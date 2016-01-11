@@ -107,11 +107,35 @@ namespace dromozoa {
     int impl_prepare(lua_State* L) {
       size_t size = 0;
       const char* sql = luaL_checklstring(L, 2, &size);
+      ssize_t i = luaL_optinteger(L, 3, 0);
+      if (i < 0) {
+        i += size;
+        if (i < 0) {
+          i = 0;
+        }
+      } else if (i > 0) {
+        --i;
+      }
+      ssize_t j = luaL_optinteger(L, 4, size);
+      if (j < 0) {
+        j += size + 1;
+      } else if (j > static_cast<ssize_t>(size)) {
+        j = size;
+      }
+      if (i > j) {
+        i = j;
+      }
       sqlite3_stmt* sth = 0;
-      int code = sqlite3_prepare_v2(get_dbh(L, 1), sql, size, &sth, 0);
+      const char* tail = 0;
+      int code = sqlite3_prepare_v2(get_dbh(L, 1), sql + i, j - i, &sth, &tail);
       if (code == SQLITE_OK) {
         new_sth(L, sth);
-        return 1;
+        if (tail) {
+          lua_pushinteger(L, tail - sql + 1);
+          return 2;
+        } else {
+          return 1;
+        }
       } else {
         sqlite3_finalize(sth);
         return push_error(L, code);
