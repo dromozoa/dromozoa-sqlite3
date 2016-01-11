@@ -24,9 +24,11 @@ extern "C" {
 
 #include <iostream>
 
+#include "dbh.hpp"
 #include "error.hpp"
 #include "function.hpp"
 #include "log_level.hpp"
+#include "sth.hpp"
 #include "success.hpp"
 
 namespace dromozoa {
@@ -101,6 +103,20 @@ namespace dromozoa {
         return push_error(L, code);
       }
     }
+
+    int impl_prepare(lua_State* L) {
+      size_t size = 0;
+      const char* sql = luaL_checklstring(L, 2, &size);
+      sqlite3_stmt* sth = 0;
+      int code = sqlite3_prepare_v2(get_dbh(L, 1), sql, size, &sth, 0);
+      if (code == SQLITE_OK) {
+        new_sth(L, sth);
+        return 1;
+      } else {
+        sqlite3_finalize(sth);
+        return push_error(L, code);
+      }
+    }
   }
 
   int open_dbh(lua_State* L) {
@@ -108,6 +124,7 @@ namespace dromozoa {
     function<impl_close>::set_field(L, "close");
     function<impl_exec>::set_field(L, "exec");
     function<impl_busy_timeout>::set_field(L, "busy_timeout");
+    function<impl_prepare>::set_field(L, "prepare");
     luaL_newmetatable(L, "dromozoa.sqlite3.dbh");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");

@@ -17,11 +17,148 @@
 
 extern "C" {
 #include "lua.h"
+#include "lauxlib.h"
 }
 
+#include <sqlite3.h>
+
+#include <iostream>
+
+#include "error.hpp"
+#include "function.hpp"
+#include "log_level.hpp"
+#include "success.hpp"
+
 namespace dromozoa {
+  int new_sth(lua_State* L, sqlite3_stmt* sth) {
+    *static_cast<sqlite3_stmt**>(lua_newuserdata(L, sizeof(sth))) = sth;
+    luaL_getmetatable(L, "dromozoa.sqlite3.sth");
+    lua_setmetatable(L, -2);
+    if (get_log_level() > 2) {
+      std::cerr << "[dromozoa-sqlite3] new sth " << sth << std::endl;
+    }
+    return 1;
+  }
+
+  sqlite3_stmt* get_sth(lua_State* L, int n) {
+    return *static_cast<sqlite3_stmt**>(luaL_checkudata(L, n, "dromozoa.sqlite3.sth"));
+  }
+
+  namespace {
+    int impl_finalize(lua_State* L) {
+      sqlite3_stmt** data = static_cast<sqlite3_stmt**>(luaL_checkudata(L, 1, "dromozoa.sqlite3.sth"));
+      sqlite3_stmt* sth = *data;
+      int code = sqlite3_finalize(sth);
+      if (code == SQLITE_OK) {
+        *data = 0;
+        if (get_log_level() > 2) {
+          std::cerr << "[dromozoa-sqlite3] close sth " << sth << std::endl;
+        }
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_gc(lua_State* L) {
+      sqlite3_stmt** data = static_cast<sqlite3_stmt**>(luaL_checkudata(L, 1, "dromozoa.sqlite3.sth"));
+      sqlite3_stmt* sth = *data;
+      *data = 0;
+      if (sth) {
+        if (get_log_level() > 1) {
+          std::cerr << "[dromozoa-sqlite3] sth " << sth << " detected" << std::endl;
+        }
+        int code = sqlite3_finalize(sth);
+        if (code == SQLITE_OK) {
+          if (get_log_level() > 2) {
+            std::cerr << "[dromozoa-sqlite3] close sth " << sth << std::endl;
+          }
+        } else {
+          if (get_log_level() > 0) {
+            std::cerr << "[dromozoa-sqlite3] cannot finalize sth " << sth << ": " << sqlite3_errstr(code) << std::endl;
+          }
+        }
+      }
+      return 0;
+    }
+
+    int impl_step(lua_State* L) {
+      int code = sqlite3_step(get_sth(L, 1));
+      if (code == SQLITE_ROW || code == SQLITE_DONE) {
+        lua_pushinteger(L, code);
+        return 1;
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_reset(lua_State* L) {
+      int code = sqlite3_reset(get_sth(L, 1));
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_column_count(lua_State* L) {
+      lua_pushinteger(L, sqlite3_column_count(get_sth(L, 1)));
+      return 1;
+    }
+
+    int impl_column_name(lua_State* L) {
+      int i = luaL_checkinteger(L, 2) - 1;
+      lua_pushstring(L, sqlite3_column_name(get_sth(L, 1), i));
+      return 1;
+    }
+
+    int impl_column_type(lua_State* L) {
+      int i = luaL_checkinteger(L, 2) - 1;
+      lua_pushinteger(L, sqlite3_column_type(get_sth(L, 1), i));
+      return 1;
+    }
+
+    int impl_column_int64(lua_State* L) {
+      int i = luaL_checkinteger(L, 2) - 1;
+      lua_pushinteger(L, sqlite3_column_int64(get_sth(L, 1), i));
+      return 1;
+    }
+
+    int impl_column_double(lua_State* L) {
+      int i = luaL_checkinteger(L, 2) - 1;
+      lua_pushnumber(L, sqlite3_column_double(get_sth(L, 1), i));
+      return 1;
+    }
+
+    int impl_column_text(lua_State* L) {
+      int i = luaL_checkinteger(L, 2) - 1;
+      sqlite3_stmt* sth = get_sth(L, 1);
+      if (const char* text = reinterpret_cast<const char*>(sqlite3_column_text(sth, i))) {
+        lua_pushlstring(L, text, sqlite3_column_bytes(sth, i));
+        return 1;
+      } else {
+        lua_pushnil(L);
+        return 1;
+      }
+    }
+  }
+
   int open_sth(lua_State* L) {
     lua_newtable(L);
+    function<impl_finalize>::set_field(L, "finalize");
+    function<impl_step>::set_field(L, "step");
+    function<impl_reset>::set_field(L, "reset");
+    function<impl_column_count>::set_field(L, "column_count");
+    function<impl_column_name>::set_field(L, "column_name");
+    function<impl_column_type>::set_field(L, "column_type");
+    function<impl_column_int64>::set_field(L, "column_int64");
+    function<impl_column_double>::set_field(L, "column_double");
+    function<impl_column_text>::set_field(L, "column_text");
+    luaL_newmetatable(L, "dromozoa.sqlite3.sth");
+    lua_pushvalue(L, -2);
+    lua_setfield(L, -2, "__index");
+    function<impl_gc>::set_field(L, "__gc");
+    lua_pop(L, 1);
     return 1;
   }
 }
