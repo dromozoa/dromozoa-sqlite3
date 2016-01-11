@@ -81,11 +81,33 @@ namespace dromozoa {
       }
       return 0;
     }
+
+    int impl_exec(lua_State* L) {
+      const char* sql = luaL_checkstring(L, 2);
+      int code = sqlite3_exec(get_dbh(L, 1), sql, 0, 0, 0);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_busy_timeout(lua_State* L) {
+      int timeout = luaL_checkinteger(L, 2);
+      int code = sqlite3_busy_timeout(get_dbh(L, 1), timeout);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
   }
 
   int open_dbh(lua_State* L) {
     lua_newtable(L);
     function<impl_close>::set_field(L, "close");
+    function<impl_exec>::set_field(L, "exec");
+    function<impl_busy_timeout>::set_field(L, "busy_timeout");
     luaL_newmetatable(L, "dromozoa.sqlite3.dbh");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");

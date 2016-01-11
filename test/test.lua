@@ -21,6 +21,14 @@ sqlite3.set_log_level(3)
 assert(sqlite3.initialize())
 
 local dbh = assert(sqlite3.open("test.db", sqlite3.SQLITE_OPEN_READWRITE + sqlite3.SQLITE_OPEN_CREATE))
+dbh:busy_timeout(60000)
+
+assert(dbh:exec("CREATE TABLE IF NOT EXISTS t (id INTEGER PRIMARY KEY AUTOINCREMENT, k TEXT UNIQUE, v TEXT)"))
+assert(dbh:exec("INSERT INTO t (k, v) VALUES('foo', 'bar')"))
+assert(not dbh:exec("INSERT INTO t (k, v) VALUES('foo', 'bar')"))
+assert(dbh:exec("INSERT INTO t (k, v) VALUES('bar', 'baz')"))
+assert(dbh:exec("INSERT INTO t (k, v) VALUES('baz', 'qux')"))
+
 assert(dbh:close())
 
 assert(sqlite3.shutdown())
