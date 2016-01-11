@@ -75,7 +75,14 @@ namespace dromozoa {
           }
         } else {
           if (get_log_level() > 0) {
-            std::cerr << "[dromozoa-sqlite3] cannot finalize sth " << sth << ": " << sqlite3_errstr(code) << std::endl;
+#if SQLITE_VERSION_NUMBER >= 3007015
+            if (const char* what = sqlite3_errstr(code)) {
+              std::cerr << "[dromozoa-sqlite3] cannot finalize sth " << sth << ": " << what << std::endl;
+            } else
+#endif
+            {
+              std::cerr << "[dromozoa-sqlite3] cannot finalize sth " << sth << ": error number " << code << std::endl;
+            }
           }
         }
       }

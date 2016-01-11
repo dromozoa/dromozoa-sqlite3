@@ -58,7 +58,11 @@ namespace dromozoa {
         new_dbh(L, dbh);
         return 1;
       } else {
+#if SQLITE_VERSION_NUMBER >= 3007014
         sqlite3_close_v2(dbh);
+#else
+        sqlite3_close(dbh);
+#endif
         return push_error(L, code);
       }
     }
@@ -71,8 +75,12 @@ namespace dromozoa {
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_READONLY);
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_READWRITE);
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_CREATE);
+#ifdef SQLITE_OPEN_URI
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_URI);
+#endif
+#ifdef SQLITE_OPEN_MEMORY
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_MEMORY);
+#endif
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_NOMUTEX);
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_FULLMUTEX);
       DROMOZOA_SET_FIELD(L, SQLITE_OPEN_SHAREDCACHE);

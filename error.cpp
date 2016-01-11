@@ -26,9 +26,12 @@ extern "C" {
 namespace dromozoa {
   int push_error(lua_State* L, int code) {
     lua_pushnil(L);
+#if SQLITE_VERSION_NUMBER >= 3007015
     if (const char* what = sqlite3_errstr(code)) {
       lua_pushstring(L, what);
-    } else {
+    } else
+#endif
+    {
       lua_pushfstring(L, "error number %d", code);
     }
     lua_pushinteger(L, code);
