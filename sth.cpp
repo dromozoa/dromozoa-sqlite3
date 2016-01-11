@@ -52,7 +52,7 @@ namespace dromozoa {
       if (code == SQLITE_OK) {
         *data = 0;
         if (get_log_level() > 2) {
-          std::cerr << "[dromozoa-sqlite3] close sth " << sth << std::endl;
+          std::cerr << "[dromozoa-sqlite3] finalize sth " << sth << std::endl;
         }
         return push_success(L);
       } else {
@@ -71,7 +71,7 @@ namespace dromozoa {
         int code = sqlite3_finalize(sth);
         if (code == SQLITE_OK) {
           if (get_log_level() > 2) {
-            std::cerr << "[dromozoa-sqlite3] close sth " << sth << std::endl;
+            std::cerr << "[dromozoa-sqlite3] finalize sth " << sth << std::endl;
           }
         } else {
           if (get_log_level() > 0) {
