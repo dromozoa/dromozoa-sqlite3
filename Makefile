@@ -18,7 +18,7 @@
 CPPFLAGS = -I$(LUA_INCDIR)
 CXXFLAGS = -Wall -W -std=c++11 $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
-LDLIBS = -ldl
+LDLIBS = -lsqlite3 -ldl
 
 TARGET = sqlite3.so
 
@@ -27,10 +27,28 @@ all: $(TARGET)
 clean:
 	rm -f *.o $(TARGET)
 
-sqlite3.so: sqlite3.o
+sqlite3.so: dbh.o error.o log_level.o set_field.o sqlite3.o sth.o success.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+dbh.o: dbh.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+error.o: error.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+log_level.o: log_level.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+set_field.o: set_field.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
 sqlite3.o: sqlite3.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+sth.o: sth.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+success.o: success.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:

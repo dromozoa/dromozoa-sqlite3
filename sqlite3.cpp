@@ -17,9 +17,84 @@
 
 extern "C" {
 #include "lua.h"
+#include "lauxlib.h"
 }
 
-extern "C" int luaopen_dromozoa_sqlite(lua_State* L) {
-  lua_newtable(L);
-  return 1;
+#include "dbh.hpp"
+#include "error.hpp"
+#include "function.hpp"
+#include "log_level.hpp"
+#include "set_field.hpp"
+#include "sth.hpp"
+#include "success.hpp"
+
+namespace dromozoa {
+  namespace {
+    int impl_initialize(lua_State* L) {
+      int code = sqlite3_initialize();
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_shutdown(lua_State* L) {
+      int code = sqlite3_shutdown();
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_open(lua_State* L) {
+      const char* filename = luaL_checkstring(L, 1);
+      int flags = luaL_optinteger(L, 2, 0);
+      const char* vfs = lua_tostring(L, 3);
+      sqlite3* dbh = 0;
+      int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
+      if (code == SQLITE_OK) {
+        new_dbh(L, dbh);
+        return 1;
+      } else {
+        sqlite3_close_v2(dbh);
+        return push_error(L, code);
+      }
+    }
+
+    void initialize(lua_State* L) {
+      function<impl_initialize>::set_field(L, "initialize");
+      function<impl_shutdown>::set_field(L, "shutdown");
+      function<impl_open>::set_field(L, "open");
+
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_READONLY);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_READWRITE);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_CREATE);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_URI);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_MEMORY);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_NOMUTEX);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_FULLMUTEX);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_SHAREDCACHE);
+      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_PRIVATECACHE);
+    }
+  }
+
+  int open(lua_State* L) {
+    lua_newtable(L);
+
+    open_dbh(L);
+    lua_setfield(L, -2, "dbh");
+
+    open_sth(L);
+    lua_setfield(L, -2, "sth");
+
+    initialize(L);
+    initialize_log_level(L);
+    return 1;
+  }
+}
+
+extern "C" int luaopen_dromozoa_sqlite3(lua_State* L) {
+  return dromozoa::open(L);
 }
