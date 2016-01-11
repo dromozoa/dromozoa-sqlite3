@@ -16,7 +16,7 @@
 # along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
 CPPFLAGS = -I$(LUA_INCDIR)
-CXXFLAGS = -Wall -W -std=c++11 $(CFLAGS)
+CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -lsqlite3 -ldl
 
