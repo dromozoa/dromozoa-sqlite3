@@ -101,6 +101,76 @@ namespace dromozoa {
       }
     }
 
+    int impl_bind_parameter_count(lua_State* L) {
+      lua_pushinteger(L, sqlite3_bind_parameter_count(get_sth(L, 1)));
+      return 1;
+    }
+
+    int impl_bind_parameter_index(lua_State* L) {
+      const char* name = luaL_checkstring(L, 2);
+      lua_pushinteger(L, sqlite3_bind_parameter_index(get_sth(L, 1), name));
+      return 1;
+    }
+
+    int impl_bind_parameter_name(lua_State* L) {
+      int i = luaL_checkinteger(L, 2);
+      lua_pushstring(L, sqlite3_bind_parameter_name(get_sth(L, 1), i));
+      return 1;
+    }
+
+    int impl_bind_int64(lua_State* L) {
+      int i = luaL_checkinteger(L, 2);
+      lua_Integer v = luaL_checkinteger(L, 3);
+      int code = sqlite3_bind_int64(get_sth(L, 1), i, v);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_bind_double(lua_State* L) {
+      int i = luaL_checkinteger(L, 2);
+      lua_Number v = luaL_checknumber(L, 3);
+      int code = sqlite3_bind_double(get_sth(L, 1), i, v);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_bind_text(lua_State* L) {
+      int i = luaL_checkinteger(L, 2);
+      size_t size = 0;
+      const char* text = luaL_checklstring(L, 3, &size);
+      int code = sqlite3_bind_text(get_sth(L, 1), i, text, size, SQLITE_TRANSIENT);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_bind_null(lua_State* L) {
+      int i = luaL_checkinteger(L, 2);
+      int code = sqlite3_bind_null(get_sth(L, 1), i);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
+    int impl_clear_bindings(lua_State* L) {
+      int code = sqlite3_clear_bindings(get_sth(L, 1));
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, code);
+      }
+    }
+
     int impl_column_count(lua_State* L) {
       lua_pushinteger(L, sqlite3_column_count(get_sth(L, 1)));
       return 1;
@@ -148,6 +218,14 @@ namespace dromozoa {
     function<impl_finalize>::set_field(L, "finalize");
     function<impl_step>::set_field(L, "step");
     function<impl_reset>::set_field(L, "reset");
+    function<impl_bind_parameter_count>::set_field(L, "bind_parameter_count");
+    function<impl_bind_parameter_index>::set_field(L, "bind_parameter_index");
+    function<impl_bind_parameter_name>::set_field(L, "bind_parameter_name");
+    function<impl_bind_int64>::set_field(L, "bind_int64");
+    function<impl_bind_double>::set_field(L, "bind_double");
+    function<impl_bind_text>::set_field(L, "bind_text");
+    function<impl_bind_null>::set_field(L, "bind_null");
+    function<impl_clear_bindings>::set_field(L, "clear_bindings");
     function<impl_column_count>::set_field(L, "column_count");
     function<impl_column_name>::set_field(L, "column_name");
     function<impl_column_type>::set_field(L, "column_type");

@@ -117,6 +117,11 @@ namespace dromozoa {
         return push_error(L, code);
       }
     }
+
+    int impl_last_insert_rowid(lua_State* L) {
+      lua_pushinteger(L, sqlite3_last_insert_rowid(get_dbh(L, 1)));
+      return 1;
+    }
   }
 
   int open_dbh(lua_State* L) {
@@ -125,6 +130,7 @@ namespace dromozoa {
     function<impl_exec>::set_field(L, "exec");
     function<impl_busy_timeout>::set_field(L, "busy_timeout");
     function<impl_prepare>::set_field(L, "prepare");
+    function<impl_last_insert_rowid>::set_field(L, "last_insert_rowid");
     luaL_newmetatable(L, "dromozoa.sqlite3.dbh");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
