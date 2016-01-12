@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -18,12 +18,10 @@
 #ifndef DROMOZOA_SUCCESS_HPP
 #define DROMOZOA_SUCCESS_HPP
 
-extern "C" {
-#include "lua.h"
-}
+#include "dromozoa/bind.hpp"
 
 namespace dromozoa {
-  int push_success(lua_State* L);
+  using bind::push_success;
 }
 
 #endif

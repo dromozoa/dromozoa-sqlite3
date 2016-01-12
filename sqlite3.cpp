@@ -20,10 +20,11 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#include "dromozoa/bind.hpp"
+
 #include "dbh.hpp"
 #include "error.hpp"
 #include "function.hpp"
-#include "log_level.hpp"
 #include "set_field.hpp"
 #include "sth.hpp"
 #include "success.hpp"
@@ -108,7 +109,7 @@ namespace dromozoa {
     lua_setfield(L, -2, "sth");
 
     initialize(L);
-    initialize_log_level(L);
+    dromozoa::bind::initialize(L);
     return 1;
   }
 }

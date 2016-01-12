@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -18,31 +18,10 @@
 #ifndef DROMOZOA_FUNCTION_HPP
 #define DROMOZOA_FUNCTION_HPP
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-}
-
-#include <exception>
+#include "dromozoa/bind.hpp"
 
 namespace dromozoa {
-  template <lua_CFunction T>
-  struct function {
-    static int value(lua_State* L) {
-      try {
-        return T(L);
-      } catch (const std::exception& e) {
-        return luaL_error(L, "caught exception: %s", e.what());
-      } catch (...) {
-        return luaL_error(L, "caught exception");
-      }
-    }
-
-    static void set_field(lua_State* L, const char* key) {
-      lua_pushcfunction(L, value);
-      lua_setfield(L, -2, key);
-    }
-  };
+  using bind::function;
 }
 
 #endif

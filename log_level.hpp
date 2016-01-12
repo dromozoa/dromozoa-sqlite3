@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -18,13 +18,10 @@
 #ifndef DROMOZOA_LOG_LEVEL_HPP
 #define DROMOZOA_LOG_LEVEL_HPP
 
-extern "C" {
-#include "lua.h"
-}
+#include "dromozoa/bind.hpp"
 
 namespace dromozoa {
-  lua_Integer get_log_level();
-  void initialize_log_level(lua_State* L);
+  using bind::get_log_level;
 }
 
 #endif
