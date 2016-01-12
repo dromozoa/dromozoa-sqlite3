@@ -27,11 +27,11 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "error.hpp"
-#include "success.hpp"
 
 namespace dromozoa {
   using bind::function;
   using bind::get_log_level;
+  using bind::push_success;
 
   int new_sth(lua_State* L, sqlite3_stmt* sth) {
     *static_cast<sqlite3_stmt**>(lua_newuserdata(L, sizeof(sth))) = sth;

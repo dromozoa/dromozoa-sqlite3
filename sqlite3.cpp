@@ -26,10 +26,10 @@ extern "C" {
 #include "error.hpp"
 #include "set_field.hpp"
 #include "sth.hpp"
-#include "success.hpp"
 
 namespace dromozoa {
   using bind::function;
+  using bind::push_success;
 
   namespace {
     int impl_initialize(lua_State* L) {
