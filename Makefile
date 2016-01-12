@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-sqlite3.
 #
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-CPPFLAGS = -I$(LUA_INCDIR)
+CPPFLAGS = -Ibind -I$(LUA_INCDIR)
 CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -lsqlite3 -ldl
@@ -27,8 +27,11 @@ all: $(TARGET)
 clean:
 	rm -f *.o $(TARGET)
 
-sqlite3.so: dbh.o error.o log_level.o set_field.o sqlite3.o sth.o success.o
+sqlite3.so: bind.o dbh.o error.o sqlite3.o sth.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+bind.o: bind/bind.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 dbh.o: dbh.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
@@ -36,19 +39,10 @@ dbh.o: dbh.cpp
 error.o: error.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-log_level.o: log_level.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-set_field.o: set_field.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
 sqlite3.o: sqlite3.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 sth.o: sth.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-success.o: success.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:

@@ -24,14 +24,17 @@ extern "C" {
 
 #include <iostream>
 
+#include "dromozoa/bind.hpp"
+
 #include "dbh.hpp"
 #include "error.hpp"
-#include "function.hpp"
-#include "log_level.hpp"
 #include "sth.hpp"
-#include "success.hpp"
 
 namespace dromozoa {
+  using bind::function;
+  using bind::get_log_level;
+  using bind::push_success;
+
   int new_dbh(lua_State* L, sqlite3* dbh) {
     *static_cast<sqlite3**>(lua_newuserdata(L, sizeof(dbh))) = dbh;
     luaL_getmetatable(L, "dromozoa.sqlite3.dbh");
