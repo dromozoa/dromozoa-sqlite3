@@ -51,7 +51,7 @@ namespace dromozoa {
 
     int impl_open(lua_State* L) {
       const char* filename = luaL_checkstring(L, 1);
-      int flags = luaL_optinteger(L, 2, 0);
+      int flags = luaL_optinteger(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       const char* vfs = lua_tostring(L, 3);
       sqlite3* dbh = 0;
       int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
