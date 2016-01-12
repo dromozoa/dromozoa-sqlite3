@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -27,6 +27,7 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
+#include "close.hpp"
 #include "error.hpp"
 #include "sth.hpp"
 
@@ -53,7 +54,7 @@ namespace dromozoa {
     int impl_close(lua_State* L) {
       sqlite3** data = static_cast<sqlite3**>(luaL_checkudata(L, 1, "dromozoa.sqlite3.dbh"));
       sqlite3* dbh = *data;
-      int code = sqlite3_close(dbh);
+      int code = wrap_close(dbh);
       if (code == SQLITE_OK) {
         *data = 0;
         if (get_log_level() > 2) {
@@ -61,7 +62,7 @@ namespace dromozoa {
         }
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, dbh);
       }
     }
 
@@ -73,25 +74,16 @@ namespace dromozoa {
         if (get_log_level() > 1) {
           std::cerr << "[dromozoa-sqlite3] dbh " << dbh << " detected" << std::endl;
         }
-#if SQLITE_VERSION_NUMBER >= 3007014
-        int code = sqlite3_close_v2(dbh);
-#else
-        int code = sqlite3_close(dbh);
-#endif
+        int code = wrap_close(dbh);
         if (code == SQLITE_OK) {
           if (get_log_level() > 2) {
             std::cerr << "[dromozoa-sqlite3] close dbh " << dbh << std::endl;
           }
         } else {
           if (get_log_level() > 0) {
-#if SQLITE_VERSION_NUMBER >= 3007015
-            if (const char* what = sqlite3_errstr(code)) {
-              std::cerr << "[dromozoa-sqlite3] cannot close dbh " << dbh << ": " << what << std::endl;
-            } else
-#endif
-            {
-              std::cerr << "[dromozoa-sqlite3] cannot close dbh " << dbh << ": error number " << code << std::endl;
-            }
+            std::cerr << "[dromozoa-sqlite3] cannot close dbh " << dbh << ": ";
+            print_error(std::cerr, code);
+            std::cerr << std::endl;
           }
         }
       }
@@ -99,26 +91,29 @@ namespace dromozoa {
     }
 
     int impl_exec(lua_State* L) {
+      sqlite3* dbh = get_dbh(L, 1);
       const char* sql = luaL_checkstring(L, 2);
-      int code = sqlite3_exec(get_dbh(L, 1), sql, 0, 0, 0);
+      int code = sqlite3_exec(dbh, sql, 0, 0, 0);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, dbh);
       }
     }
 
     int impl_busy_timeout(lua_State* L) {
+      sqlite3* dbh = get_dbh(L, 1);
       int timeout = luaL_checkinteger(L, 2);
-      int code = sqlite3_busy_timeout(get_dbh(L, 1), timeout);
+      int code = sqlite3_busy_timeout(dbh, timeout);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, dbh);
       }
     }
 
     int impl_prepare(lua_State* L) {
+      sqlite3* dbh = get_dbh(L, 1);
       size_t size = 0;
       const char* sql = luaL_checklstring(L, 2, &size);
       ssize_t i = luaL_optinteger(L, 3, 0);
@@ -141,7 +136,7 @@ namespace dromozoa {
       }
       sqlite3_stmt* sth = 0;
       const char* tail = 0;
-      int code = sqlite3_prepare_v2(get_dbh(L, 1), sql + i, j - i, &sth, &tail);
+      int code = sqlite3_prepare_v2(dbh, sql + i, j - i, &sth, &tail);
       if (code == SQLITE_OK) {
         new_sth(L, sth);
         if (tail) {
@@ -152,7 +147,7 @@ namespace dromozoa {
         }
       } else {
         sqlite3_finalize(sth);
-        return push_error(L, code);
+        return push_error(L, dbh);
       }
     }
 
