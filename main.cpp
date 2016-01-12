@@ -23,6 +23,7 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
+#include "close.hpp"
 #include "error.hpp"
 #include "sth.hpp"
 
@@ -59,11 +60,7 @@ namespace dromozoa {
         new_dbh(L, dbh);
         return 1;
       } else {
-#if SQLITE_VERSION_NUMBER >= 3007014
-        sqlite3_close_v2(dbh);
-#else
-        sqlite3_close(dbh);
-#endif
+        wrap_close(dbh);
         return push_error(L, code);
       }
     }
