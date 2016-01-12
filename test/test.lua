@@ -20,13 +20,13 @@ local sqlite3 = require "dromozoa.sqlite3"
 -- sqlite3.set_log_level(3)
 assert(sqlite3.initialize())
 
-local dbh = assert(sqlite3.open("test.db", sqlite3.SQLITE_OPEN_READWRITE + sqlite3.SQLITE_OPEN_CREATE))
+local dbh = assert(sqlite3.open("test.db"))
 dbh:busy_timeout(60000)
 
 assert(dbh:exec("CREATE TABLE IF NOT EXISTS t (id INTEGER PRIMARY KEY AUTOINCREMENT, k TEXT UNIQUE, v TEXT, n FLOAT)"))
 assert(dbh:exec("INSERT INTO t (k, v, n) VALUES('foo', 'bar', 0.125)"))
 assert(dbh:last_insert_rowid() == 1)
-print(dbh:exec("INSERT INTO t (k, v, n) VALUES('foo', 'bar', 0.125)"))
+-- print(dbh:exec("INSERT INTO t (k, v, n) VALUES('foo', 'bar', 0.125)"))
 assert(not dbh:exec("INSERT INTO t (k, v, n) VALUES('foo', 'bar', 0.125)"))
 assert(dbh:exec("INSERT INTO t (k, v, n) VALUES('bar', 'baz', 17)"))
 assert(dbh:last_insert_rowid() == 2)
