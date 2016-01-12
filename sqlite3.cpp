@@ -20,15 +20,16 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#include "dromozoa/bind.hpp"
+
 #include "dbh.hpp"
 #include "error.hpp"
-#include "function.hpp"
-#include "log_level.hpp"
-#include "set_field.hpp"
 #include "sth.hpp"
-#include "success.hpp"
 
 namespace dromozoa {
+  using bind::function;
+  using bind::push_success;
+
   namespace {
     int impl_initialize(lua_State* L) {
       int code = sqlite3_initialize();
@@ -72,29 +73,29 @@ namespace dromozoa {
       function<impl_shutdown>::set_field(L, "shutdown");
       function<impl_open>::set_field(L, "open");
 
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_READONLY);
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_READWRITE);
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_CREATE);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_READONLY);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_READWRITE);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_CREATE);
 #ifdef SQLITE_OPEN_URI
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_URI);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_URI);
 #endif
 #ifdef SQLITE_OPEN_MEMORY
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_MEMORY);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_MEMORY);
 #endif
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_NOMUTEX);
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_FULLMUTEX);
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_SHAREDCACHE);
-      DROMOZOA_SET_FIELD(L, SQLITE_OPEN_PRIVATECACHE);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_NOMUTEX);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_FULLMUTEX);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_SHAREDCACHE);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_PRIVATECACHE);
 
-      DROMOZOA_SET_FIELD(L, SQLITE_OK);
-      DROMOZOA_SET_FIELD(L, SQLITE_ROW);
-      DROMOZOA_SET_FIELD(L, SQLITE_DONE);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OK);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_ROW);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_DONE);
 
-      DROMOZOA_SET_FIELD(L, SQLITE_INTEGER);
-      DROMOZOA_SET_FIELD(L, SQLITE_FLOAT);
-      DROMOZOA_SET_FIELD(L, SQLITE_TEXT);
-      DROMOZOA_SET_FIELD(L, SQLITE_BLOB);
-      DROMOZOA_SET_FIELD(L, SQLITE_NULL);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_INTEGER);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_FLOAT);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_TEXT);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_BLOB);
+      DROMOZOA_BIND_SET_FIELD(L, SQLITE_NULL);
     }
   }
 
@@ -108,7 +109,7 @@ namespace dromozoa {
     lua_setfield(L, -2, "sth");
 
     initialize(L);
-    initialize_log_level(L);
+    dromozoa::bind::initialize(L);
     return 1;
   }
 }

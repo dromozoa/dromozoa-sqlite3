@@ -24,12 +24,15 @@ extern "C" {
 
 #include <iostream>
 
+#include "dromozoa/bind.hpp"
+
 #include "error.hpp"
-#include "function.hpp"
-#include "log_level.hpp"
-#include "success.hpp"
 
 namespace dromozoa {
+  using bind::function;
+  using bind::get_log_level;
+  using bind::push_success;
+
   int new_sth(lua_State* L, sqlite3_stmt* sth) {
     *static_cast<sqlite3_stmt**>(lua_newuserdata(L, sizeof(sth))) = sth;
     luaL_getmetatable(L, "dromozoa.sqlite3.sth");
@@ -52,7 +55,7 @@ namespace dromozoa {
       if (code == SQLITE_OK) {
         *data = 0;
         if (get_log_level() > 2) {
-          std::cerr << "[dromozoa-sqlite3] close sth " << sth << std::endl;
+          std::cerr << "[dromozoa-sqlite3] finalize sth " << sth << std::endl;
         }
         return push_success(L);
       } else {
@@ -71,7 +74,7 @@ namespace dromozoa {
         int code = sqlite3_finalize(sth);
         if (code == SQLITE_OK) {
           if (get_log_level() > 2) {
-            std::cerr << "[dromozoa-sqlite3] close sth " << sth << std::endl;
+            std::cerr << "[dromozoa-sqlite3] finalize sth " << sth << std::endl;
           }
         } else {
           if (get_log_level() > 0) {
