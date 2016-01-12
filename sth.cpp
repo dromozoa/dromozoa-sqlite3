@@ -59,7 +59,7 @@ namespace dromozoa {
         }
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 
@@ -93,21 +93,23 @@ namespace dromozoa {
     }
 
     int impl_step(lua_State* L) {
-      int code = sqlite3_step(get_sth(L, 1));
+      sqlite3_stmt* sth = get_sth(L, 1);
+      int code = sqlite3_step(sth);
       if (code == SQLITE_ROW || code == SQLITE_DONE) {
         lua_pushinteger(L, code);
         return 1;
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 
     int impl_reset(lua_State* L) {
-      int code = sqlite3_reset(get_sth(L, 1));
+      sqlite3_stmt* sth = get_sth(L, 1);
+      int code = sqlite3_reset(sth);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 
@@ -129,55 +131,60 @@ namespace dromozoa {
     }
 
     int impl_bind_int64(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
       int i = luaL_checkinteger(L, 2);
       lua_Integer v = luaL_checkinteger(L, 3);
-      int code = sqlite3_bind_int64(get_sth(L, 1), i, v);
+      int code = sqlite3_bind_int64(sth, i, v);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 
     int impl_bind_double(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
       int i = luaL_checkinteger(L, 2);
       lua_Number v = luaL_checknumber(L, 3);
-      int code = sqlite3_bind_double(get_sth(L, 1), i, v);
+      int code = sqlite3_bind_double(sth, i, v);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 
     int impl_bind_text(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
       int i = luaL_checkinteger(L, 2);
       size_t size = 0;
       const char* text = luaL_checklstring(L, 3, &size);
-      int code = sqlite3_bind_text(get_sth(L, 1), i, text, size, SQLITE_TRANSIENT);
+      int code = sqlite3_bind_text(sth, i, text, size, SQLITE_TRANSIENT);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 
     int impl_bind_null(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
       int i = luaL_checkinteger(L, 2);
-      int code = sqlite3_bind_null(get_sth(L, 1), i);
+      int code = sqlite3_bind_null(sth, i);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 
     int impl_clear_bindings(lua_State* L) {
-      int code = sqlite3_clear_bindings(get_sth(L, 1));
+      sqlite3_stmt* sth = get_sth(L, 1);
+      int code = sqlite3_clear_bindings(sth);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
-        return push_error(L, code);
+        return push_error(L, sth);
       }
     }
 

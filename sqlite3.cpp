@@ -108,8 +108,9 @@ namespace dromozoa {
     open_sth(L);
     lua_setfield(L, -2, "sth");
 
-    initialize(L);
     dromozoa::bind::initialize(L);
+    initialize(L);
+
     return 1;
   }
 }

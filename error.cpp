@@ -37,4 +37,20 @@ namespace dromozoa {
     lua_pushinteger(L, code);
     return 3;
   }
+
+  int push_error(lua_State* L, sqlite3* dbh) {
+    int code = sqlite3_extended_errcode(dbh);
+    lua_pushnil(L);
+    if (const char* what = sqlite3_errmsg(dbh)) {
+      lua_pushstring(L, what);
+    } else {
+      lua_pushfstring(L, "error number %d", code);
+    }
+    lua_pushinteger(L, code);
+    return 3;
+  }
+
+  int push_error(lua_State* L, sqlite3_stmt* sth) {
+    return push_error(L, sqlite3_db_handle(sth));
+  }
 }
