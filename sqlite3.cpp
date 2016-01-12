@@ -29,6 +29,8 @@ extern "C" {
 #include "success.hpp"
 
 namespace dromozoa {
+  using bind::function;
+
   namespace {
     int impl_initialize(lua_State* L) {
       int code = sqlite3_initialize();
@@ -68,8 +70,6 @@ namespace dromozoa {
     }
 
     void initialize(lua_State* L) {
-      using bind::function;
-
       function<impl_initialize>::set_field(L, "initialize");
       function<impl_shutdown>::set_field(L, "shutdown");
       function<impl_open>::set_field(L, "open");
