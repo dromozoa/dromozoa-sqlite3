@@ -1,3 +1,0 @@
-[submodule "bind"]
-	path = bind
-	url = git@github.com:dromozoa/dromozoa-bind.git
