@@ -27,6 +27,7 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "error.hpp"
+#include "sth.hpp"
 
 namespace dromozoa {
   using bind::function;
