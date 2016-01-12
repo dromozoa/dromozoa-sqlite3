@@ -24,7 +24,6 @@ extern "C" {
 
 #include "dbh.hpp"
 #include "error.hpp"
-#include "function.hpp"
 #include "set_field.hpp"
 #include "sth.hpp"
 #include "success.hpp"
@@ -69,6 +68,8 @@ namespace dromozoa {
     }
 
     void initialize(lua_State* L) {
+      using bind::function;
+
       function<impl_initialize>::set_field(L, "initialize");
       function<impl_shutdown>::set_field(L, "shutdown");
       function<impl_open>::set_field(L, "open");

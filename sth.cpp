@@ -24,8 +24,9 @@ extern "C" {
 
 #include <iostream>
 
+#include "dromozoa/bind.hpp"
+
 #include "error.hpp"
-#include "function.hpp"
 #include "log_level.hpp"
 #include "success.hpp"
 
@@ -221,6 +222,8 @@ namespace dromozoa {
   }
 
   int open_sth(lua_State* L) {
+    using bind::function;
+
     lua_newtable(L);
     function<impl_finalize>::set_field(L, "finalize");
     function<impl_step>::set_field(L, "step");

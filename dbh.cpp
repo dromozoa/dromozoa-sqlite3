@@ -24,9 +24,10 @@ extern "C" {
 
 #include <iostream>
 
+#include "dromozoa/bind.hpp"
+
 #include "dbh.hpp"
 #include "error.hpp"
-#include "function.hpp"
 #include "log_level.hpp"
 #include "sth.hpp"
 #include "success.hpp"
@@ -160,6 +161,8 @@ namespace dromozoa {
   }
 
   int open_dbh(lua_State* L) {
+    using bind::function;
+
     lua_newtable(L);
     function<impl_close>::set_field(L, "close");
     function<impl_exec>::set_field(L, "exec");
