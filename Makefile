@@ -27,7 +27,7 @@ all: $(TARGET)
 clean:
 	rm -f *.o $(TARGET)
 
-sqlite3.so: bind.o dbh.o error.o set_field.o sqlite3.o sth.o
+sqlite3.so: bind.o dbh.o error.o sqlite3.o sth.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 bind.o: bind/bind.cpp
@@ -37,9 +37,6 @@ dbh.o: dbh.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 error.o: error.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-set_field.o: set_field.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 sqlite3.o: sqlite3.cpp
