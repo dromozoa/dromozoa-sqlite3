@@ -27,6 +27,7 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
+#include "close.hpp"
 #include "error.hpp"
 #include "sth.hpp"
 
@@ -53,7 +54,7 @@ namespace dromozoa {
     int impl_close(lua_State* L) {
       sqlite3** data = static_cast<sqlite3**>(luaL_checkudata(L, 1, "dromozoa.sqlite3.dbh"));
       sqlite3* dbh = *data;
-      int code = sqlite3_close(dbh);
+      int code = wrap_close(dbh);
       if (code == SQLITE_OK) {
         *data = 0;
         if (get_log_level() > 2) {
@@ -73,11 +74,7 @@ namespace dromozoa {
         if (get_log_level() > 1) {
           std::cerr << "[dromozoa-sqlite3] dbh " << dbh << " detected" << std::endl;
         }
-#if SQLITE_VERSION_NUMBER >= 3007014
-        int code = sqlite3_close_v2(dbh);
-#else
-        int code = sqlite3_close(dbh);
-#endif
+        int code = wrap_close(dbh);
         if (code == SQLITE_OK) {
           if (get_log_level() > 2) {
             std::cerr << "[dromozoa-sqlite3] close dbh " << dbh << std::endl;

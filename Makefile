@@ -27,10 +27,13 @@ all: $(TARGET)
 clean:
 	rm -f *.o $(TARGET)
 
-sqlite3.so: bind.o dbh.o error.o sth.o main.o
+sqlite3.so: bind.o close.o dbh.o error.o sth.o main.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 bind.o: bind/bind.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+close.o: close.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 dbh.o: dbh.cpp
