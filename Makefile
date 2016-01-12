@@ -27,7 +27,7 @@ all: $(TARGET)
 clean:
 	rm -f *.o $(TARGET)
 
-sqlite3.so: bind.o dbh.o error.o sqlite3.o sth.o
+sqlite3.so: bind.o dbh.o error.o sth.o main.o
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 bind.o: bind/bind.cpp
@@ -39,10 +39,10 @@ dbh.o: dbh.cpp
 error.o: error.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-sqlite3.o: sqlite3.cpp
+sth.o: sth.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-sth.o: sth.cpp
+main.o: main.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:
