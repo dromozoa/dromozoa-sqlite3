@@ -49,6 +49,26 @@ namespace dromozoa {
         lua_pushboolean(L, raise_error);
         return 1;
       }
+
+      int impl_band(lua_State* L) {
+        int n = lua_gettop(L);
+        lua_Integer result = luaL_checkinteger(L, 1);
+        for (int i = 2; i <= n; ++i) {
+          result &= luaL_checkinteger(L, i);
+        }
+        lua_pushinteger(L, result);
+        return 1;
+      }
+
+      int impl_bor(lua_State* L) {
+        int n = lua_gettop(L);
+        lua_Integer result = luaL_checkinteger(L, 1);
+        for (int i = 2; i <= n; ++i) {
+          result |= luaL_checkinteger(L, i);
+        }
+        lua_pushinteger(L, result);
+        return 1;
+      }
     }
 
     namespace detail {
@@ -100,6 +120,8 @@ namespace dromozoa {
       function<impl_get_log_level>::set_field(L, "get_log_level");
       function<impl_set_raise_error>::set_field(L, "set_raise_error");
       function<impl_get_raise_error>::set_field(L, "get_raise_error");
+      function<impl_band>::set_field(L, "band");
+      function<impl_bor>::set_field(L, "bor");
     }
   }
 }

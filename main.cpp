@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -23,6 +23,7 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
+#include "close.hpp"
 #include "error.hpp"
 #include "sth.hpp"
 
@@ -51,7 +52,7 @@ namespace dromozoa {
 
     int impl_open(lua_State* L) {
       const char* filename = luaL_checkstring(L, 1);
-      int flags = luaL_optinteger(L, 2, 0);
+      int flags = luaL_optinteger(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       const char* vfs = lua_tostring(L, 3);
       sqlite3* dbh = 0;
       int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
@@ -59,11 +60,7 @@ namespace dromozoa {
         new_dbh(L, dbh);
         return 1;
       } else {
-#if SQLITE_VERSION_NUMBER >= 3007014
-        sqlite3_close_v2(dbh);
-#else
-        sqlite3_close(dbh);
-#endif
+        wrap_close(dbh);
         return push_error(L, code);
       }
     }
@@ -108,8 +105,9 @@ namespace dromozoa {
     open_sth(L);
     lua_setfield(L, -2, "sth");
 
-    initialize(L);
     dromozoa::bind::initialize(L);
+    initialize(L);
+
     return 1;
   }
 }

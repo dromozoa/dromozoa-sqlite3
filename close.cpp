@@ -15,22 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_ERROR_HPP
-#define DROMOZOA_ERROR_HPP
-
-extern "C" {
-#include "lua.h"
-}
-
 #include <sqlite3.h>
 
-#include <iosfwd>
-
 namespace dromozoa {
-  int push_error(lua_State* L, int code);
-  int push_error(lua_State* L, sqlite3* dbh);
-  int push_error(lua_State* L, sqlite3_stmt* sth);
-  void print_error(std::ostream& out, int code);
-}
-
+  int wrap_close(sqlite3* dbh) {
+#if SQLITE_VERSION_NUMBER >= 3007014
+    return sqlite3_close_v2(dbh);
+#else
+    return sqlite3_close(dbh);
 #endif
+  }
+}
