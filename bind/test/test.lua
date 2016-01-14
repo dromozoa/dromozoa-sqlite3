@@ -39,8 +39,7 @@ assert(bind.set_raise_error(true))
 
 local result, message = pcall(test.raise0)
 -- print(result, message)
-assert(not result)
-assert(message:find("error raised"))
+assert(result)
 
 local result, message = pcall(test.raise1)
 assert(not result)
@@ -53,6 +52,11 @@ assert(message:find("test"))
 local result, message = pcall(test.raise3)
 assert(not result)
 assert(message:find("test"))
+
+local result, message = pcall(test.raise_false)
+-- print(result, message)
+assert(result)
+assert(message == false)
 
 local t = test.new()
 assert(t:get() == 0)
