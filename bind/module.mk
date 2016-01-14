@@ -1,40 +1,37 @@
 # Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
-# This file is part of dromozoa-sqlite3.
+# This file is part of dromozoa-bind.
 #
-# dromozoa-sqlite3 is free software: you can redistribute it and/or modify
+# dromozoa-bind is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# dromozoa-sqlite3 is distributed in the hope that it will be useful,
+# dromozoa-bind is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
+# along with dromozoa-bind.  If not, see <http://www.gnu.org/licenses/>.
 
-CPPFLAGS = -Ibind -I$(LUA_INCDIR)
+CPPFLAGS = -I$(LUA_INCDIR)
 CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
-LDLIBS = -lsqlite3 -ldl
+LDLIBS = -ldl
 
-OBJS = bind.o close.o dbh.o error.o sth.o module.o
-TARGET = sqlite3.so
+OBJS = bind.o module.o
+TARGET = bind.so
 
 all: $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET)
 
-sqlite3.so: $(OBJS)
+bind.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 .cpp.o:
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-bind.o: bind/bind.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:

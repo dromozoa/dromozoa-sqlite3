@@ -74,8 +74,8 @@ namespace dromozoa {
     namespace detail {
       int handle_result(lua_State* L, int result) {
         if (raise_error) {
-          if (result <= 0 || !lua_toboolean(L, -result)) {
-            if (result <= 1) {
+          if (result > 0 && lua_isnil(L, -result)) {
+            if (result == 1) {
               lua_pushliteral(L, "error raised");
             } else if (result > 2) {
               lua_pop(L, result - 2);

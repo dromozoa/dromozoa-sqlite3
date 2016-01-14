@@ -59,6 +59,12 @@ namespace dromozoa {
       return 3;
     }
 
+    int impl_raise_false(lua_State* L) {
+      lua_pushboolean(L, false);
+      lua_pushstring(L, "test");
+      return 2;
+    }
+
     int impl_new(lua_State* L) {
       *static_cast<int*>(lua_newuserdata(L, sizeof(int))) = 0;
       luaL_getmetatable(L, "dromozoa.bind.test");
@@ -85,6 +91,7 @@ namespace dromozoa {
     function<impl_raise1>::set_field(L, "raise1");
     function<impl_raise2>::set_field(L, "raise2");
     function<impl_raise3>::set_field(L, "raise3");
+    function<impl_raise_false>::set_field(L, "raise_false");
     function<impl_new>::set_field(L, "new");
     function<impl_set>::set_field(L, "set");
     function<impl_get>::set_field(L, "get");
