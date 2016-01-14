@@ -20,6 +20,7 @@ CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -lsqlite3 -ldl
 
+OBJS = bind.o close.o dbh.o error.o sth.o module.o
 TARGET = sqlite3.so
 
 all: $(TARGET)
@@ -27,25 +28,13 @@ all: $(TARGET)
 clean:
 	rm -f *.o $(TARGET)
 
-sqlite3.so: bind.o close.o dbh.o error.o sth.o main.o
+sqlite3.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+.cpp.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
 bind.o: bind/bind.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-close.o: close.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-dbh.o: dbh.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-error.o: error.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-sth.o: sth.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
-main.o: main.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:
