@@ -20,7 +20,7 @@ local sqlite3 = require "dromozoa.sqlite3"
 -- sqlite3.set_log_level(3)
 assert(sqlite3.initialize())
 
-local dbh = assert(sqlite3.open(":memory:", sqlite3.SQLITE_OPEN_READWRITE + sqlite3.SQLITE_OPEN_CREATE))
+local dbh = assert(sqlite3.open(":memory:"))
 
 local sql = "SELECT 1; SELECT 2"
 local sth1, i = assert(dbh:prepare(sql))
