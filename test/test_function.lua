@@ -20,30 +20,30 @@ local sqlite3 = require "dromozoa.sqlite3"
 sqlite3.set_log_level(3)
 sqlite3.set_raise_error(true)
 
-local registry = debug.getregistry()
-print(registry["dromozoa.sqlite3.function"])
-
-local dbh = sqlite3.open(":memory:")
-print("--")
-for k, v in pairs(registry["dromozoa.sqlite3.function"]) do
-  print(k, v)
+local reg = debug.getregistry()
+for i, v in ipairs(reg) do
+  print(i, v)
 end
 
-print("--")
-print(dbh:create_function("f", 1, function (a)
-  print("f")
-end))
-print(dbh:create_function("g", -1, function () end))
-print(dbh:create_function("h", -1, function () end))
+local dbh = sqlite3.open(":memory:")
+
+dbh:create_function("f", 3, function (a, b, c)
+  print("f", a, b, c)
+end)
+-- print(dbh:create_function("g", -1, function () end))
+-- print(dbh:create_function("h", -1, function () end))
 -- print(dbh:create_function())
 
-for k, v in pairs(registry["dromozoa.sqlite3.function"]) do
-  print(v[1])
+dbh:exec([[
+  SELECT f(3.14, 'foo', 42);
+]])
+
+for i, v in ipairs(reg) do
+  print(i, v)
 end
 
 dbh:close()
-print("--")
-for k, v in pairs(registry["dromozoa.sqlite3.function"]) do
-  print(k, v)
-end
 
+for i, v in ipairs(reg) do
+  print(i, v)
+end

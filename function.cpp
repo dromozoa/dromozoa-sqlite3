@@ -22,6 +22,8 @@ extern "C" {
 
 #include <sqlite3.h>
 
+#include <iostream>
+
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
@@ -32,20 +34,60 @@ extern "C" {
 
 namespace dromozoa {
   using bind::function;
+  using bind::get_log_level;
   using bind::push_success;
 
   namespace {
+
     void impl_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
+      function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
+      lua_State* L = f.get();
+      int top = lua_gettop(L);
+
+      lua_pushinteger(L, f.ref());
+      lua_gettable(L, LUA_REGISTRYINDEX);
+
+      for (int i = 0; i < argc; ++i) {
+        sqlite3_value* v = argv[i];
+        switch (sqlite3_value_type(v)) {
+          case SQLITE_INTEGER:
+            lua_pushinteger(L, sqlite3_value_int64(v));
+            break;
+          case SQLITE_FLOAT:
+            lua_pushnumber(L, sqlite3_value_double(v));
+            break;
+          case SQLITE3_TEXT:
+            if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(v))) {
+              lua_pushlstring(L, text, sqlite3_value_bytes(v));
+            } else {
+              lua_pushnil(L);
+            }
+            break;
+          case SQLITE_BLOB:
+            if (const char* text = static_cast<const char*>(sqlite3_value_blob(v))) {
+              lua_pushlstring(L, text, sqlite3_value_bytes(v));
+            } else {
+              lua_pushnil(L);
+            }
+            break;
+          case SQLITE_NULL:
+            lua_pushnil(L);
+            break;
+        }
+      }
+
+      int result = lua_pcall(L, argc, LUA_MULTRET, 0);
+      if (result != LUA_OK) {
+        sqlite3_result_error(context, lua_tostring(L, -1), SQLITE_ERROR);
+      }
+      lua_settop(L, top);
     }
 
-    void impl_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    }
+    // void impl_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    // }
 
-    void impl_final(sqlite3_context* context) {
-    }
-
-    void impl_destroy(void* data) {
-    }
+    // void impl_final(sqlite3_context* context) {
+    // }
 
     int impl_create_function(lua_State* L) {
       database_handle& d = get_database_handle(L, 1);
@@ -54,18 +96,14 @@ namespace dromozoa {
       const char* name = luaL_checkstring(L, 2);
       int narg = luaL_checkinteger(L, 3);
       lua_pushvalue(L, 4);
-      int ref = luaL_ref(L, -2);
+      int ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-      int code = sqlite3_create_function_v2(
-          dbh,
-          name,
-          narg,
-          SQLITE_UTF8,
-          d.new_function(L, ref),
-          impl_func,
-          0,
-          0,
-          impl_destroy);
+      function_handle* f = d.new_function(L, ref);
+      if (get_log_level() > 2) {
+        std::cerr << "[dromozoa-sqlite3] new function " << f << std::endl;
+      }
+
+      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, impl_func, 0, 0, 0);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
@@ -79,9 +117,6 @@ namespace dromozoa {
   }
 
   void initialize_function(lua_State* L) {
-    lua_pushstring(L, "dromozoa.sqlite3.function");
-    lua_newtable(L);
-    lua_settable(L, LUA_REGISTRYINDEX);
     function<impl_create_function>::set_field(L, "create_function");
   }
 }

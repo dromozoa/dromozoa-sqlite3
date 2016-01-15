@@ -20,6 +20,7 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include "database_handle.hpp"
 #include "function_handle.hpp"
 
 namespace dromozoa {
@@ -29,5 +30,31 @@ namespace dromozoa {
   function_handle::function_handle(lua_State* L, int ref_step, int ref_final)
     : L_(L), ref_(LUA_NOREF), ref_step_(ref_step), ref_final_(ref_final) {}
 
-  function_handle::~function_handle() {}
+  function_handle::~function_handle() {
+    if (ref_ != LUA_NOREF) {
+      luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
+    }
+    if (ref_step_ != LUA_NOREF) {
+      luaL_unref(L_, LUA_REGISTRYINDEX, ref_step_);
+    }
+    if (ref_final_ != LUA_NOREF) {
+      luaL_unref(L_, LUA_REGISTRYINDEX, ref_final_);
+    }
+  }
+
+  lua_State* function_handle::get() const {
+    return L_;
+  }
+
+  int function_handle::ref() const {
+    return ref_;
+  }
+
+  int function_handle::ref_step() const {
+    return ref_step_;
+  }
+
+  int function_handle::ref_final() const {
+    return ref_final_;
+  }
 }

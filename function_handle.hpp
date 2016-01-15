@@ -28,6 +28,10 @@ namespace dromozoa {
   class function_handle {
     friend class database_handle;
   public:
+    lua_State* get() const;
+    int ref() const;
+    int ref_step() const;
+    int ref_final() const;
   private:
     lua_State* L_;
     int ref_;

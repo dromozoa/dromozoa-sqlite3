@@ -42,14 +42,6 @@ namespace dromozoa {
     new(d) database_handle(dbh);
     luaL_getmetatable(L, "dromozoa.sqlite3.dbh");
     lua_setmetatable(L, -2);
-
-    lua_pushstring(L, "dromozoa.sqlite3.function");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    lua_pushlightuserdata(L, dbh);
-    lua_newtable(L);
-    lua_settable(L, -3);
-    lua_pop(L, 1);
-
     if (get_log_level() > 2) {
       std::cerr << "[dromozoa-sqlite3] new dbh " << dbh << std::endl;
     }

@@ -58,8 +58,7 @@ namespace dromozoa {
       sqlite3* dbh = 0;
       int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
       if (code == SQLITE_OK) {
-        new_dbh(L, dbh);
-        return 1;
+        return new_dbh(L, dbh);
       } else {
         wrap_close(dbh);
         return push_error(L, code);
