@@ -40,6 +40,14 @@ namespace dromozoa {
     *static_cast<sqlite3**>(lua_newuserdata(L, sizeof(dbh))) = dbh;
     luaL_getmetatable(L, "dromozoa.sqlite3.dbh");
     lua_setmetatable(L, -2);
+
+    lua_pushstring(L, "dromozoa.sqlite3.function");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    lua_pushlightuserdata(L, dbh);
+    lua_newtable(L);
+    lua_settable(L, -3);
+    lua_pop(L, 1);
+
     if (get_log_level() > 2) {
       std::cerr << "[dromozoa-sqlite3] new dbh " << dbh << std::endl;
     }
@@ -51,11 +59,21 @@ namespace dromozoa {
   }
 
   namespace {
+    void destruct_dbh(lua_State* L, sqlite3* dbh) {
+      lua_pushstring(L, "dromozoa.sqlite3.function");
+      lua_gettable(L, LUA_REGISTRYINDEX);
+      lua_pushlightuserdata(L, dbh);
+      lua_pushnil(L);
+      lua_settable(L, -3);
+      lua_pop(L, 1);
+    }
+
     int impl_close(lua_State* L) {
       sqlite3** data = static_cast<sqlite3**>(luaL_checkudata(L, 1, "dromozoa.sqlite3.dbh"));
       sqlite3* dbh = *data;
       int code = wrap_close(dbh);
       if (code == SQLITE_OK) {
+        destruct_dbh(L, dbh);
         *data = 0;
         if (get_log_level() > 2) {
           std::cerr << "[dromozoa-sqlite3] close dbh " << dbh << std::endl;
@@ -69,6 +87,7 @@ namespace dromozoa {
     int impl_gc(lua_State* L) {
       sqlite3** data = static_cast<sqlite3**>(luaL_checkudata(L, 1, "dromozoa.sqlite3.dbh"));
       sqlite3* dbh = *data;
+      destruct_dbh(L, dbh);
       *data = 0;
       if (dbh) {
         if (get_log_level() > 1) {
