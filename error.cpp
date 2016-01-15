@@ -16,7 +16,7 @@
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
 extern "C" {
-#include "lua.h"
+#include <lua.h>
 }
 
 #include <sqlite3.h>

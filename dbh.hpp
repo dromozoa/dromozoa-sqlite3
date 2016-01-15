@@ -19,7 +19,7 @@
 #define DROMOZOA_DBH_HPP
 
 extern "C" {
-#include "lua.h"
+#include <lua.h>
 }
 
 #include <sqlite3.h>

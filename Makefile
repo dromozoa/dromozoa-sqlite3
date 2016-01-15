@@ -20,7 +20,7 @@ CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -lsqlite3 -ldl
 
-OBJS = bind.o close.o dbh.o error.o function.o sth.o module.o
+OBJS = bind.o close.o database_handle.o dbh.o error.o function.o function_handle.o sth.o module.o
 TARGET = sqlite3.so
 
 all: $(TARGET)

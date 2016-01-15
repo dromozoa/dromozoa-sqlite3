@@ -15,22 +15,30 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_ERROR_HPP
-#define DROMOZOA_ERROR_HPP
+#ifndef DROMOZOA_FUNCTION_HANDLE_HPP
+#define DROMOZOA_FUNCTION_HANDLE_HPP
 
 extern "C" {
 #include <lua.h>
 }
 
-#include <sqlite3.h>
-
-#include <iosfwd>
-
 namespace dromozoa {
-  int push_error(lua_State* L, int code);
-  int push_error(lua_State* L, sqlite3* dbh);
-  int push_error(lua_State* L, sqlite3_stmt* sth);
-  void print_error(std::ostream& out, int code);
+  class database_handle;
+
+  class function_handle {
+    friend class database_handle;
+  public:
+  private:
+    lua_State* L_;
+    int ref_;
+    int ref_step_;
+    int ref_final_;
+    function_handle(lua_State* L, int ref);
+    function_handle(lua_State* L, int ref_step, int ref_final);
+    ~function_handle();
+    function_handle(const function_handle&);
+    function_handle& operator=(const function_handle&);
+  };
 }
 
 #endif

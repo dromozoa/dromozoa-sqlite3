@@ -16,8 +16,8 @@
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
 extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
+#include <lua.h>
+#include <lauxlib.h>
 }
 
 #include <sqlite3.h>
@@ -25,36 +25,52 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
+#include "error.hpp"
+#include "database_handle.hpp"
 #include "function.hpp"
+#include "function_handle.hpp"
 
 namespace dromozoa {
   using bind::function;
+  using bind::push_success;
 
   namespace {
-    class Function {
-    public:
-      lua_State* L;
-      int ref;
-    };
+    void impl_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    }
 
+    void impl_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    }
 
+    void impl_final(sqlite3_context* context) {
+    }
 
+    void impl_destroy(void* data) {
+    }
 
     int impl_create_function(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
-      const char* name = luaL_checkstring(L, 2);
-      int nargs = luaL_checkinteger(L, 3);
+      database_handle& d = get_database_handle(L, 1);
+      sqlite3* dbh = d.get();
 
-      lua_pushstring(L, "dromozoa.sqlite3.function");
-      lua_gettable(L, LUA_REGISTRYINDEX);
-      lua_pushlightuserdata(L, dbh);
-      lua_gettable(L, -2);
+      const char* name = luaL_checkstring(L, 2);
+      int narg = luaL_checkinteger(L, 3);
       lua_pushvalue(L, 4);
       int ref = luaL_ref(L, -2);
-      lua_pop(L, 1);
 
-      lua_pushinteger(L, ref);
-      return 1;
+      int code = sqlite3_create_function_v2(
+          dbh,
+          name,
+          narg,
+          SQLITE_UTF8,
+          d.new_function(L, ref),
+          impl_func,
+          0,
+          0,
+          impl_destroy);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, dbh);
+      }
     }
 
     // int impl_create_aggregate(lua_State* L) {
