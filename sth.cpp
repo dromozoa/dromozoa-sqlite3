@@ -220,8 +220,7 @@ namespace dromozoa {
         lua_pushlstring(L, text, sqlite3_column_bytes(sth, i));
         return 1;
       } else {
-        lua_pushnil(L);
-        return 1;
+        return 0;
       }
     }
 
@@ -232,8 +231,7 @@ namespace dromozoa {
         lua_pushlstring(L, blob, sqlite3_column_bytes(sth, i));
         return 1;
       } else {
-        lua_pushnil(L);
-        return 1;
+        return 0;
       }
     }
   }
