@@ -24,6 +24,7 @@ extern "C" {
 
 #include "dbh.hpp"
 #include "close.hpp"
+#include "context.hpp"
 #include "error.hpp"
 #include "function.hpp"
 #include "sth.hpp"
@@ -98,6 +99,9 @@ namespace dromozoa {
 
   int open(lua_State* L) {
     lua_newtable(L);
+
+    open_context(L);
+    lua_setfield(L, -2, "context");
 
     open_dbh(L);
     initialize_function(L);

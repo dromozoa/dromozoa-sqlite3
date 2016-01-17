@@ -27,16 +27,22 @@ end
 
 local dbh = sqlite3.open(":memory:")
 
-dbh:create_function("f", 3, function (a, b, c)
-  print("f", a, b, c)
+dbh:create_function("f", 3, function (context, a, b, c)
+  print("f", context, a, b, c)
+  -- context:result_int64(42)
+  context:result_text("barbaz")
 end)
 -- print(dbh:create_function("g", -1, function () end))
 -- print(dbh:create_function("h", -1, function () end))
 -- print(dbh:create_function())
 
-dbh:exec([[
+local sth = dbh:prepare([[
   SELECT f(3.14, 'foo', 42);
 ]])
+sth:step()
+print(sth:column_text(1))
+sth:step()
+sth:finalize()
 
 for i, v in ipairs(reg) do
   print(i, v)

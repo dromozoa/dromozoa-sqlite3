@@ -27,6 +27,7 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
+#include "context.hpp"
 #include "error.hpp"
 #include "database_handle.hpp"
 #include "function.hpp"
@@ -46,6 +47,8 @@ namespace dromozoa {
 
       lua_pushinteger(L, f.ref());
       lua_gettable(L, LUA_REGISTRYINDEX);
+
+      new_context(L, context);
 
       for (int i = 0; i < argc; ++i) {
         sqlite3_value* v = argv[i];
@@ -76,9 +79,9 @@ namespace dromozoa {
         }
       }
 
-      int result = lua_pcall(L, argc, LUA_MULTRET, 0);
+      int result = lua_pcall(L, argc + 1, 0, 0);
       if (result != LUA_OK) {
-        sqlite3_result_error(context, lua_tostring(L, -1), SQLITE_ERROR);
+        sqlite3_result_error(context, lua_tostring(L, -1), -1);
       }
       lua_settop(L, top);
     }
