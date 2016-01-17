@@ -1,8 +1,8 @@
 package = "dromozoa-bind"
-version = "1.4-1"
+version = "1.5-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-bind/archive/v1.4.tar.gz";
-  file = "dromozoa-bind-1.4.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-bind/archive/v1.5.tar.gz";
+  file = "dromozoa-bind-1.5.tar.gz";
 }
 description = {
   summary = "Helper library for creating bindings between C++ and Lua";

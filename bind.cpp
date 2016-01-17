@@ -115,6 +115,29 @@ namespace dromozoa {
       lua_setfield(L, -2, key);
     }
 
+    size_t translate_range_i(lua_State* L, int n, size_t size) {
+      lua_Integer i = luaL_optinteger(L, n, 0);
+      if (i < 0) {
+        i += size;
+        if (i < 0) {
+          i = 0;
+        }
+      } else if (i > 0) {
+        --i;
+      }
+      return i;
+    }
+
+    size_t translate_range_j(lua_State* L, int n, size_t size) {
+      lua_Integer j = luaL_optinteger(L, n, size);
+      if (j < 0) {
+        j += size + 1;
+      } else if (j > static_cast<lua_Integer>(size)) {
+        j = size;
+      }
+      return j;
+    }
+
     void initialize(lua_State* L) {
       function<impl_set_log_level>::set_field(L, "set_log_level");
       function<impl_get_log_level>::set_field(L, "get_log_level");
