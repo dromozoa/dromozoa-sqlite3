@@ -224,6 +224,18 @@ namespace dromozoa {
         return 1;
       }
     }
+
+    int impl_column_blob(lua_State* L) {
+      int i = luaL_checkinteger(L, 2) - 1;
+      sqlite3_stmt* sth = get_sth(L, 1);
+      if (const char* blob = reinterpret_cast<const char*>(sqlite3_column_blob(sth, i))) {
+        lua_pushlstring(L, blob, sqlite3_column_bytes(sth, i));
+        return 1;
+      } else {
+        lua_pushnil(L);
+        return 1;
+      }
+    }
   }
 
   int open_sth(lua_State* L) {
@@ -245,6 +257,7 @@ namespace dromozoa {
     function<impl_column_int64>::set_field(L, "column_int64");
     function<impl_column_double>::set_field(L, "column_double");
     function<impl_column_text>::set_field(L, "column_text");
+    function<impl_column_blob>::set_field(L, "column_blob");
     luaL_newmetatable(L, "dromozoa.sqlite3.sth");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");

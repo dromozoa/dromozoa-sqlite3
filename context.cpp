@@ -20,6 +20,8 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <stddef.h>
+
 #include "dromozoa/bind.hpp"
 
 #include <sqlite3.h>
@@ -27,6 +29,8 @@ extern "C" {
 namespace dromozoa {
   using bind::function;
   using bind::push_success;
+  using bind::translate_range_i;
+  using bind::translate_range_j;
 
   int new_context(lua_State* L, sqlite3_context* context) {
     *static_cast<sqlite3_context**>(lua_newuserdata(L, sizeof(context))) = context;
@@ -58,14 +62,28 @@ namespace dromozoa {
       sqlite3_context* context = get_context(L, 1);
       size_t size = 0;
       const char* text = luaL_checklstring(L, 2, &size);
-      sqlite3_result_text(context, text, size, SQLITE_TRANSIENT);
+      size_t i = translate_range_i(L, 3, size);
+      size_t j = translate_range_i(L, 4, size);
+      if (i < j) {
+        sqlite3_result_text(context, text + i, j - i, SQLITE_TRANSIENT);
+      } else {
+        sqlite3_result_text(context, "", 0, SQLITE_STATIC);
+      }
       return push_success(L);
     }
 
     int impl_result_blob(lua_State* L) {
       sqlite3_context* context = get_context(L, 1);
       size_t size = 0;
-      const char* text = luaL_checklstring(L, 2, &size);
+      const char* blob = luaL_checklstring(L, 2, &size);
+      size_t i = translate_range_i(L, 3, size);
+      size_t j = translate_range_j(L, 4, size);
+      if (i < j) {
+        sqlite3_result_blob(context, blob + i, j - i, SQLITE_TRANSIENT);
+      } else {
+        sqlite3_result_zeroblob(context, 0);
+      }
+      return push_success(L);
     }
   }
 
@@ -74,6 +92,7 @@ namespace dromozoa {
     function<impl_result_int64>::set_field(L, "result_int64");
     function<impl_result_double>::set_field(L, "result_double");
     function<impl_result_text>::set_field(L, "result_text");
+    function<impl_result_blob>::set_field(L, "result_blob");
     luaL_newmetatable(L, "dromozoa.sqlite3.context");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
