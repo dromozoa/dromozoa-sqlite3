@@ -19,7 +19,7 @@
 #define DROMOZOA_BIND_FUNCTION_HPP
 
 extern "C" {
-#include "lua.h"
+#include <lua.h>
 }
 
 #include <exception>

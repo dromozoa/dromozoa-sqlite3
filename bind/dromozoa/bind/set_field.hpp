@@ -19,7 +19,7 @@
 #define DROMOZOA_BIND_SET_FIELD_HPP
 
 extern "C" {
-#include "lua.h"
+#include <lua.h>
 }
 
 namespace dromozoa {

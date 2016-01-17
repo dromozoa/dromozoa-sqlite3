@@ -19,7 +19,7 @@
 #define DROMOZOA_BIND_INITIALIZE_HPP
 
 extern "C" {
-#include "lua.h"
+#include <lua.h>
 }
 
 namespace dromozoa {
