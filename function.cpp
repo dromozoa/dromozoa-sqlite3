@@ -63,8 +63,9 @@ namespace dromozoa {
           }
         case SQLITE_NULL:
           return 0;
+        default:
+          return 0;
       }
-      return 0;
     }
 
     void impl_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
