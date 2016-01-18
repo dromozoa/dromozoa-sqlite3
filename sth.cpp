@@ -51,7 +51,7 @@ namespace dromozoa {
   }
 
   namespace {
-    int check_bind_parameter_index(sqlite3_stmt* sth, lua_State* L, int n) {
+    int check_bind_parameter_index(lua_State* L, int n, sqlite3_stmt* sth) {
       if (lua_isnumber(L, n)) {
         return luaL_checkinteger(L, n);
       } else {
@@ -167,7 +167,7 @@ namespace dromozoa {
 
     int impl_bind_int64(lua_State* L) {
       sqlite3_stmt* sth = get_sth(L, 1);
-      int index = check_bind_parameter_index(sth, L, 2);
+      int index = check_bind_parameter_index(L, 2, sth);
       lua_Integer value = luaL_checkinteger(L, 3);
       int code = sqlite3_bind_int64(sth, index, value);
       if (code == SQLITE_OK) {
@@ -179,7 +179,7 @@ namespace dromozoa {
 
     int impl_bind_double(lua_State* L) {
       sqlite3_stmt* sth = get_sth(L, 1);
-      int index = check_bind_parameter_index(sth, L, 2);
+      int index = check_bind_parameter_index(L, 2, sth);
       lua_Number value = luaL_checknumber(L, 3);
       int code = sqlite3_bind_double(sth, index, value);
       if (code == SQLITE_OK) {
@@ -191,7 +191,7 @@ namespace dromozoa {
 
     int impl_bind_text(lua_State* L) {
       sqlite3_stmt* sth = get_sth(L, 1);
-      int index = check_bind_parameter_index(sth, L, 2);
+      int index = check_bind_parameter_index(L, 2, sth);
       size_t size = 0;
       const char* text = luaL_checklstring(L, 3, &size);
       size_t i = translate_range_i(L, 4, size);
@@ -211,7 +211,7 @@ namespace dromozoa {
 
     int impl_bind_blob(lua_State* L) {
       sqlite3_stmt* sth = get_sth(L, 1);
-      int index = check_bind_parameter_index(sth, L, 2);
+      int index = check_bind_parameter_index(L, 2, sth);
       size_t size = 0;
       const char* blob = luaL_checklstring(L, 3, &size);
       size_t i = translate_range_i(L, 4, size);
@@ -231,7 +231,7 @@ namespace dromozoa {
 
     int impl_bind_null(lua_State* L) {
       sqlite3_stmt* sth = get_sth(L, 1);
-      int index = check_bind_parameter_index(sth, L, 2);
+      int index = check_bind_parameter_index(L, 2, sth);
       int code = sqlite3_bind_null(sth, index);
       if (code == SQLITE_OK) {
         return push_success(L);
