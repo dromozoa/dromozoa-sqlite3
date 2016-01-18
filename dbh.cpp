@@ -28,7 +28,6 @@ extern "C" {
 
 #include "database_handle.hpp"
 #include "dbh.hpp"
-#include "close.hpp"
 #include "error.hpp"
 #include "sth.hpp"
 
