@@ -136,22 +136,23 @@ namespace dromozoa {
       size_t j = translate_range_j(L, 4, size);
       sqlite3_stmt* sth = 0;
       const char* tail = 0;
+      int code;
       if (i < j) {
-        int code = sqlite3_prepare_v2(dbh, sql + i, j - i, &sth, &tail);
-        if (code == SQLITE_OK) {
-          new_sth(L, sth);
-          if (tail) {
-            lua_pushinteger(L, tail - sql + 1);
-            return 2;
-          } else {
-            return 1;
-          }
+        code = sqlite3_prepare_v2(dbh, sql + i, j - i, &sth, &tail);
+      } else {
+        code = sqlite3_prepare_v2(dbh, "", 0, &sth, 0);
+      }
+      if (code == SQLITE_OK) {
+        new_sth(L, sth);
+        if (tail) {
+          lua_pushinteger(L, tail - sql + 1);
+          return 2;
         } else {
-          sqlite3_finalize(sth);
-          return push_error(L, dbh);
+          return 1;
         }
       } else {
-        return 0;
+        sqlite3_finalize(sth);
+        return push_error(L, dbh);
       }
     }
   }
