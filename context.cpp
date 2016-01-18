@@ -22,9 +22,9 @@ extern "C" {
 
 #include <stddef.h>
 
-#include "dromozoa/bind.hpp"
-
 #include <sqlite3.h>
+
+#include "dromozoa/bind.hpp"
 
 namespace dromozoa {
   using bind::function;
@@ -85,6 +85,12 @@ namespace dromozoa {
       }
       return push_success(L);
     }
+
+    int impl_result_null(lua_State* L) {
+      sqlite3_context* context = get_context(L, 1);
+      sqlite3_result_null(context);
+      return push_success(L);
+    }
   }
 
   int open_context(lua_State* L) {
@@ -93,6 +99,7 @@ namespace dromozoa {
     function<impl_result_double>::set_field(L, "result_double");
     function<impl_result_text>::set_field(L, "result_text");
     function<impl_result_blob>::set_field(L, "result_blob");
+    function<impl_result_null>::set_field(L, "result_null");
     luaL_newmetatable(L, "dromozoa.sqlite3.context");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
