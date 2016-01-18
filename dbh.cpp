@@ -105,28 +105,6 @@ namespace dromozoa {
       }
     }
 
-    int impl_exec(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
-      const char* sql = luaL_checkstring(L, 2);
-      int code = sqlite3_exec(dbh, sql, 0, 0, 0);
-      if (code == SQLITE_OK) {
-        return push_success(L);
-      } else {
-        return push_error(L, dbh);
-      }
-    }
-
-    int impl_changes(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
-      lua_pushinteger(L, sqlite3_changes(dbh));
-      return 1;
-    }
-
-    int impl_last_insert_rowid(lua_State* L) {
-      lua_pushinteger(L, sqlite3_last_insert_rowid(get_dbh(L, 1)));
-      return 1;
-    }
-
     int impl_prepare(lua_State* L) {
       sqlite3* dbh = get_dbh(L, 1);
       size_t size = 0;
@@ -154,16 +132,38 @@ namespace dromozoa {
         return push_error(L, dbh);
       }
     }
+
+    int impl_exec(lua_State* L) {
+      sqlite3* dbh = get_dbh(L, 1);
+      const char* sql = luaL_checkstring(L, 2);
+      int code = sqlite3_exec(dbh, sql, 0, 0, 0);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, dbh);
+      }
+    }
+
+    int impl_changes(lua_State* L) {
+      sqlite3* dbh = get_dbh(L, 1);
+      lua_pushinteger(L, sqlite3_changes(dbh));
+      return 1;
+    }
+
+    int impl_last_insert_rowid(lua_State* L) {
+      lua_pushinteger(L, sqlite3_last_insert_rowid(get_dbh(L, 1)));
+      return 1;
+    }
   }
 
   int open_dbh(lua_State* L) {
     lua_newtable(L);
     function<impl_close>::set_field(L, "close");
     function<impl_busy_timeout>::set_field(L, "busy_timeout");
+    function<impl_prepare>::set_field(L, "prepare");
     function<impl_exec>::set_field(L, "exec");
     function<impl_changes>::set_field(L, "changes");
     function<impl_last_insert_rowid>::set_field(L, "last_insert_rowid");
-    function<impl_prepare>::set_field(L, "prepare");
     luaL_newmetatable(L, "dromozoa.sqlite3.dbh");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
