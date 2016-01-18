@@ -32,6 +32,7 @@ extern "C" {
 #include "database_handle.hpp"
 #include "function.hpp"
 #include "function_handle.hpp"
+#include "value.hpp"
 
 namespace dromozoa {
   using bind::function;
@@ -51,31 +52,8 @@ namespace dromozoa {
       new_context(L, context);
 
       for (int i = 0; i < argc; ++i) {
-        sqlite3_value* v = argv[i];
-        switch (sqlite3_value_type(v)) {
-          case SQLITE_INTEGER:
-            lua_pushinteger(L, sqlite3_value_int64(v));
-            break;
-          case SQLITE_FLOAT:
-            lua_pushnumber(L, sqlite3_value_double(v));
-            break;
-          case SQLITE3_TEXT:
-            if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(v))) {
-              lua_pushlstring(L, text, sqlite3_value_bytes(v));
-            } else {
-              lua_pushnil(L);
-            }
-            break;
-          case SQLITE_BLOB:
-            if (const char* text = static_cast<const char*>(sqlite3_value_blob(v))) {
-              lua_pushlstring(L, text, sqlite3_value_bytes(v));
-            } else {
-              lua_pushnil(L);
-            }
-            break;
-          case SQLITE_NULL:
-            lua_pushnil(L);
-            break;
+        if (push_value(L, argv[i]) == 0) {
+          lua_pushnil(L);
         }
       }
 

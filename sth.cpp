@@ -49,6 +49,35 @@ namespace dromozoa {
   }
 
   namespace {
+    int push_column(lua_State* L, sqlite3_stmt* sth, int i) {
+      switch (sqlite3_column_type(sth, i)) {
+        case SQLITE_INTEGER:
+          lua_pushinteger(L, sqlite3_column_int64(sth, i));
+          return 1;
+        case SQLITE_FLOAT:
+          lua_pushnumber(L, sqlite3_column_double(sth, i));
+          return 1;
+        case SQLITE_TEXT:
+          if (const char* text = reinterpret_cast<const char*>(sqlite3_column_text(sth, i))) {
+            lua_pushlstring(L, text, sqlite3_column_bytes(sth, i));
+            return 1;
+          } else {
+            return 0;
+          }
+        case SQLITE_BLOB:
+          if (const char* blob = static_cast<const char*>(sqlite3_column_blob(sth, i))) {
+            lua_pushlstring(L, blob, sqlite3_column_bytes(sth, i));
+            return 1;
+          } else {
+            return 0;
+          }
+        case SQLITE_NULL:
+          return 0;
+        default:
+          return 0;
+      }
+    }
+
     int impl_finalize(lua_State* L) {
       sqlite3_stmt** data = static_cast<sqlite3_stmt**>(luaL_checkudata(L, 1, "dromozoa.sqlite3.sth"));
       sqlite3_stmt* sth = *data;
@@ -197,7 +226,8 @@ namespace dromozoa {
 
     int impl_column_type(lua_State* L) {
       int i = luaL_checkinteger(L, 2) - 1;
-      lua_pushinteger(L, sqlite3_column_type(get_sth(L, 1), i));
+      int type = sqlite3_column_type(get_sth(L, 1), i);
+      lua_pushinteger(L, type);
       return 1;
     }
 
@@ -234,6 +264,11 @@ namespace dromozoa {
         return 0;
       }
     }
+
+    int impl_column(lua_State* L) {
+      int i = luaL_checkinteger(L, 2) - 1;
+      return push_column(L, get_sth(L, 1), i);
+    }
   }
 
   int open_sth(lua_State* L) {
@@ -256,6 +291,7 @@ namespace dromozoa {
     function<impl_column_double>::set_field(L, "column_double");
     function<impl_column_text>::set_field(L, "column_text");
     function<impl_column_blob>::set_field(L, "column_blob");
+    function<impl_column>::set_field(L, "column");
     luaL_newmetatable(L, "dromozoa.sqlite3.sth");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
