@@ -35,3 +35,7 @@ assert(sth2:step() == sqlite3.SQLITE_DONE)
 assert(sth1:step() == sqlite3.SQLITE_ROW)
 assert(sth1:column(1) == 1)
 assert(sth1:step() == sqlite3.SQLITE_DONE)
+
+local sth = dbh:prepare(" ")
+-- print(sth:step())
+print(sth:sql())
