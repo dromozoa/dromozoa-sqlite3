@@ -30,7 +30,7 @@ namespace dromozoa {
       case SQLITE_FLOAT:
         lua_pushnumber(L, sqlite3_value_double(value));
         return 1;
-      case SQLITE3_TEXT:
+      case SQLITE_TEXT:
         if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
           lua_pushlstring(L, text, sqlite3_value_bytes(value));
           return 1;

@@ -50,7 +50,7 @@ assert(sth:column(1) == 1)
 assert(sth:column(2) == "foo")
 assert(sth:column(3) == "bar")
 assert(sth:column(4) == 0.125)
-print(json.encode(sth:named_columns()))
+print(json.encode(sth:columns()))
 for i = 1, sth:column_count() do
   -- print(sth:column_type(i), sth:column_name(i))
   assert(sth:column_name(i))
