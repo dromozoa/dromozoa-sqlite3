@@ -148,12 +148,6 @@ namespace dromozoa {
       }
     }
 
-    int impl_sql(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
-      lua_pushstring(L, sqlite3_sql(sth));
-      return 1;
-    }
-
     int impl_bind_parameter_count(lua_State* L) {
       lua_pushinteger(L, sqlite3_bind_parameter_count(get_sth(L, 1)));
       return 1;
@@ -293,6 +287,12 @@ namespace dromozoa {
       }
       return 1;
     }
+
+    int impl_sql(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
+      lua_pushstring(L, sqlite3_sql(sth));
+      return 1;
+    }
   }
 
   int open_sth(lua_State* L) {
@@ -300,7 +300,6 @@ namespace dromozoa {
     function<impl_finalize>::set_field(L, "finalize");
     function<impl_step>::set_field(L, "step");
     function<impl_reset>::set_field(L, "reset");
-    function<impl_sql>::set_field(L, "sql");
     function<impl_bind_parameter_count>::set_field(L, "bind_parameter_count");
     function<impl_bind_parameter_index>::set_field(L, "bind_parameter_index");
     function<impl_bind_parameter_name>::set_field(L, "bind_parameter_name");
@@ -315,6 +314,7 @@ namespace dromozoa {
     function<impl_column_type>::set_field(L, "column_type");
     function<impl_column>::set_field(L, "column");
     function<impl_columns>::set_field(L, "columns");
+    function<impl_sql>::set_field(L, "sql");
     luaL_newmetatable(L, "dromozoa.sqlite3.sth");
     lua_pushvalue(L, -2);
     lua_setfield(L, -2, "__index");
