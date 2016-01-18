@@ -42,7 +42,7 @@ local sth = dbh:prepare([[
 ]])
 sth:step()
 print(sth:column_type(1))
-print(sth:column_blob(1))
+print(sth:column(1))
 sth:step()
 sth:finalize()
 

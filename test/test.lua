@@ -15,6 +15,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
+local json = require "dromozoa.commons.json"
 local sqlite3 = require "dromozoa.sqlite3"
 
 -- sqlite3.set_log_level(3)
@@ -41,14 +42,15 @@ assert(sth:column_type(1) == sqlite3.SQLITE_INTEGER)
 assert(sth:column_type(2) == sqlite3.SQLITE_TEXT)
 assert(sth:column_type(3) == sqlite3.SQLITE_TEXT)
 assert(sth:column_type(4) == sqlite3.SQLITE_FLOAT)
-assert(sth:column_int64(1) == 1)
-assert(sth:column_text(2) == "foo")
-assert(sth:column_text(3) == "bar")
-assert(sth:column_double(4) == 0.125)
+-- assert(sth:column_int64(1) == 1)
+-- assert(sth:column_text(2) == "foo")
+-- assert(sth:column_text(3) == "bar")
+-- assert(sth:column_double(4) == 0.125)
 assert(sth:column(1) == 1)
 assert(sth:column(2) == "foo")
 assert(sth:column(3) == "bar")
 assert(sth:column(4) == 0.125)
+print(json.encode(sth:named_columns()))
 for i = 1, sth:column_count() do
   -- print(sth:column_type(i), sth:column_name(i))
   assert(sth:column_name(i))

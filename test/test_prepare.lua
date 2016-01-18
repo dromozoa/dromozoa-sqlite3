@@ -29,9 +29,9 @@ local sth2, i = assert(dbh:prepare(sql, i))
 assert(i == 19)
 
 assert(sth2:step() == sqlite3.SQLITE_ROW)
-assert(sth2:column_int64(1) == 2)
+assert(sth2:column(1) == 2)
 assert(sth2:step() == sqlite3.SQLITE_DONE)
 
 assert(sth1:step() == sqlite3.SQLITE_ROW)
-assert(sth1:column_int64(1) == 1)
+assert(sth1:column(1) == 1)
 assert(sth1:step() == sqlite3.SQLITE_DONE)
