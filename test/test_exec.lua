@@ -15,7 +15,8 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-local json = require "dromozoa.commons.json"
+local equal = require "dromozoa.commons.equal"
+local sequence = require "dromozoa.commons.sequence"
 local sqlite3 = require "dromozoa.sqlite3"
 
 sqlite3.set_log_level(3)
@@ -32,9 +33,22 @@ CREATE TABLE t (
 INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
 INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
-UPDATE t SET i = 42 WHERE t = 'foo';
-SELECT NULL;
+]])
+
+local data = sequence()
+dbh:exec([[
 SELECT * FROM t;
+UPDATE t SET i = 42 WHERE t = 'foo';
+SELECT * FROM t WHERE t = 'foo';
 ]], function (columns)
-  print(json.encode(columns))
+  data:push({ columns.i, columns.t })
 end)
+
+assert(equal(data, {
+  { "17", "foo" };
+  { "23", "bar" };
+  { "37", "baz" };
+  { "42", "foo" };
+}))
+
+dbh:close()
