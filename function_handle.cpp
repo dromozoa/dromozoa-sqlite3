@@ -76,7 +76,7 @@ namespace dromozoa {
           lua_pushnil(L);
         }
       }
-      if (lua_pcall(L, argc + 1, 0, 0) != LUA_OK) {
+      if (lua_pcall(L, argc + 1, 0, 0) != 0) {
         sqlite3_result_error(context, lua_tostring(L, -1), -1);
       }
       lua_settop(L, top);
@@ -111,7 +111,7 @@ namespace dromozoa {
       }
     }
     int result = 0;
-    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+    if (lua_pcall(L, 1, 1, 0) != 0) {
       result = 1;
     } else {
       if (lua_isnumber(L, -1)) {
