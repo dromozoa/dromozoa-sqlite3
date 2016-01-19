@@ -36,10 +36,9 @@ namespace dromozoa {
   private:
     lua_State* L_;
     int ref_;
-    int ref_step_;
     int ref_final_;
     function_handle(lua_State* L, int ref);
-    function_handle(lua_State* L, int ref_step, int ref_final);
+    function_handle(lua_State* L, int ref, int ref_final);
     ~function_handle();
     function_handle(const function_handle&);
     function_handle& operator=(const function_handle&);
