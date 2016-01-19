@@ -15,13 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_CLOSE_HPP
-#define DROMOZOA_CLOSE_HPP
+#ifndef DROMOZOA_CONTEXT_HPP
+#define DROMOZOA_CONTEXT_HPP
+
+extern "C" {
+#include <lua.h>
+}
 
 #include <sqlite3.h>
 
 namespace dromozoa {
-  int wrap_close(sqlite3* dbh);
+  int new_context(lua_State* L, sqlite3_context* context);
+  int open_context(lua_State* L);
 }
 
 #endif

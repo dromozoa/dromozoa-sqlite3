@@ -16,15 +16,16 @@
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
 extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
+#include <lua.h>
+#include <lauxlib.h>
 }
 
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
-#include "close.hpp"
+#include "context.hpp"
 #include "error.hpp"
+#include "function.hpp"
 #include "sth.hpp"
 
 namespace dromozoa {
@@ -57,10 +58,9 @@ namespace dromozoa {
       sqlite3* dbh = 0;
       int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
       if (code == SQLITE_OK) {
-        new_dbh(L, dbh);
-        return 1;
+        return new_dbh(L, dbh);
       } else {
-        wrap_close(dbh);
+        sqlite3_close(dbh);
         return push_error(L, code);
       }
     }
@@ -99,7 +99,11 @@ namespace dromozoa {
   int open(lua_State* L) {
     lua_newtable(L);
 
+    open_context(L);
+    lua_setfield(L, -2, "context");
+
     open_dbh(L);
+    initialize_function(L);
     lua_setfield(L, -2, "dbh");
 
     open_sth(L);

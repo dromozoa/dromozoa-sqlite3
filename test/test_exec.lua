@@ -15,34 +15,40 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
+local equal = require "dromozoa.commons.equal"
+local sequence = require "dromozoa.commons.sequence"
 local sqlite3 = require "dromozoa.sqlite3"
 
 sqlite3.set_log_level(2)
 sqlite3.set_raise_error(true)
 
-local dbh = assert(sqlite3.open(":memory:"))
+local dbh = sqlite3.open(":memory:")
 
-local sql = "SELECT 1; SELECT 2"
-local sth1, i = assert(dbh:prepare(sql))
-assert(i == 10)
-local sth2, i = assert(dbh:prepare(sql, i))
-assert(i == 19)
+dbh:exec([[
+CREATE TABLE t (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  f FLOAT,
+  i INTEGER,
+  t TEXT);
+INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
+INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
+INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
+]])
 
-assert(sth2:step() == sqlite3.SQLITE_ROW)
-assert(sth2:column(1) == 2)
-assert(sth2:step() == sqlite3.SQLITE_DONE)
+local data = sequence()
+dbh:exec([[
+SELECT * FROM t;
+UPDATE t SET i = 42 WHERE t = 'foo';
+SELECT * FROM t WHERE t = 'foo';
+]], function (columns)
+  data:push({ columns.i, columns.t })
+end)
 
-assert(sth1:step() == sqlite3.SQLITE_ROW)
-assert(sth1:column(1) == 1)
-assert(sth1:step() == sqlite3.SQLITE_DONE)
+assert(equal(data, {
+  { "17", "foo" };
+  { "23", "bar" };
+  { "37", "baz" };
+  { "42", "foo" };
+}))
 
-local sth3, i = dbh:prepare("")
-assert(i == nil)
-local result, message  = pcall(sth3.step, sth3)
--- print(result, message)
-assert(not result)
-
-sth1:finalize()
-sth2:finalize()
-sth3:finalize()
 dbh:close()
