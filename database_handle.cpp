@@ -22,8 +22,6 @@ extern "C" {
 
 #include <sqlite3.h>
 
-#include <iostream>
-
 #include "database_handle.hpp"
 #include "function_handle.hpp"
 
@@ -38,7 +36,6 @@ namespace dromozoa {
     std::set<function_handle*>::iterator i = function_.begin();
     std::set<function_handle*>::iterator end = function_.end();
     for (; i != end; ++i) {
-      std::cerr << "close " << *i << std::endl;
       delete *i;
     }
     function_.clear();

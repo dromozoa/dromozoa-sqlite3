@@ -22,8 +22,6 @@ extern "C" {
 
 #include <sqlite3.h>
 
-#include <iostream>
-
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
@@ -38,17 +36,17 @@ namespace dromozoa {
   using bind::push_success;
 
   namespace {
-    void impl_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    void cb_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
       function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
-      f.call(context, argc, argv);
+      f.call_func(context, argc, argv);
     }
 
-    void impl_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    void cb_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
       function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
       f.call_step(context, argc, argv);
     }
 
-    void impl_final(sqlite3_context* context) {
+    void cb_final(sqlite3_context* context) {
       function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
       f.call_final(context);
     }
@@ -61,13 +59,8 @@ namespace dromozoa {
       int narg = luaL_checkinteger(L, 3);
       lua_pushvalue(L, 4);
       int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
       function_handle* f = d.new_function(L, ref);
-      if (get_log_level() > 2) {
-        std::cerr << "[dromozoa-sqlite3] new function " << f << std::endl;
-      }
-
-      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, impl_func, 0, 0, 0);
+      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, cb_func, 0, 0, 0);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
@@ -85,13 +78,8 @@ namespace dromozoa {
       int ref_step = luaL_ref(L, LUA_REGISTRYINDEX);
       lua_pushvalue(L, 5);
       int ref_final = luaL_ref(L, LUA_REGISTRYINDEX);
-
       function_handle* f = d.new_function(L, ref_step, ref_final);
-      if (get_log_level() > 2) {
-        std::cerr << "[dromozoa-sqlite3] new aggregate " << f << std::endl;
-      }
-
-      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, 0, impl_step, impl_final, 0);
+      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, 0, cb_step, cb_final, 0);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {

@@ -66,7 +66,7 @@ namespace dromozoa {
       }
     }
 
-    void impl_call(lua_State* L, int ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
+    void call(lua_State* L, int ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
       int top = lua_gettop(L);
       lua_pushinteger(L, ref);
       lua_gettable(L, LUA_REGISTRYINDEX);
@@ -76,23 +76,49 @@ namespace dromozoa {
           lua_pushnil(L);
         }
       }
-      int result = lua_pcall(L, argc + 1, 0, 0);
-      if (result != LUA_OK) {
+      if (lua_pcall(L, argc + 1, 0, 0) != LUA_OK) {
         sqlite3_result_error(context, lua_tostring(L, -1), -1);
       }
       lua_settop(L, top);
     }
   }
 
-  void function_handle::call(sqlite3_context* context, int argc, sqlite3_value** argv) const {
-    impl_call(L_, ref_, context, argc, argv);
+  void function_handle::call_func(sqlite3_context* context, int argc, sqlite3_value** argv) const {
+    call(L_, ref_, context, argc, argv);
   }
 
   void function_handle::call_step(sqlite3_context* context, int argc, sqlite3_value** argv) const {
-    impl_call(L_, ref_, context, argc, argv);
+    call(L_, ref_, context, argc, argv);
   }
 
   void function_handle::call_final(sqlite3_context* context) const {
-    impl_call(L_, ref_final_, context, 0, 0);
+    call(L_, ref_final_, context, 0, 0);
+  }
+
+  int function_handle::call_exec(int count, char** columns, char** names) const {
+    lua_State* L = L_;
+    int top = lua_gettop(L);
+    lua_pushinteger(L, ref_);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    lua_newtable(L);
+    for (int i = 0; i < count; ++i) {
+      if (columns[i]) {
+        lua_pushstring(L, columns[i]);
+        lua_pushinteger(L, i + 1);
+        lua_pushvalue(L, -2);
+        lua_settable(L, -4);
+        lua_setfield(L, -2, names[i]);
+      }
+    }
+    int result = 0;
+    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+      result = 1;
+    } else {
+      if (lua_isnumber(L, -1)) {
+        result = lua_tonumber(L, -1);
+      }
+    }
+    lua_settop(L, top);
+    return result;
   }
 }

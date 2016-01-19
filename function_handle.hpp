@@ -30,16 +30,17 @@ namespace dromozoa {
   class function_handle {
     friend class database_handle;
   public:
-    void call(sqlite3_context* context, int argc, sqlite3_value** argv) const;
+    function_handle(lua_State* L, int ref);
+    function_handle(lua_State* L, int ref, int ref_final);
+    ~function_handle();
+    void call_func(sqlite3_context* context, int argc, sqlite3_value** argv) const;
     void call_step(sqlite3_context* context, int argc, sqlite3_value** argv) const;
     void call_final(sqlite3_context* context) const;
+    int call_exec(int count, char** columns, char** names) const;
   private:
     lua_State* L_;
     int ref_;
     int ref_final_;
-    function_handle(lua_State* L, int ref);
-    function_handle(lua_State* L, int ref, int ref_final);
-    ~function_handle();
     function_handle(const function_handle&);
     function_handle& operator=(const function_handle&);
   };

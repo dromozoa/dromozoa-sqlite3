@@ -29,6 +29,7 @@ extern "C" {
 #include "database_handle.hpp"
 #include "dbh.hpp"
 #include "error.hpp"
+#include "function_handle.hpp"
 #include "sth.hpp"
 
 namespace dromozoa {
@@ -133,10 +134,23 @@ namespace dromozoa {
       }
     }
 
+    int cb_exec(void* data, int count, char** columns, char** names) {
+      return static_cast<function_handle*>(data)->call_exec(count, columns, names);
+    }
+
     int impl_exec(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
+      database_handle& d = get_database_handle(L, 1);
+      sqlite3* dbh = d.get();
       const char* sql = luaL_checkstring(L, 2);
-      int code = sqlite3_exec(dbh, sql, 0, 0, 0);
+      int code;
+      if (lua_isnoneornil(L, 3)) {
+        code = sqlite3_exec(dbh, sql, 0, 0, 0);
+      } else {
+        lua_pushvalue(L, 3);
+        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+        function_handle f(L, ref);
+        code = sqlite3_exec(dbh, sql, cb_exec, &f, 0);
+      }
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
