@@ -22,6 +22,7 @@ build = {
     LUA_LIBDIR = "$(LUA_LIBDIR)";
   };
   install_variables = {
+    LUADIR = "$(LUADIR)";
     LIBDIR = "$(LIBDIR)";
   };
 }

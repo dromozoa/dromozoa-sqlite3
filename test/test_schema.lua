@@ -17,7 +17,7 @@
 
 local json = require "dromozoa.commons.json"
 local sqlite3 = require "dromozoa.sqlite3"
-local metatable = require "dromozoa.sqlite3.metatable"
+local entity = sqlite3.entity
 
 sqlite3.set_log_level(2)
 sqlite3.set_raise_error(true)
@@ -56,7 +56,7 @@ SELECT * FROM t1 WHERE 'select' = :select;
 print(sth:bind_parameter_name(1))
 sth:finalize()
 
-local t = metatable(dbh, "t2")
+local t = entity(dbh, "t2")
 print(json.encode(t))
 print(t:insert_sql())
 
