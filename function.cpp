@@ -60,7 +60,7 @@ namespace dromozoa {
       lua_pushvalue(L, 4);
       int ref = luaL_ref(L, LUA_REGISTRYINDEX);
       function_handle* f = d.new_function(L, ref);
-      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, cb_func, 0, 0, 0);
+      int code = sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, f, cb_func, 0, 0);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
@@ -79,7 +79,7 @@ namespace dromozoa {
       lua_pushvalue(L, 5);
       int ref_final = luaL_ref(L, LUA_REGISTRYINDEX);
       function_handle* f = d.new_function(L, ref_step, ref_final);
-      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, 0, cb_step, cb_final, 0);
+      int code = sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, f, 0, cb_step, cb_final);
       if (code == SQLITE_OK) {
         return push_success(L);
       } else {
