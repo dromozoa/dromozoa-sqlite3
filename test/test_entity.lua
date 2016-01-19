@@ -61,3 +61,5 @@ print(json.encode(t))
 print(t:insert_sql())
 
 dbh:close()
+
+assert(sqlite3.null == entity.null)
