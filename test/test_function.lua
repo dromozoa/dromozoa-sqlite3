@@ -17,41 +17,61 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
-sqlite3.set_log_level(3)
+sqlite3.set_log_level(2)
 sqlite3.set_raise_error(true)
-
-local reg = debug.getregistry()
-for i, v in ipairs(reg) do
-  print(i, v)
-end
 
 local dbh = sqlite3.open(":memory:")
 
-dbh:create_function("f", 3, function (context, a, b, c)
-  print("f", context, a, b, c)
-  -- context:result_int64(42)
-  -- context:result_blob("foobarbaz")
-  context:result_blob("")
+dbh:exec([[
+CREATE TABLE t (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  f FLOAT,
+  i INTEGER,
+  t TEXT);
+INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
+INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
+INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
+]])
+
+dbh:create_function("dromozoa_function", 2, function (context, a, b)
+  context:result_int64(a + b)
 end)
--- print(dbh:create_function("g", -1, function () end))
--- print(dbh:create_function("h", -1, function () end))
--- print(dbh:create_function())
 
 local sth = dbh:prepare([[
-  SELECT f(3.14, 'foo', 42);
+SELECT dromozoa_function(1, 2);
 ]])
-sth:step()
-print(sth:column_type(1))
-print(sth:column(1))
-sth:step()
+assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column(1) == 3)
+assert(sth:step() == sqlite3.SQLITE_DONE)
 sth:finalize()
 
-for i, v in ipairs(reg) do
-  print(i, v)
-end
+local sum = 0
+dbh:create_aggregate("dromozoa_aggregate", 2, function (context, a, b)
+  -- print("a", a, b)
+  sum = sum + a + b
+end, function (context)
+  -- print("f", sum)
+  context:result_double(sum)
+end)
+
+local sth = dbh:prepare([[
+SELECT dromozoa_aggregate(f, i) FROM t;
+]])
+assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column(1) == 78.5)
+assert(sth:step() == sqlite3.SQLITE_DONE)
+sth:finalize()
+
+dbh:create_function("dromozoa_error", 0, function (context)
+  error("error")
+end)
+local sth = dbh:prepare([[
+SELECT dromozoa_error();
+]])
+local result, message = pcall(sth.step, sth)
+-- print(result, message)
+assert(not result)
+sth:reset()
+sth:finalize()
 
 dbh:close()
-
-for i, v in ipairs(reg) do
-  print(i, v)
-end

@@ -141,11 +141,8 @@ namespace dromozoa {
     int impl_reset(lua_State* L) {
       sqlite3_stmt* sth = get_sth(L, 1);
       int code = sqlite3_reset(sth);
-      if (code == SQLITE_OK) {
-        return push_success(L);
-      } else {
-        return push_error(L, sth);
-      }
+      lua_pushinteger(L, code);
+      return 1;
     }
 
     int impl_bind_parameter_count(lua_State* L) {

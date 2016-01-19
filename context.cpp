@@ -46,15 +46,15 @@ namespace dromozoa {
 
     int impl_result_int64(lua_State* L) {
       sqlite3_context* context = get_context(L, 1);
-      lua_Integer v = luaL_checkinteger(L, 2);
-      sqlite3_result_int64(context, v);
+      lua_Integer value = luaL_checkinteger(L, 2);
+      sqlite3_result_int64(context, value);
       return push_success(L);
     }
 
     int impl_result_double(lua_State* L) {
       sqlite3_context* context = get_context(L, 1);
-      lua_Integer v = luaL_checknumber(L, 2);
-      sqlite3_result_double(context, v);
+      lua_Number value = luaL_checknumber(L, 2);
+      sqlite3_result_double(context, value);
       return push_success(L);
     }
 

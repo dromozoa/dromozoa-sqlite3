@@ -19,7 +19,7 @@ local equal = require "dromozoa.commons.equal"
 local sequence = require "dromozoa.commons.sequence"
 local sqlite3 = require "dromozoa.sqlite3"
 
-sqlite3.set_log_level(3)
+sqlite3.set_log_level(2)
 sqlite3.set_raise_error(true)
 
 local dbh = sqlite3.open(":memory:")
