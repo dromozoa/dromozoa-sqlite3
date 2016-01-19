@@ -23,6 +23,7 @@ extern "C" {
 #include "context.hpp"
 #include "database_handle.hpp"
 #include "function_handle.hpp"
+#include "null.hpp"
 
 namespace dromozoa {
   function_handle::function_handle(lua_State* L, int ref)
@@ -60,7 +61,8 @@ namespace dromozoa {
             return 0;
           }
         case SQLITE_NULL:
-          return 0;
+          push_null(L);
+          return 1;
         default:
           return 0;
       }
@@ -104,11 +106,13 @@ namespace dromozoa {
     for (int i = 0; i < count; ++i) {
       if (columns[i]) {
         lua_pushstring(L, columns[i]);
-        lua_pushinteger(L, i + 1);
-        lua_pushvalue(L, -2);
-        lua_settable(L, -4);
-        lua_setfield(L, -2, names[i]);
+      } else {
+        push_null(L);
       }
+      lua_pushinteger(L, i + 1);
+      lua_pushvalue(L, -2);
+      lua_settable(L, -4);
+      lua_setfield(L, -2, names[i]);
     }
     int result = 0;
     if (lua_pcall(L, 1, 1, 0) != 0) {
