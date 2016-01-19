@@ -20,6 +20,7 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include "context.hpp"
 #include "database_handle.hpp"
 #include "function_handle.hpp"
 
@@ -31,30 +32,68 @@ namespace dromozoa {
     : L_(L), ref_(LUA_NOREF), ref_step_(ref_step), ref_final_(ref_final) {}
 
   function_handle::~function_handle() {
-    if (ref_ != LUA_NOREF) {
-      luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
+    luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
+    luaL_unref(L_, LUA_REGISTRYINDEX, ref_step_);
+    luaL_unref(L_, LUA_REGISTRYINDEX, ref_final_);
+  }
+
+  namespace {
+    int push_value(lua_State* L, sqlite3_value* value) {
+      switch (sqlite3_value_type(value)) {
+        case SQLITE_INTEGER:
+          lua_pushinteger(L, sqlite3_value_int64(value));
+          return 1;
+        case SQLITE_FLOAT:
+          lua_pushnumber(L, sqlite3_value_double(value));
+          return 1;
+        case SQLITE_TEXT:
+          if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
+            lua_pushlstring(L, text, sqlite3_value_bytes(value));
+            return 1;
+          } else {
+            return 0;
+          }
+        case SQLITE_BLOB:
+          if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
+            lua_pushlstring(L, blob, sqlite3_value_bytes(value));
+            return 1;
+          } else {
+            return 0;
+          }
+        case SQLITE_NULL:
+          return 0;
+        default:
+          return 0;
+      }
     }
-    if (ref_step_ != LUA_NOREF) {
-      luaL_unref(L_, LUA_REGISTRYINDEX, ref_step_);
+
+    void impl_call(lua_State* L, int ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
+      int top = lua_gettop(L);
+      lua_pushinteger(L, ref);
+      lua_gettable(L, LUA_REGISTRYINDEX);
+      new_context(L, context);
+      for (int i = 0; i < argc; ++i) {
+        if (push_value(L, argv[i]) == 0) {
+          lua_pushnil(L);
+        }
+      }
+      int result = lua_pcall(L, argc + 1, 0, 0);
+      if (result != LUA_OK) {
+        sqlite3_result_error(context, lua_tostring(L, -1), -1);
+      }
+      lua_settop(L, top);
     }
-    if (ref_final_ != LUA_NOREF) {
-      luaL_unref(L_, LUA_REGISTRYINDEX, ref_final_);
-    }
   }
 
-  lua_State* function_handle::get() const {
-    return L_;
+  void function_handle::call(sqlite3_context* context, int argc, sqlite3_value** argv) const {
+    impl_call(L_, ref_, context, argc, argv);
   }
 
-  int function_handle::ref() const {
-    return ref_;
+  void function_handle::call_step(sqlite3_context* context, int argc, sqlite3_value** argv) const {
+    impl_call(L_, ref_step_, context, argc, argv);
   }
 
-  int function_handle::ref_step() const {
-    return ref_step_;
-  }
-
-  int function_handle::ref_final() const {
-    return ref_final_;
+  void function_handle::call_final(sqlite3_context* context) const {
+    impl_call(L_, ref_final_, context, 0, 0);
   }
 }

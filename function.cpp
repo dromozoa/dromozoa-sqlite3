@@ -27,7 +27,6 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "dbh.hpp"
-#include "context.hpp"
 #include "error.hpp"
 #include "database_handle.hpp"
 #include "function.hpp"
@@ -39,63 +38,20 @@ namespace dromozoa {
   using bind::push_success;
 
   namespace {
-    int push_value(lua_State* L, sqlite3_value* value) {
-      switch (sqlite3_value_type(value)) {
-        case SQLITE_INTEGER:
-          lua_pushinteger(L, sqlite3_value_int64(value));
-          return 1;
-        case SQLITE_FLOAT:
-          lua_pushnumber(L, sqlite3_value_double(value));
-          return 1;
-        case SQLITE_TEXT:
-          if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
-            lua_pushlstring(L, text, sqlite3_value_bytes(value));
-            return 1;
-          } else {
-            return 0;
-          }
-        case SQLITE_BLOB:
-          if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
-            lua_pushlstring(L, blob, sqlite3_value_bytes(value));
-            return 1;
-          } else {
-            return 0;
-          }
-        case SQLITE_NULL:
-          return 0;
-        default:
-          return 0;
-      }
-    }
-
     void impl_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
       function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
-      lua_State* L = f.get();
-      int top = lua_gettop(L);
-
-      lua_pushinteger(L, f.ref());
-      lua_gettable(L, LUA_REGISTRYINDEX);
-
-      new_context(L, context);
-
-      for (int i = 0; i < argc; ++i) {
-        if (push_value(L, argv[i]) == 0) {
-          lua_pushnil(L);
-        }
-      }
-
-      int result = lua_pcall(L, argc + 1, 0, 0);
-      if (result != LUA_OK) {
-        sqlite3_result_error(context, lua_tostring(L, -1), -1);
-      }
-      lua_settop(L, top);
+      f.call(context, argc, argv);
     }
 
-    // void impl_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    // }
+    void impl_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
+      function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
+      f.call_step(context, argc, argv);
+    }
 
-    // void impl_final(sqlite3_context* context) {
-    // }
+    void impl_final(sqlite3_context* context) {
+      function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
+      f.call_final(context);
+    }
 
     int impl_create_function(lua_State* L) {
       database_handle& d = get_database_handle(L, 1);
@@ -119,12 +75,33 @@ namespace dromozoa {
       }
     }
 
-    // int impl_create_aggregate(lua_State* L) {
-    //   return 0;
-    // }
+    int impl_create_aggregate(lua_State* L) {
+      database_handle& d = get_database_handle(L, 1);
+      sqlite3* dbh = d.get();
+
+      const char* name = luaL_checkstring(L, 2);
+      int narg = luaL_checkinteger(L, 3);
+      lua_pushvalue(L, 4);
+      int ref_step = luaL_ref(L, LUA_REGISTRYINDEX);
+      lua_pushvalue(L, 5);
+      int ref_final = luaL_ref(L, LUA_REGISTRYINDEX);
+
+      function_handle* f = d.new_function(L, ref_step, ref_final);
+      if (get_log_level() > 2) {
+        std::cerr << "[dromozoa-sqlite3] new aggregate " << f << std::endl;
+      }
+
+      int code = sqlite3_create_function_v2(dbh, name, narg, SQLITE_UTF8, f, 0, impl_step, impl_final, 0);
+      if (code == SQLITE_OK) {
+        return push_success(L);
+      } else {
+        return push_error(L, dbh);
+      }
+    }
   }
 
   void initialize_function(lua_State* L) {
     function<impl_create_function>::set_field(L, "create_function");
+    function<impl_create_aggregate>::set_field(L, "create_aggregate");
   }
 }

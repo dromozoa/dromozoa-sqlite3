@@ -22,16 +22,17 @@ extern "C" {
 #include <lua.h>
 }
 
+#include <sqlite3.h>
+
 namespace dromozoa {
   class database_handle;
 
   class function_handle {
     friend class database_handle;
   public:
-    lua_State* get() const;
-    int ref() const;
-    int ref_step() const;
-    int ref_final() const;
+    void call(sqlite3_context* context, int argc, sqlite3_value** argv) const;
+    void call_step(sqlite3_context* context, int argc, sqlite3_value** argv) const;
+    void call_final(sqlite3_context* context) const;
   private:
     lua_State* L_;
     int ref_;
