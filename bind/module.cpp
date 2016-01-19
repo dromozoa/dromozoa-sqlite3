@@ -20,6 +20,8 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <stddef.h>
+
 #include <stdexcept>
 
 #include "dromozoa/bind.hpp"
@@ -27,6 +29,8 @@ extern "C" {
 namespace dromozoa {
   using bind::function;
   using bind::push_success;
+  using bind::translate_range_i;
+  using bind::translate_range_j;
 
   namespace {
     int impl_throw(lua_State*) {
@@ -81,6 +85,15 @@ namespace dromozoa {
       lua_pushinteger(L, *static_cast<const int*>(luaL_checkudata(L, 1, "dromozoa.bind.test")));
       return 1;
     }
+
+    int impl_translate_range(lua_State* L) {
+      size_t size = luaL_checkinteger(L, 1);
+      size_t i = translate_range_i(L, 2, size);
+      size_t j = translate_range_j(L, 3, size);
+      lua_pushinteger(L, i);
+      lua_pushinteger(L, j);
+      return 2;
+    }
   }
 
   int open_test(lua_State* L) {
@@ -95,6 +108,7 @@ namespace dromozoa {
     function<impl_new>::set_field(L, "new");
     function<impl_set>::set_field(L, "set");
     function<impl_get>::set_field(L, "get");
+    function<impl_translate_range>::set_field(L, "translate_range");
 
     luaL_newmetatable(L, "dromozoa.bind.test");
     lua_pushvalue(L, -2);

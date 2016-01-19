@@ -15,61 +15,78 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
+local equal = require "dromozoa.commons.equal"
 local sqlite3 = require "dromozoa.sqlite3"
 
--- sqlite3.set_log_level(3)
+sqlite3.set_log_level(2)
+sqlite3.set_raise_error(true)
 assert(sqlite3.initialize())
 
+os.remove("test.db")
 local dbh = assert(sqlite3.open("test.db"))
 dbh:busy_timeout(60000)
 
-assert(dbh:exec("CREATE TABLE IF NOT EXISTS t (id INTEGER PRIMARY KEY AUTOINCREMENT, k TEXT UNIQUE, v TEXT, n FLOAT)"))
-assert(dbh:exec("INSERT INTO t (k, v, n) VALUES('foo', 'bar', 0.125)"))
-assert(dbh:last_insert_rowid() == 1)
--- print(dbh:exec("INSERT INTO t (k, v, n) VALUES('foo', 'bar', 0.125)"))
-assert(not dbh:exec("INSERT INTO t (k, v, n) VALUES('foo', 'bar', 0.125)"))
-assert(dbh:exec("INSERT INTO t (k, v, n) VALUES('bar', 'baz', 17)"))
-assert(dbh:last_insert_rowid() == 2)
-assert(dbh:exec("INSERT INTO t (k, v, n) VALUES('baz', 'qux', 23)"))
+dbh:exec([[
+CREATE TABLE t (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  f FLOAT,
+  i INTEGER,
+  t TEXT UNIQUE);
+INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
+INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
+INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
+]])
+
 assert(dbh:last_insert_rowid() == 3)
 
-local sth = assert(dbh:prepare("SELECT * FROM t"))
+local result, message = pcall(dbh.exec, dbh, "INSERT INTO t (f, i, t) VALUES(1, 42, 'foo')")
+-- print(result, message)
+assert(not result)
+
+local sth = dbh:prepare([[
+SELECT * FROM t
+]])
 assert(sth:step() == sqlite3.SQLITE_ROW)
--- print(sth:column_count())
 assert(sth:column_count() == 4)
 assert(sth:column_type(1) == sqlite3.SQLITE_INTEGER)
-assert(sth:column_type(2) == sqlite3.SQLITE_TEXT)
-assert(sth:column_type(3) == sqlite3.SQLITE_TEXT)
-assert(sth:column_type(4) == sqlite3.SQLITE_FLOAT)
-assert(sth:column_int64(1) == 1)
-assert(sth:column_text(2) == "foo")
-assert(sth:column_text(3) == "bar")
-assert(sth:column_double(4) == 0.125)
-for i = 1, sth:column_count() do
-  -- print(sth:column_type(i), sth:column_name(i))
-  assert(sth:column_name(i))
-end
+assert(sth:column_type(2) == sqlite3.SQLITE_FLOAT)
+assert(sth:column_type(3) == sqlite3.SQLITE_INTEGER)
+assert(sth:column_type(4) == sqlite3.SQLITE_TEXT)
+assert(sth:column(1) == 1)
+assert(sth:column(2) == 0.25)
+assert(sth:column(3) == 17)
+assert(sth:column(4) == "foo")
+
 assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(equal(sth:columns(), {
+  [1] = 2;
+  [2] = 0.50;
+  [3] = 23;
+  [4] = "bar";
+  id = 2;
+  f = 0.50;
+  i = 23;
+  t = "bar";
+}))
 assert(sth:step() == sqlite3.SQLITE_ROW)
 assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(sth:finalize())
 
-local sth = assert(dbh:prepare("INSERT INTO t (k, v, n) VALUES (:k, :v, :n)"))
+local sth = dbh:prepare([[
+INSERT INTO t (f, i, t) VALUES (:f, :i, :t)
+]])
 assert(sth:bind_parameter_count() == 3)
-assert(sth:bind_parameter_index(":k") == 1)
-assert(sth:bind_parameter_index(":v") == 2)
-assert(sth:bind_parameter_index(":n") == 3)
-assert(sth:bind_parameter_name(1) == ":k")
-assert(sth:bind_parameter_name(2) == ":v")
-assert(sth:bind_parameter_name(3) == ":n")
-assert(sth:bind_text(1, "qux"))
-assert(sth:bind_int64(2, 42))
-assert(sth:bind_double(3, 3.14))
+assert(sth:bind_parameter_index(":f") == 1)
+assert(sth:bind_parameter_index(":i") == 2)
+assert(sth:bind_parameter_index(":t") == 3)
+assert(sth:bind_parameter_name(1) == ":f")
+assert(sth:bind_parameter_name(2) == ":i")
+assert(sth:bind_parameter_name(3) == ":t")
+sth:bind_double(":f", 1):bind_int64(":i", 42):bind_text(":t", "qux")
+
 assert(dbh:last_insert_rowid() == 3)
 assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(dbh:last_insert_rowid() == 4)
-assert(sth:finalize())
+sth:finalize()
 
-assert(dbh:close())
-
-assert(sqlite3.shutdown())
+dbh:close()

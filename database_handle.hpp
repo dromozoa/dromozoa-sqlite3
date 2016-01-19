@@ -15,14 +15,34 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifndef DROMOZOA_DATABASE_HANDLE_HPP
+#define DROMOZOA_DATABASE_HANDLE_HPP
+
+extern "C" {
+#include <lua.h>
+}
+
 #include <sqlite3.h>
 
+#include <set>
+
 namespace dromozoa {
-  int wrap_close(sqlite3* dbh) {
-#if SQLITE_VERSION_NUMBER >= 3007014
-    return sqlite3_close_v2(dbh);
-#else
-    return sqlite3_close(dbh);
-#endif
-  }
+  class function_handle;
+
+  class database_handle {
+  public:
+    database_handle(sqlite3* dbh);
+    ~database_handle();
+    int close();
+    sqlite3* get() const;
+    function_handle* new_function(lua_State* L, int ref);
+    function_handle* new_function(lua_State* L, int ref_step, int ref_final);
+  private:
+    sqlite3* dbh_;
+    std::set<function_handle*> function_;
+  };
+
+  database_handle& get_database_handle(lua_State* L, int n);
 }
+
+#endif
