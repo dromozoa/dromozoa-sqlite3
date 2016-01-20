@@ -18,37 +18,38 @@
 local sequence = require "dromozoa.commons.sequence"
 local sequence_writer = require "dromozoa.commons.sequence_writer"
 
-local function type_to_affinity(t)
-  t = t:upper()
-  if t:find("INT") then
+local function quote(value)
+  return "'" .. value:gsub("'", "''") .. "'"
+end
+
+local function decltype_to_affinity(decltype)
+  decltype = decltype:upper()
+  if decltype:find("INT") then
     return "INTEGER"
-  elseif t:find("CHAR") or t:find("CLOB") or t:find("TEXT") then
+  elseif decltype:find("CHAR") or decltype:find("CLOB") or decltype:find("TEXT") then
     return "TEXT"
-  elseif t:find("BLOB") then
+  elseif decltype:find("BLOB") then
     return "BLOB"
-  elseif t:find("REAL") or t:find("FLOA") or t:find("DOUB") then
+  elseif decltype:find("REAL") or decltype:find("FLOA") or decltype:find("DOUB") then
     return "REAL"
   else
     return "NUMERIC"
   end
 end
 
-local function quote(value)
-  return "'" .. value:gsub("'", "''") .. "'"
-end
-
-local function columns(dbh, name)
+local function load_table_info(dbh, name)
   local columns = sequence()
   dbh:exec("PRAGMA table_info(" .. quote(name) .. ")", function (r)
+    local decltype = r.type;
     columns:push({
       name = r.name;
-      type = r.type;
-      affinity = type_to_affinity(r.type);
-      primary_key = r.pk ~= "0";
-      not_null = r.notnull ~= "0";
+      decltype = decltype;
+      affinity = decltype_to_affinity(decltype);
+      primary_key = tonumber(r.pk) ~= 0;
+      not_null = tonumber(r.notnull) ~= 0;
     })
   end)
-  return columns;
+  return columns
 end
 
 local class = {}
@@ -57,8 +58,26 @@ function class.new(dbh, name)
   return {
     dbh = dbh;
     name = name;
-    columns = columns(dbh, name);
+    columns = columns;
   }
+end
+
+function class:insert(this)
+  local dbh = self.dbh
+  local name = self.name
+  local names = sequence()
+  local values = sequence()
+  for column in self.columns:each() do
+    local name = column.name
+    local value = this[name]
+    if value ~= nil then
+      names:push(name)
+      values:push(value)
+    end
+  end
+  local out = sequence_writer()
+  out:write("INSERT INTO ", quote(self.name), " (", names:concat(", "), ") VALUES (", ("?"):rep(#name, ","), ")")
+  return out:concat()
 end
 
 function class:insert_sql()
@@ -66,12 +85,18 @@ function class:insert_sql()
   out:write("INSERT INTO ", quote(self.name), " (")
   local first = true
   for column in self.columns:each() do
-    if first then
-      first = false
+    print(column.primary_key, column.affinity)
+    if column.primary_key and column.affinity == "INTEGER" then
+      -- assume rowid or auto increment
+      print("is rowid or auto increment")
     else
-      out:write(",")
+      if first then
+        first = false
+      else
+        out:write(",")
+      end
+      out:write(quote(column.name))
     end
-    out:write(quote(column.name))
   end
   out:write(") VALUES (")
   local first = true
@@ -84,9 +109,6 @@ function class:insert_sql()
     out:write("?")
   end
   return out:write(")"):concat()
-end
-
-function class:update_sql()
 end
 
 local metatable = {

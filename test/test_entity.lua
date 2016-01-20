@@ -37,28 +37,21 @@ CREATE TABLE t2 (
 ALTER TABLE t1 ADD COLUMN "select" DOUBLE;
 SELECT * from SQLITE_MASTER WHERE type = 'table';
 ]], function (columns)
-  print(columns.name, columns.sql)
+  print(columns.name)
 end)
 
-local sth = dbh:prepare([[
-PRAGMA table_info('t1');
-]])
-while sth:step() == sqlite3.SQLITE_ROW do
-  local c = sth:columns()
-  c[1] = nil
-  print(json.encode(c))
-end
-sth:finalize()
+local t1 = sqlite3.entity(dbh, "t1")
+print(json.encode(t1))
+print(t1:insert_sql())
+print(t1:insert({
+  k = "foo";
+  v = 42;
+  select = 3.14;
+}))
 
-local sth = dbh:prepare([[
-SELECT * FROM t1 WHERE 'select' = :select;
-]])
-print(sth:bind_parameter_name(1))
-sth:finalize()
-
-local t = entity(dbh, "t2")
-print(json.encode(t))
-print(t:insert_sql())
+local t2 = sqlite3.entity(dbh, "t2")
+print(json.encode(t2))
+print(t2:insert_sql())
 
 dbh:close()
 
