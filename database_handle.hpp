@@ -36,7 +36,7 @@ namespace dromozoa {
     int close();
     sqlite3* get() const;
     function_handle* new_function(lua_State* L, int ref);
-    function_handle* new_function(lua_State* L, int ref_step, int ref_final);
+    function_handle* new_aggregate(lua_State* L, int ref_step, int ref_final);
   private:
     sqlite3* dbh_;
     std::set<function_handle*> function_;

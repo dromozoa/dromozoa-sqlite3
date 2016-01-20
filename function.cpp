@@ -54,7 +54,6 @@ namespace dromozoa {
     int impl_create_function(lua_State* L) {
       database_handle& d = get_database_handle(L, 1);
       sqlite3* dbh = d.get();
-
       const char* name = luaL_checkstring(L, 2);
       int narg = luaL_checkinteger(L, 3);
       lua_pushvalue(L, 4);
@@ -71,14 +70,13 @@ namespace dromozoa {
     int impl_create_aggregate(lua_State* L) {
       database_handle& d = get_database_handle(L, 1);
       sqlite3* dbh = d.get();
-
       const char* name = luaL_checkstring(L, 2);
       int narg = luaL_checkinteger(L, 3);
       lua_pushvalue(L, 4);
       int ref_step = luaL_ref(L, LUA_REGISTRYINDEX);
       lua_pushvalue(L, 5);
       int ref_final = luaL_ref(L, LUA_REGISTRYINDEX);
-      function_handle* f = d.new_function(L, ref_step, ref_final);
+      function_handle* f = d.new_aggregate(L, ref_step, ref_final);
       int code = sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, f, 0, cb_step, cb_final);
       if (code == SQLITE_OK) {
         return push_success(L);
