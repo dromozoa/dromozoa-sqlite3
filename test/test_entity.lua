@@ -17,7 +17,6 @@
 
 local json = require "dromozoa.commons.json"
 local sqlite3 = require "dromozoa.sqlite3"
-local entity = sqlite3.entity
 
 sqlite3.set_log_level(2)
 sqlite3.set_raise_error(true)
@@ -42,17 +41,31 @@ end)
 
 local t1 = sqlite3.entity(dbh, "t1")
 print(json.encode(t1))
-print(t1:insert_sql())
-print(t1:insert({
+
+local data = {
   k = "foo";
   v = 42;
   select = 3.14;
-}))
+}
+local sql = t1:insert_sql(data)
+print(sql)
+local sth = dbh:prepare(sql)
+local i = t1:bind(sth, 1, data)
+assert(i == 4)
+assert(sth:step() == sqlite3.SQLITE_DONE)
+sth:finalize()
 
-local t2 = sqlite3.entity(dbh, "t2")
-print(json.encode(t2))
-print(t2:insert_sql())
+local sth = dbh:prepare([[
+SELECT rowid AS rowid, * FROM t1;
+]])
+while sth:step() == sqlite3.SQLITE_ROW do
+  local r = sth:columns()
+  print(r.rowid, r.id, r.k, r.v, r.select)
+  r[1] = nil
+  print(json.encode(r))
+end
+sth:finalize()
 
 dbh:close()
 
-assert(sqlite3.null == entity.null)
+assert(sqlite3.null == sqlite3.entity.null)

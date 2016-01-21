@@ -52,63 +52,77 @@ local function load_table_info(dbh, name)
   return columns
 end
 
+local function make_quoted_names(columns, entity)
+  local quoted_names = sequence()
+  if entity == nil then
+    for column in columns:each() do
+      quoted_names:push(quote(column.name))
+    end
+  else
+    for column in columns:each() do
+      local name = column.name
+      if entity[name] ~= nil then
+        quoted_names:push(quote(name))
+      end
+    end
+  end
+  return quoted_names
+end
+
 local class = {}
 
 function class.new(dbh, name)
   return {
-    dbh = dbh;
     name = name;
     columns = load_table_info(dbh, name);
   }
 end
 
-function class:insert(this)
-  local dbh = self.dbh
-  local name = self.name
-  local names = sequence()
-  local values = sequence()
-  for column in self.columns:each() do
-    local name = column.name
-    local value = this[name]
-    if value ~= nil then
-      names:push(name)
-      values:push(value)
-    end
-  end
-  local out = sequence_writer()
-  out:write("INSERT INTO ", quote(self.name), " (", names:concat(", "), ") VALUES (", ("?"):rep(#name, ","), ")")
-  return out:concat()
+function class:insert_sql(entity)
+  local quoted_names = make_quoted_names(self.columns, entity)
+  return "INSERT INTO " .. quote(self.name) .. " (" .. quoted_names:concat(", ") .. ") VALUES (" .. ("?"):rep(#quoted_names, ", ") .. ")"
 end
 
-function class:insert_sql()
-  local out = sequence_writer()
-  out:write("INSERT INTO ", quote(self.name), " (")
-  local first = true
+function class:update_sql(entity)
+  local quoted_names = make_quoted_names(self.columns, entity)
+  return "UPDATE " .. quote(self.name) .. " SET " .. quoted_names:concat(" = ?, ") .. " = ?"
+end
+
+function class:bind(sth, i, entity)
   for column in self.columns:each() do
-    print(column.primary_key, column.affinity)
-    if column.primary_key and column.affinity == "INTEGER" then
-      -- assume rowid or auto increment
-      print("is rowid or auto increment")
-    else
-      if first then
-        first = false
+    local value = entity[column.name]
+    if value ~= nil then
+      local t = type(value)
+      if t == "number" then
+        if column.decltype == "INTEGER" then
+          sth:bind_int64(i, value)
+        else
+          sth:bind_double(i, value)
+        end
+      elseif t == "string" then
+        if column.decltype == "BLOB" then
+          sth:bind_blob(i, value)
+        else
+          sth:bind_text(i, value)
+        end
+      elseif t == "boolean" then
+        if value then
+          sth:bind_int64(i, 1)
+        else
+          sth:bind_int64(i, 0)
+        end
+      elseif value == class.null then
+        sth:bind_null(i)
       else
-        out:write(",")
+        sth:bind_text(i, tostring(value))
       end
-      out:write(quote(column.name))
+      i = i + 1
     end
   end
-  out:write(") VALUES (")
-  local first = true
-  for column in self.columns:each() do
-    if first then
-      first = false
-    else
-      out:write(",")
-    end
-    out:write("?")
-  end
-  return out:write(")"):concat()
+  return i
+end
+
+function class:insert(dbh, entity)
 end
 
 local metatable = {
