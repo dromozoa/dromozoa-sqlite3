@@ -20,7 +20,6 @@ local sqlite3 = require "dromozoa.sqlite3"
 
 sqlite3.set_log_level(2)
 sqlite3.set_raise_error(true)
-assert(sqlite3.initialize())
 
 os.remove("test.db")
 local dbh = assert(sqlite3.open("test.db"))

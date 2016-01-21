@@ -146,9 +146,7 @@ namespace dromozoa {
       if (lua_isnoneornil(L, 3)) {
         code = sqlite3_exec(dbh, sql, 0, 0, 0);
       } else {
-        lua_pushvalue(L, 3);
-        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-        function_handle f(L, ref);
+        function_handle f(L, 3);
         code = sqlite3_exec(dbh, sql, cb_exec, &f, 0);
       }
       if (code == SQLITE_OK) {

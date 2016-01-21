@@ -27,6 +27,7 @@ extern "C" {
 #include "dromozoa/bind.hpp"
 
 #include "error.hpp"
+#include "null.hpp"
 #include "sth.hpp"
 
 namespace dromozoa {
@@ -82,7 +83,8 @@ namespace dromozoa {
             return 0;
           }
         case SQLITE_NULL:
-          return 0;
+          push_null(L);
+          return 1;
         default:
           return 0;
       }
@@ -253,21 +255,24 @@ namespace dromozoa {
     }
 
     int impl_column_name(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
       int i = luaL_checkinteger(L, 2) - 1;
-      lua_pushstring(L, sqlite3_column_name(get_sth(L, 1), i));
+      lua_pushstring(L, sqlite3_column_name(sth, i));
       return 1;
     }
 
     int impl_column_type(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
       int i = luaL_checkinteger(L, 2) - 1;
-      int type = sqlite3_column_type(get_sth(L, 1), i);
+      int type = sqlite3_column_type(sth, i);
       lua_pushinteger(L, type);
       return 1;
     }
 
     int impl_column(lua_State* L) {
+      sqlite3_stmt* sth = get_sth(L, 1);
       int i = luaL_checkinteger(L, 2) - 1;
-      return push_column(L, get_sth(L, 1), i);
+      return push_column(L, sth, i);
     }
 
     int impl_columns(lua_State* L) {
