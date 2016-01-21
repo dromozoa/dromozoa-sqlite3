@@ -43,7 +43,7 @@ namespace dromozoa {
 
     void cb_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
       function_handle& f = *static_cast<function_handle*>(sqlite3_user_data(context));
-      f.call_step(context, argc, argv);
+      f.call_func(context, argc, argv);
     }
 
     void cb_final(sqlite3_context* context) {
@@ -56,9 +56,7 @@ namespace dromozoa {
       sqlite3* dbh = d.get();
       const char* name = luaL_checkstring(L, 2);
       int narg = luaL_checkinteger(L, 3);
-      lua_pushvalue(L, 4);
-      int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-      function_handle* f = d.new_function(L, ref);
+      function_handle* f = d.new_function(L, 4);
       int code = sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, f, cb_func, 0, 0);
       if (code == SQLITE_OK) {
         return push_success(L);
@@ -72,11 +70,7 @@ namespace dromozoa {
       sqlite3* dbh = d.get();
       const char* name = luaL_checkstring(L, 2);
       int narg = luaL_checkinteger(L, 3);
-      lua_pushvalue(L, 4);
-      int ref_step = luaL_ref(L, LUA_REGISTRYINDEX);
-      lua_pushvalue(L, 5);
-      int ref_final = luaL_ref(L, LUA_REGISTRYINDEX);
-      function_handle* f = d.new_aggregate(L, ref_step, ref_final);
+      function_handle* f = d.new_aggregate(L, 4, 5);
       int code = sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, f, 0, cb_step, cb_final);
       if (code == SQLITE_OK) {
         return push_success(L);

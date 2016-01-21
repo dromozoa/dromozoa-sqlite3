@@ -26,11 +26,17 @@ extern "C" {
 #include "null.hpp"
 
 namespace dromozoa {
-  function_handle::function_handle(lua_State* L, int ref)
-    : L_(L), ref_(ref), ref_final_(LUA_NOREF) {}
+  function_handle::function_handle(lua_State* L, int n) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
+    lua_pushvalue(L, n);
+    ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
+  }
 
-  function_handle::function_handle(lua_State* L, int ref, int ref_final)
-    : L_(L), ref_(ref), ref_final_(ref_final) {}
+  function_handle::function_handle(lua_State* L, int n, int n_final) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
+    lua_pushvalue(L, n);
+    ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
+    lua_pushvalue(L, n_final);
+    ref_final_ = luaL_ref(L, LUA_REGISTRYINDEX);
+  }
 
   function_handle::~function_handle() {
     luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
@@ -86,10 +92,6 @@ namespace dromozoa {
   }
 
   void function_handle::call_func(sqlite3_context* context, int argc, sqlite3_value** argv) const {
-    call(L_, ref_, context, argc, argv);
-  }
-
-  void function_handle::call_step(sqlite3_context* context, int argc, sqlite3_value** argv) const {
     call(L_, ref_, context, argc, argv);
   }
 

@@ -55,10 +55,10 @@ namespace dromozoa {
     return dbh_;
   }
 
-  function_handle* database_handle::new_function(lua_State* L, int ref) {
+  function_handle* database_handle::new_function(lua_State* L, int n) {
     function_handle* function = 0;
     try {
-      function = new function_handle(L, ref);
+      function = new function_handle(L, n);
       function_.insert(function);
       return function;
     } catch (...) {
@@ -67,10 +67,10 @@ namespace dromozoa {
     }
   }
 
-  function_handle* database_handle::new_aggregate(lua_State* L, int ref_step, int ref_final) {
+  function_handle* database_handle::new_aggregate(lua_State* L, int n, int n_final) {
     function_handle* function = 0;
     try {
-      function = new function_handle(L, ref_step, ref_final);
+      function = new function_handle(L, n, n_final);
       function_.insert(function);
       return function;
     } catch (...) {
