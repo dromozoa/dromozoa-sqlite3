@@ -29,7 +29,9 @@ namespace dromozoa {
   database_handle::database_handle(sqlite3* dbh) : dbh_(dbh) {}
 
   database_handle::~database_handle() {
-    close();
+    if (dbh_) {
+      close();
+    }
   }
 
   int database_handle::close() {

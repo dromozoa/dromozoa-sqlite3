@@ -58,7 +58,7 @@ function class.new(dbh, name)
   return {
     dbh = dbh;
     name = name;
-    columns = columns;
+    columns = load_table_info(dbh, name);
   }
 end
 
