@@ -16,6 +16,7 @@
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
 local sequence = require "dromozoa.commons.sequence"
+local sequence_writer = require "dromozoa.commons.sequence_writer"
 
 local function quote(value)
   return "'" .. value:gsub("'", "''") .. "'"
@@ -76,7 +77,15 @@ function class:insert_sql(object, command)
     command = "INSERT"
   end
   local quoted_names = make_quoted_names(self.columns, object)
-  return command .. " INTO " .. quote(self.name) .. " (" .. quoted_names:concat(", ") .. ") VALUES (" .. ("?"):rep(#quoted_names, ", ") .. ")"
+  local out = sequence_writer():write(command, " INTO ", quote(self.name), " (", quoted_names:concat(", "), ") VALUES (")
+  local n = #quoted_names
+  if n > 0 then
+    out:write("?")
+    for i = 2, n do
+      out:write(", ?")
+    end
+  end
+  return out:write(")"):concat()
 end
 
 function class:update_sql(object, command)
