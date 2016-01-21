@@ -88,6 +88,46 @@ SELECT * FROM t1 WHERE id = 4;
   assert(r.select == "0.25")
 end)
 
+local t2 = sqlite3.entity(dbh, "t2")
+assert(t2:insert(dbh, { k = "foo", v = "bar" }) == sqlite3.SQLITE_DONE)
+assert(dbh:last_insert_rowid() == 1)
+
+dbh:exec([[
+SELECT * FROM t2;
+]], function (r)
+  assert(r.id == "1")
+  assert(r.k == "foo")
+  assert(r.v == "bar")
+end)
+
+assert(t2:update(dbh, 1, { v = "baz" }) == sqlite3.SQLITE_DONE)
+
+dbh:exec([[
+SELECT * FROM t2;
+]], function (r)
+  assert(r.id == "1")
+  assert(r.k == "foo")
+  assert(r.v == "baz")
+end)
+
+assert(t2:insert(dbh, { k = "bar" }, "REPLACE") == sqlite3.SQLITE_DONE)
+assert(t2:insert(dbh, { k = "baz" }, "REPLACE") == sqlite3.SQLITE_DONE)
+assert(t2:insert(dbh, { k = "qux" }, "REPLACE") == sqlite3.SQLITE_DONE)
+
+dbh:exec([[
+SELECT COUNT(*) AS n FROM t2;
+]], function (r)
+  assert(r.n == "4")
+end)
+
+assert(t2:delete(dbh, 1) == sqlite3.SQLITE_DONE)
+
+dbh:exec([[
+SELECT COUNT(*) AS n FROM t2;
+]], function (r)
+  assert(r.n == "3")
+end)
+
 dbh:close()
 
 assert(sqlite3.null == sqlite3.entity.null)

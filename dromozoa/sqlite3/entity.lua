@@ -121,6 +121,34 @@ function class:bind(sth, i, object)
   return i
 end
 
+function class:insert(dbh, object, command)
+  local sql = self:insert_sql(object, command)
+  local sth = dbh:prepare(sql)
+  self:bind(sth, 1, object)
+  local result = sth:step()
+  sth:finalize()
+  return result
+end
+
+function class:update(dbh, rowid, object, command)
+  local sql = self:update_sql(object, command) .. " WHERE rowid = ?"
+  local sth = dbh:prepare(sql)
+  local i = self:bind(sth, 1, object)
+  sth:bind_int64(i, rowid)
+  local result = sth:step()
+  sth:finalize()
+  return result
+end
+
+function class:delete(dbh, rowid)
+  local sql = "DELETE FROM " .. quote(self.name) .. " WHERE rowid = ?"
+  local sth = dbh:prepare(sql)
+  sth:bind_int64(1, rowid)
+  local result = sth:step()
+  sth:finalize()
+  return result
+end
+
 local metatable = {
   __index = class;
 }
