@@ -16,7 +16,6 @@
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
 local sequence = require "dromozoa.commons.sequence"
-local sequence_writer = require "dromozoa.commons.sequence_writer"
 
 local function quote(value)
   return "'" .. value:gsub("'", "''") .. "'"
@@ -52,18 +51,12 @@ local function load_table_info(dbh, name)
   return columns
 end
 
-local function make_quoted_names(columns, entity)
+local function make_quoted_names(columns, object)
   local quoted_names = sequence()
-  if entity == nil then
-    for column in columns:each() do
-      quoted_names:push(quote(column.name))
-    end
-  else
-    for column in columns:each() do
-      local name = column.name
-      if entity[name] ~= nil then
-        quoted_names:push(quote(name))
-      end
+  for column in columns:each() do
+    local name = column.name
+    if object[name] ~= nil then
+      quoted_names:push(quote(name))
     end
   end
   return quoted_names
@@ -78,19 +71,25 @@ function class.new(dbh, name)
   }
 end
 
-function class:insert_sql(entity)
-  local quoted_names = make_quoted_names(self.columns, entity)
-  return "INSERT INTO " .. quote(self.name) .. " (" .. quoted_names:concat(", ") .. ") VALUES (" .. ("?"):rep(#quoted_names, ", ") .. ")"
+function class:insert_sql(object, command)
+  if command == nil then
+    command = "INSERT"
+  end
+  local quoted_names = make_quoted_names(self.columns, object)
+  return command .. " INTO " .. quote(self.name) .. " (" .. quoted_names:concat(", ") .. ") VALUES (" .. ("?"):rep(#quoted_names, ", ") .. ")"
 end
 
-function class:update_sql(entity)
-  local quoted_names = make_quoted_names(self.columns, entity)
-  return "UPDATE " .. quote(self.name) .. " SET " .. quoted_names:concat(" = ?, ") .. " = ?"
+function class:update_sql(object, command)
+  if command == nil then
+    command = "UPDATE"
+  end
+  local quoted_names = make_quoted_names(self.columns, object)
+  return command .. " " .. quote(self.name) .. " SET " .. quoted_names:concat(" = ?, ") .. " = ?"
 end
 
-function class:bind(sth, i, entity)
+function class:bind(sth, i, object)
   for column in self.columns:each() do
-    local value = entity[column.name]
+    local value = object[column.name]
     if value ~= nil then
       local t = type(value)
       if t == "number" then
@@ -120,9 +119,6 @@ function class:bind(sth, i, entity)
     end
   end
   return i
-end
-
-function class:insert(dbh, entity)
 end
 
 local metatable = {

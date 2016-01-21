@@ -27,7 +27,7 @@ dbh:exec([[
 CREATE TABLE t1 (
   id INTEGER PRIMARY KEY,
   k TEXT UNIQUE,
-  v INTEGER);
+  v INTEGER NOT NULL);
 INSERT INTO t1 (k, v) VALUES (0, 0);
 CREATE TABLE t2 (
   id INTEGER PRIMARY KEY,
@@ -36,35 +36,57 @@ CREATE TABLE t2 (
 ALTER TABLE t1 ADD COLUMN "select" DOUBLE;
 SELECT * from SQLITE_MASTER WHERE type = 'table';
 ]], function (columns)
-  print(columns.name)
+  -- print(columns.name)
 end)
 
 local t1 = sqlite3.entity(dbh, "t1")
-print(json.encode(t1))
+-- print(json.encode(t1))
+assert(t1.columns[1].primary_key)
+assert(not t1.columns[2].primary_key)
+assert(not t1.columns[2].not_null)
+assert(not t1.columns[3].primary_key)
+assert(t1.columns[3].not_null)
 
 local data = {
   k = "foo";
   v = 42;
-  select = 3.14;
+  select = 0.25;
 }
 local sql = t1:insert_sql(data)
-print(sql)
+-- print(sql)
 local sth = dbh:prepare(sql)
 local i = t1:bind(sth, 1, data)
 assert(i == 4)
 assert(sth:step() == sqlite3.SQLITE_DONE)
+assert(dbh:last_insert_rowid() == 2)
 sth:finalize()
 
-local sth = dbh:prepare([[
-SELECT rowid AS rowid, * FROM t1;
-]])
-while sth:step() == sqlite3.SQLITE_ROW do
-  local r = sth:columns()
-  print(r.rowid, r.id, r.k, r.v, r.select)
-  r[1] = nil
-  print(json.encode(r))
-end
+dbh:exec([[
+SELECT * FROM t1 WHERE id = 4;
+]], function (r)
+  assert(r.k == "foo")
+  assert(r.v == "42")
+  assert(r.select == "0.25")
+end)
+
+local data = {
+  k = "bar"
+}
+local sql = t1:update_sql(data) .. " WHERE id = ?"
+local sth = dbh:prepare(sql)
+local i = t1:bind(sth, 1, data)
+assert(i == 2)
+sth:bind_int64(i, 2)
+assert(sth:step() == sqlite3.SQLITE_DONE)
 sth:finalize()
+
+dbh:exec([[
+SELECT * FROM t1 WHERE id = 4;
+]], function (r)
+  assert(r.k == "bar")
+  assert(r.v == "42")
+  assert(r.select == "0.25")
+end)
 
 dbh:close()
 
