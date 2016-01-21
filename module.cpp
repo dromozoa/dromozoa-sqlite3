@@ -26,6 +26,7 @@ extern "C" {
 #include "context.hpp"
 #include "error.hpp"
 #include "function.hpp"
+#include "null.hpp"
 #include "sth.hpp"
 
 namespace dromozoa {
@@ -33,6 +34,15 @@ namespace dromozoa {
   using bind::push_success;
 
   namespace {
+    int open_entity(lua_State* L) {
+      lua_getglobal(L, "require");
+      lua_pushstring(L, "dromozoa.sqlite3.entity");
+      lua_call(L, 1, 1);
+      push_null(L);
+      lua_setfield(L, -2, "null");
+      return 1;
+    }
+
     int impl_initialize(lua_State* L) {
       int code = sqlite3_initialize();
       if (code == SQLITE_OK) {
@@ -69,6 +79,9 @@ namespace dromozoa {
       function<impl_initialize>::set_field(L, "initialize");
       function<impl_shutdown>::set_field(L, "shutdown");
       function<impl_open>::set_field(L, "open");
+
+      push_null(L);
+      lua_setfield(L, -2, "null");
 
       DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_READONLY);
       DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_READWRITE);
@@ -108,6 +121,9 @@ namespace dromozoa {
 
     open_sth(L);
     lua_setfield(L, -2, "sth");
+
+    open_entity(L);
+    lua_setfield(L, -2, "entity");
 
     dromozoa::bind::initialize(L);
     initialize(L);
