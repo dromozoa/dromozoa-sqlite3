@@ -130,4 +130,4 @@ end)
 
 dbh:close()
 
-assert(sqlite3.null == sqlite3.entity.null)
+assert(sqlite3.null == sqlite3.entity.super.null)

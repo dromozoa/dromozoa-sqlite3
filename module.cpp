@@ -38,8 +38,10 @@ namespace dromozoa {
       lua_getglobal(L, "require");
       lua_pushliteral(L, "dromozoa.sqlite3.entity");
       lua_call(L, 1, 1);
-      push_null(L);
-      lua_setfield(L, -2, "null");
+      // push_null(L);
+      // lua_setfield(L, -2, "null");
+      lua_pushvalue(L, -2);
+      lua_setfield(L, -2, "super");
       return 1;
     }
 
