@@ -18,11 +18,7 @@
 #ifndef DROMOZOA_BIND_HPP
 #define DROMOZOA_BIND_HPP
 
-#include "bind/function.hpp"
-#include "bind/initialize.hpp"
-#include "bind/log_level.hpp"
-#include "bind/push_success.hpp"
-#include "bind/set_field.hpp"
-#include "bind/translate_range.hpp"
+#include "bind/luaX.hpp"
+#include "bind/unexpected.hpp"
 
 #endif
