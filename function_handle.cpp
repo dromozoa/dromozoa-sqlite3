@@ -15,26 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
-#include "context.hpp"
-#include "database_handle.hpp"
-#include "function_handle.hpp"
-#include "null.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  function_handle::function_handle(lua_State* L, int n) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
-    lua_pushvalue(L, n);
+  function_handle::function_handle(lua_State* L, int arg) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
+    lua_pushvalue(L, arg);
     ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 
-  function_handle::function_handle(lua_State* L, int n, int n_final) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
-    lua_pushvalue(L, n);
+  function_handle::function_handle(lua_State* L, int arg, int arg_final) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
+    lua_pushvalue(L, arg);
     ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
-    lua_pushvalue(L, n_final);
+    lua_pushvalue(L, arg_final);
     ref_final_ = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 
@@ -44,45 +36,44 @@ namespace dromozoa {
   }
 
   namespace {
-    int push_value(lua_State* L, sqlite3_value* value) {
+    void push_value(lua_State* L, sqlite3_value* value) {
       switch (sqlite3_value_type(value)) {
         case SQLITE_INTEGER:
-          lua_pushinteger(L, sqlite3_value_int64(value));
-          return 1;
+          luaX_push(L, sqlite3_value_int64(value));
+          break;
         case SQLITE_FLOAT:
-          lua_pushnumber(L, sqlite3_value_double(value));
-          return 1;
+          luaX_push(L, sqlite3_value_double(value));
+          break;
         case SQLITE_TEXT:
           if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
             lua_pushlstring(L, text, sqlite3_value_bytes(value));
-            return 1;
           } else {
-            return 0;
+            luaX_push(L, luaX_nil);
           }
+          break;
         case SQLITE_BLOB:
           if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
             lua_pushlstring(L, blob, sqlite3_value_bytes(value));
-            return 1;
           } else {
-            return 0;
+            luaX_push(L, luaX_nil);
           }
+          break;
         case SQLITE_NULL:
           push_null(L);
-          return 1;
+          break;
         default:
-          return 0;
+          luaX_push(L, luaX_nil);
+          break;
       }
     }
 
     void call(lua_State* L, int ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
       int top = lua_gettop(L);
-      lua_pushinteger(L, ref);
+      luaX_push(L, ref);
       lua_gettable(L, LUA_REGISTRYINDEX);
       new_context(L, context);
       for (int i = 0; i < argc; ++i) {
-        if (push_value(L, argv[i]) == 0) {
-          lua_pushnil(L);
-        }
+        push_value(L, argv[i]);
       }
       if (lua_pcall(L, argc + 1, 0, 0) != 0) {
         sqlite3_result_error(context, lua_tostring(L, -1), -1);
@@ -102,19 +93,18 @@ namespace dromozoa {
   int function_handle::call_exec(int count, char** columns, char** names) const {
     lua_State* L = L_;
     int top = lua_gettop(L);
-    lua_pushinteger(L, ref_);
+    luaX_push(L, ref_);
     lua_gettable(L, LUA_REGISTRYINDEX);
     lua_newtable(L);
     for (int i = 0; i < count; ++i) {
       if (columns[i]) {
-        lua_pushstring(L, columns[i]);
+        luaX_push(L, columns[i]);
       } else {
         push_null(L);
       }
-      lua_pushinteger(L, i + 1);
-      lua_pushvalue(L, -2);
-      lua_settable(L, -4);
-      lua_setfield(L, -2, names[i]);
+      lua_pushvalue(L, -2); // [TODO] fix?
+      luaX_set_field(L, -3, i + 1);
+      luaX_set_field(L, -2, names[i]);
     }
     int result = 0;
     if (lua_pcall(L, 1, 1, 0) != 0) {

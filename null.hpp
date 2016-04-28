@@ -18,12 +18,6 @@
 #ifndef DROMOZOA_NULL_HPP
 #define DROMOZOA_NULL_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-namespace dromozoa {
-  int push_null(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

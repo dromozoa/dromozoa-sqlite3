@@ -18,15 +18,6 @@
 #ifndef DROMOZOA_CONTEXT_HPP
 #define DROMOZOA_CONTEXT_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-#include <sqlite3.h>
-
-namespace dromozoa {
-  int new_context(lua_State* L, sqlite3_context* context);
-  int open_context(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

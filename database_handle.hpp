@@ -18,31 +18,6 @@
 #ifndef DROMOZOA_DATABASE_HANDLE_HPP
 #define DROMOZOA_DATABASE_HANDLE_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-#include <sqlite3.h>
-
-#include <set>
-
-namespace dromozoa {
-  class function_handle;
-
-  class database_handle {
-  public:
-    database_handle(sqlite3* dbh);
-    ~database_handle();
-    int close();
-    sqlite3* get() const;
-    function_handle* new_function(lua_State* L, int n);
-    function_handle* new_aggregate(lua_State* L, int n, int n_final);
-  private:
-    sqlite3* dbh_;
-    std::set<function_handle*> function_;
-  };
-
-  database_handle& get_database_handle(lua_State* L, int n);
-}
+#include "common.hpp"
 
 #endif

@@ -18,16 +18,6 @@
 #ifndef DROMOZOA_STH_HPP
 #define DROMOZOA_STH_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-#include <sqlite3.h>
-
-namespace dromozoa {
-  int new_sth(lua_State* L, sqlite3_stmt* sth);
-  sqlite3_stmt* get_sth(lua_State* L, int n);
-  int open_sth(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

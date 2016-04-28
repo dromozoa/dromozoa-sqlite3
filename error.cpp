@@ -22,6 +22,7 @@ extern "C" {
 #include <sqlite3.h>
 
 #include <iostream>
+#include <sstream>
 
 #include "error.hpp"
 
@@ -65,5 +66,16 @@ namespace dromozoa {
     {
       out << "error number " << code;
     }
+  }
+
+  std::string error_to_string(int code) {
+#if SQLITE_VERSION_NUMBER >= 3007015
+    if (const char* what = sqlite3_errstr(code)) {
+      return what;
+    }
+#endif
+    std::ostringstream out;
+    out << "error number " << code;
+    return out.str();
   }
 }

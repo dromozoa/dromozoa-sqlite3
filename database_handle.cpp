@@ -15,22 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
-#include <sqlite3.h>
-
-#include "database_handle.hpp"
-#include "function_handle.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
   database_handle::database_handle(sqlite3* dbh) : dbh_(dbh) {}
 
   database_handle::~database_handle() {
     if (dbh_) {
-      close();
+      int code = close();
+      if (code != SQLITE_OK) {
+        DROMOZOA_UNEXPECTED(error_to_string(code));
+      }
     }
   }
 
@@ -55,10 +50,10 @@ namespace dromozoa {
     return dbh_;
   }
 
-  function_handle* database_handle::new_function(lua_State* L, int n) {
+  function_handle* database_handle::new_function(lua_State* L, int arg) {
     function_handle* function = 0;
     try {
-      function = new function_handle(L, n);
+      function = new function_handle(L, arg);
       function_.insert(function);
       return function;
     } catch (...) {
@@ -67,19 +62,15 @@ namespace dromozoa {
     }
   }
 
-  function_handle* database_handle::new_aggregate(lua_State* L, int n, int n_final) {
+  function_handle* database_handle::new_aggregate(lua_State* L, int arg, int arg_final) {
     function_handle* function = 0;
     try {
-      function = new function_handle(L, n, n_final);
+      function = new function_handle(L, arg, arg_final);
       function_.insert(function);
       return function;
     } catch (...) {
       delete function;
       throw;
     }
-  }
-
-  database_handle& get_database_handle(lua_State* L, int n) {
-    return *static_cast<database_handle*>(luaL_checkudata(L, n, "dromozoa.sqlite3.dbh"));
   }
 }

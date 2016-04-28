@@ -18,7 +18,24 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  void push_null(lua_State* L) {
-    lua_pushlightuserdata(L, 0);
+  statement_handle::statement_handle(sqlite3_stmt* sth) : sth_(sth) {}
+
+  statement_handle::~statement_handle() {
+    if (sth_) {
+      int code = finalize();
+      if (code != SQLITE_OK) {
+        DROMOZOA_UNEXPECTED(error_to_string(code));
+      }
+    }
+  }
+
+  int statement_handle::finalize() {
+    sqlite3_stmt* sth = sth_;
+    sth_ = 0;
+    return sqlite3_finalize(sth);
+  }
+
+  sqlite3_stmt* statement_handle::get() const {
+    return sth_;
   }
 }

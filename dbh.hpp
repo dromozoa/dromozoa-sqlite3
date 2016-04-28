@@ -18,16 +18,6 @@
 #ifndef DROMOZOA_DBH_HPP
 #define DROMOZOA_DBH_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-#include <sqlite3.h>
-
-namespace dromozoa {
-  int new_dbh(lua_State* L, sqlite3* dbh);
-  sqlite3* get_dbh(lua_State* L, int n);
-  int open_dbh(lua_State* L);
-}
+#include "common.hpp"
 
 #endif

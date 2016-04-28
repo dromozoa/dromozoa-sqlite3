@@ -15,24 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-}
-
-#include "dromozoa/bind.hpp"
-
-#include "dbh.hpp"
-#include "context.hpp"
-#include "error.hpp"
-#include "function.hpp"
-#include "null.hpp"
-#include "sth.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  using bind::function;
-  using bind::push_success;
-
   namespace {
     int open_entity(lua_State* L) {
       lua_getglobal(L, "require");
@@ -43,81 +28,78 @@ namespace dromozoa {
       return 1;
     }
 
-    int impl_initialize(lua_State* L) {
+    void impl_initialize(lua_State* L) {
       int code = sqlite3_initialize();
       if (code == SQLITE_OK) {
-        return push_success(L);
+        luaX_push_success(L);
       } else {
-        return push_error(L, code);
+        push_error(L, code);
       }
     }
 
-    int impl_shutdown(lua_State* L) {
+    void impl_shutdown(lua_State* L) {
       int code = sqlite3_shutdown();
       if (code == SQLITE_OK) {
-        return push_success(L);
+        luaX_push_success(L);
       } else {
-        return push_error(L, code);
+        push_error(L, code);
       }
     }
 
-    int impl_open(lua_State* L) {
+    void impl_open(lua_State* L) {
       const char* filename = luaL_checkstring(L, 1);
-      int flags = luaL_optinteger(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+      int flags = luaX_opt_integer<int>(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       const char* vfs = lua_tostring(L, 3);
       sqlite3* dbh = 0;
       int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
       if (code == SQLITE_OK) {
-        return new_dbh(L, dbh);
+        new_dbh(L, dbh);
       } else {
         sqlite3_close(dbh);
-        return push_error(L, code);
+        push_error(L, code);
       }
     }
 
     void initialize(lua_State* L) {
-      function<impl_initialize>::set_field(L, "initialize");
-      function<impl_shutdown>::set_field(L, "shutdown");
-      function<impl_open>::set_field(L, "open");
+      luaX_set_field(L, -1, "initialize", impl_initialize);
+      luaX_set_field(L, -1, "shutdown", impl_shutdown);
+      luaX_set_field(L, -1, "open", impl_open);
 
       push_null(L);
       lua_setfield(L, -2, "null");
 
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_READONLY);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_READWRITE);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_CREATE);
+      luaX_set_field(L, -1, "SQLITE_OPEN_READONLY", SQLITE_OPEN_READONLY);
+      luaX_set_field(L, -1, "SQLITE_OPEN_READWRITE", SQLITE_OPEN_READWRITE);
+      luaX_set_field(L, -1, "SQLITE_OPEN_CREATE", SQLITE_OPEN_CREATE);
 #ifdef SQLITE_OPEN_URI
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_URI);
+      luaX_set_field(L, -1, "SQLITE_OPEN_URI", SQLITE_OPEN_URI);
 #endif
 #ifdef SQLITE_OPEN_MEMORY
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_MEMORY);
+      luaX_set_field(L, -1, "SQLITE_OPEN_MEMORY", SQLITE_OPEN_MEMORY);
 #endif
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_NOMUTEX);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_FULLMUTEX);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_SHAREDCACHE);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OPEN_PRIVATECACHE);
+      luaX_set_field(L, -1, "SQLITE_OPEN_NOMUTEX", SQLITE_OPEN_NOMUTEX);
+      luaX_set_field(L, -1, "SQLITE_OPEN_FULLMUTEX", SQLITE_OPEN_FULLMUTEX);
+      luaX_set_field(L, -1, "SQLITE_OPEN_SHAREDCACHE", SQLITE_OPEN_SHAREDCACHE);
+      luaX_set_field(L, -1, "SQLITE_OPEN_PRIVATECACHE", SQLITE_OPEN_PRIVATECACHE);
 
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_OK);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_ROW);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_DONE);
+      luaX_set_field(L, -1, "SQLITE_OK", SQLITE_OK);
+      luaX_set_field(L, -1, "SQLITE_ROW", SQLITE_ROW);
+      luaX_set_field(L, -1, "SQLITE_DONE", SQLITE_DONE);
 
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_INTEGER);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_FLOAT);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_TEXT);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_BLOB);
-      DROMOZOA_BIND_SET_FIELD(L, SQLITE_NULL);
+      luaX_set_field(L, -1, "SQLITE_INTEGER", SQLITE_INTEGER);
+      luaX_set_field(L, -1, "SQLITE_FLOAT", SQLITE_FLOAT);
+      luaX_set_field(L, -1, "SQLITE_TEXT", SQLITE_TEXT);
+      luaX_set_field(L, -1, "SQLITE_BLOB", SQLITE_BLOB);
+      luaX_set_field(L, -1, "SQLITE_NULL", SQLITE_NULL);
     }
   }
 
   int open(lua_State* L) {
     lua_newtable(L);
 
-    open_context(L);
-    lua_setfield(L, -2, "context");
+    initialize_context(L);
 
-    open_dbh(L);
-    initialize_function(L);
-    lua_setfield(L, -2, "dbh");
+    initialize_dbh(L);
 
     open_sth(L);
     lua_setfield(L, -2, "sth");
@@ -125,7 +107,6 @@ namespace dromozoa {
     open_entity(L);
     lua_setfield(L, -2, "entity");
 
-    dromozoa::bind::initialize(L);
     initialize(L);
 
     return 1;
