@@ -23,6 +23,7 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -200,6 +201,24 @@ namespace dromozoa {
       T* data = static_cast<T*>(lua_newuserdata(L, sizeof(T)));
       new(data) T(v1, v2, v3, v4, v5, v6, v7, v8);
       return data;
+    }
+
+    inline bool luaX_is_integer(lua_State* L, int index) {
+#if LUA_VERSION_NUM+0 >= 503
+      if (lua_isinteger(L, index)) {
+        return true;
+      }
+#endif
+      if (lua_type(L, index) == LUA_TNUMBER) {
+        double u = lua_tonumber(L, index);
+        if (isfinite(u)) {
+          lua_pushinteger(L, u);
+          double v = lua_tonumber(L, -1);
+          lua_pop(L, 1);
+          return u == v;
+        }
+      }
+      return false;
     }
 
     template <class T>
@@ -532,7 +551,7 @@ namespace dromozoa {
 
     inline void luaX_set_metatable(lua_State* L, const char* name) {
 #if LUA_VERSION_NUM+0 >= 502
-      return luaL_setmetatable(L, name);
+      luaL_setmetatable(L, name);
 #else
       luaL_getmetatable(L, name);
       lua_setmetatable(L, -2);
@@ -775,6 +794,7 @@ namespace dromozoa {
   using bind::luaX_check_udata;
   using bind::luaX_field_error;
   using bind::luaX_get_field;
+  using bind::luaX_is_integer;
   using bind::luaX_new;
   using bind::luaX_nil;
   using bind::luaX_opt_enum;
