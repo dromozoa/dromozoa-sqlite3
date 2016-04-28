@@ -18,20 +18,15 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  void new_sth(lua_State* L, sqlite3_stmt* sth) {
-    luaX_new<statement_handle>(L, sth);
-    luaX_set_metatable(L, "dromozoa.sqlite3.sth");
-  }
-
-  statement_handle* check_statement_handle(lua_State* L, int arg) {
-    return luaX_check_udata<statement_handle>(L, arg, "dromozoa.sqlite3.sth");
-  }
-
-  sqlite3_stmt* get_sth(lua_State* L, int arg) {
-    return check_statement_handle(L, arg)->get();
-  }
-
   namespace {
+    statement_handle* check_statement_handle(lua_State* L, int arg) {
+      return luaX_check_udata<statement_handle>(L, arg, "dromozoa.sqlite3.sth");
+    }
+
+    sqlite3_stmt* check_sth(lua_State* L, int arg) {
+      return check_statement_handle(L, arg)->get();
+    }
+
     int check_bind_parameter_index(lua_State* L, int arg, sqlite3_stmt* sth) {
       if (lua_isnumber(L, arg)) {
         return luaX_check_integer<int>(L, arg);
@@ -62,13 +57,16 @@ namespace dromozoa {
           } else {
             return false;
           }
-          break;
         case SQLITE_NULL:
           push_null(L);
           return true;
         default:
           return false;
       }
+    }
+
+    void impl_gc(lua_State* L) {
+      check_statement_handle(L, 1)->~statement_handle();
     }
 
     void impl_finalize(lua_State* L) {
@@ -80,12 +78,9 @@ namespace dromozoa {
       }
     }
 
-    void impl_gc(lua_State* L) {
-      check_statement_handle(L, 1)->~statement_handle();
-    }
-
+    // [TODO] fix interface
     void impl_step(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int code = sqlite3_step(sth);
       if (code == SQLITE_ROW || code == SQLITE_DONE) {
         luaX_push(L, code);
@@ -96,27 +91,30 @@ namespace dromozoa {
 
     // [TODO] fix interface
     void impl_reset(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int code = sqlite3_reset(sth);
       luaX_push(L, code);
     }
 
     void impl_bind_parameter_count(lua_State* L) {
-      luaX_push(L, sqlite3_bind_parameter_count(get_sth(L, 1)));
+      sqlite3_stmt* sth = check_sth(L, 1);
+      luaX_push(L, sqlite3_bind_parameter_count(sth));
     }
 
     void impl_bind_parameter_index(lua_State* L) {
+      sqlite3_stmt* sth = check_sth(L, 1);
       const char* name = luaL_checkstring(L, 2);
-      luaX_push(L, sqlite3_bind_parameter_index(get_sth(L, 1), name));
+      luaX_push(L, sqlite3_bind_parameter_index(sth, name));
     }
 
     void impl_bind_parameter_name(lua_State* L) {
+      sqlite3_stmt* sth = check_sth(L, 1);
       int index = luaX_check_integer<int>(L, 2);
-      luaX_push(L, sqlite3_bind_parameter_name(get_sth(L, 1), index));
+      luaX_push(L, sqlite3_bind_parameter_name(sth, index));
     }
 
     void impl_bind_int64(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int index = check_bind_parameter_index(L, 2, sth);
       sqlite3_int64 value = luaX_check_integer<sqlite3_int64>(L, 3);
       int code = sqlite3_bind_int64(sth, index, value);
@@ -128,7 +126,7 @@ namespace dromozoa {
     }
 
     void impl_bind_double(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int index = check_bind_parameter_index(L, 2, sth);
       double value = luaL_checknumber(L, 3);
       int code = sqlite3_bind_double(sth, index, value);
@@ -140,7 +138,7 @@ namespace dromozoa {
     }
 
     void impl_bind_text(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int index = check_bind_parameter_index(L, 2, sth);
       size_t size = 0;
       const char* text = luaL_checklstring(L, 3, &size);
@@ -160,7 +158,7 @@ namespace dromozoa {
     }
 
     void impl_bind_blob(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int index = check_bind_parameter_index(L, 2, sth);
       size_t size = 0;
       const char* blob = luaL_checklstring(L, 3, &size);
@@ -180,7 +178,7 @@ namespace dromozoa {
     }
 
     void impl_bind_null(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int index = check_bind_parameter_index(L, 2, sth);
       int code = sqlite3_bind_null(sth, index);
       if (code == SQLITE_OK) {
@@ -191,7 +189,7 @@ namespace dromozoa {
     }
 
     void impl_clear_bindings(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int code = sqlite3_clear_bindings(sth);
       if (code == SQLITE_OK) {
         luaX_push_success(L);
@@ -201,30 +199,31 @@ namespace dromozoa {
     }
 
     void impl_column_count(lua_State* L) {
-      luaX_push(L, sqlite3_column_count(get_sth(L, 1)));
+      sqlite3_stmt* sth = check_sth(L, 1);
+      luaX_push(L, sqlite3_column_count(sth));
     }
 
     void impl_column_name(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int i = luaX_check_integer<int>(L, 2) - 1;
       luaX_push(L, sqlite3_column_name(sth, i));
     }
 
     void impl_column_type(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int i = luaX_check_integer<int>(L, 2) - 1;
       int type = sqlite3_column_type(sth, i);
       luaX_push(L, type);
     }
 
     void impl_column(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int i = luaX_check_integer<int>(L, 2) - 1;
       push_column(L, sth, i);
     }
 
     void impl_columns(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       int count = sqlite3_column_count(sth);
       lua_newtable(L);
       for (int i = 0; i < count; ++i) {
@@ -237,12 +236,17 @@ namespace dromozoa {
     }
 
     void impl_sql(lua_State* L) {
-      sqlite3_stmt* sth = get_sth(L, 1);
+      sqlite3_stmt* sth = check_sth(L, 1);
       luaX_push(L, sqlite3_sql(sth));
     }
   }
 
-  int open_sth(lua_State* L) {
+  void new_sth(lua_State* L, sqlite3_stmt* sth) {
+    luaX_new<statement_handle>(L, sth);
+    luaX_set_metatable(L, "dromozoa.sqlite3.sth");
+  }
+
+  void initialize_sth(lua_State* L) {
     lua_newtable(L);
     {
       luaL_newmetatable(L, "dromozoa.sqlite3.sth");
@@ -270,6 +274,6 @@ namespace dromozoa {
       luaX_set_field(L, -1, "columns", impl_columns);
       luaX_set_field(L, -1, "sql", impl_sql);
     }
-    return 1;
+    luaX_set_field(L, -2, "sth");
   }
 }

@@ -18,24 +18,15 @@
 #include <iostream>
 
 #include "common.hpp"
-#include "database_handle.hpp"
-#include "error.hpp"
-#include "function_handle.hpp"
-#include "sth.hpp"
 
 namespace dromozoa {
-  void new_dbh(lua_State* L, sqlite3* dbh) {
-    luaX_new<database_handle>(L, dbh);
-    luaL_getmetatable(L, "dromozoa.sqlite3.dbh");
-  }
-
-  sqlite3* get_dbh(lua_State* L, int arg) {
-    return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh")->get();
-  }
-
   namespace {
-    database_handle* check_database_handle(lua_State* L, int arg) {
-      return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh");
+    sqlite3* check_dbh(lua_State* L, int arg) {
+      return check_database_handle(L, arg)->get();
+    }
+
+    int cb_exec(void* data, int count, char** columns, char** names) {
+      return static_cast<function_handle*>(data)->call_exec(count, columns, names);
     }
 
     void impl_gc(lua_State* L) {
@@ -52,7 +43,7 @@ namespace dromozoa {
     }
 
     void impl_busy_timeout(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
+      sqlite3* dbh = check_dbh(L, 1);
       int timeout = luaX_check_integer<int>(L, 2);
       if (sqlite3_busy_timeout(dbh, timeout) == SQLITE_OK) {
         luaX_push_success(L);
@@ -62,7 +53,7 @@ namespace dromozoa {
     }
 
     void impl_prepare(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
+      sqlite3* dbh = check_dbh(L, 1);
       size_t size = 0;
       const char* sql = luaL_checklstring(L, 2, &size);
       size_t i = luaX_opt_range_i(L, 3, size);
@@ -79,7 +70,6 @@ namespace dromozoa {
         new_sth(L, sth);
         if (tail) {
           luaX_push(L, tail - sql + 1);
-        } else {
         }
       } else {
         sqlite3_finalize(sth);
@@ -87,14 +77,10 @@ namespace dromozoa {
       }
     }
 
-    int cb_exec(void* data, int count, char** columns, char** names) {
-      return static_cast<function_handle*>(data)->call_exec(count, columns, names);
-    }
-
     void impl_exec(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
+      sqlite3* dbh = check_dbh(L, 1);
       const char* sql = luaL_checkstring(L, 2);
-      int code = 0;
+      int code = SQLITE_ERROR;
       if (lua_isnoneornil(L, 3)) {
         code = sqlite3_exec(dbh, sql, 0, 0, 0);
       } else {
@@ -109,18 +95,27 @@ namespace dromozoa {
     }
 
     void impl_changes(lua_State* L) {
-      sqlite3* dbh = get_dbh(L, 1);
-      lua_pushinteger(L, sqlite3_changes(dbh));
+      sqlite3* dbh = check_dbh(L, 1);
+      luaX_push(L, sqlite3_changes(dbh));
     }
 
     void impl_last_insert_rowid(lua_State* L) {
-      lua_pushinteger(L, sqlite3_last_insert_rowid(get_dbh(L, 1)));
+      luaX_push(L, sqlite3_last_insert_rowid(check_dbh(L, 1)));
     }
+  }
+
+  void new_dbh(lua_State* L, sqlite3* dbh) {
+    luaX_new<database_handle>(L, dbh);
+    luaL_getmetatable(L, "dromozoa.sqlite3.dbh");
+  }
+
+  database_handle* check_database_handle(lua_State* L, int arg) {
+    return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh");
   }
 
   void initialize_function(lua_State* L);
 
-  void open_dbh(lua_State* L) {
+  void initialize_dbh(lua_State* L) {
     lua_newtable(L);
     {
       luaL_newmetatable(L, "dromozoa.sqlite3.dbh");

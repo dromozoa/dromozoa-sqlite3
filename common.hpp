@@ -72,24 +72,16 @@ namespace dromozoa {
     function_handle& operator=(const function_handle&);
   };
 
-  int push_error(lua_State* L, sqlite3* dbh);
-  int push_error(lua_State* L, sqlite3_stmt* sth);
-  int push_error(lua_State* L, int code);
   std::string error_to_string(int code);
-
+  void push_error(lua_State* L, int code);
+  void push_error(lua_State* L, sqlite3* dbh);
+  void push_error(lua_State* L, sqlite3_stmt* sth);
   void push_null(lua_State* L);
 
-  database_handle* check_database_handle(lua_State* L, int arg);
-
-  void new_sth(lua_State* L, sqlite3_stmt* sth);
-  sqlite3_stmt* get_sth(lua_State* L, int n);
-  int open_sth(lua_State* L);
-
-  void new_context(lua_State* L, sqlite3_context* context);
-  void initialize_context(lua_State* L);
   void new_dbh(lua_State* L, sqlite3* dbh);
-  sqlite3* get_dbh(lua_State* L, int n);
-  void initialize_dbh(lua_State* L);
+  database_handle* check_database_handle(lua_State* L, int arg);
+  void new_sth(lua_State* L, sqlite3_stmt* sth);
+  void new_context(lua_State* L, sqlite3_context* context);
 }
 
 #endif

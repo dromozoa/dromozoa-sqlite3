@@ -18,19 +18,6 @@
 #ifndef DROMOZOA_ERROR_HPP
 #define DROMOZOA_ERROR_HPP
 
-extern "C" {
-#include <lua.h>
-}
-
-#include <sqlite3.h>
-
-#include <iosfwd>
-
-namespace dromozoa {
-  int push_error(lua_State* L, int code);
-  int push_error(lua_State* L, sqlite3* dbh);
-  int push_error(lua_State* L, sqlite3_stmt* sth);
-  void print_error(std::ostream& out, int code);
-}
+#include "common.hpp"
 
 #endif

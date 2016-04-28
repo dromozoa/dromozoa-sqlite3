@@ -18,32 +18,27 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  void new_context(lua_State* L, sqlite3_context* context) {
-    luaX_new<sqlite3_context*>(L, context);
-    luaX_set_metatable(L, "dromozoa.sqlite3.context");
-  }
-
   namespace {
-    sqlite3_context* get_context(lua_State* L, int arg) {
+    sqlite3_context* check_context(lua_State* L, int arg) {
       return *luaX_check_udata<sqlite3_context*>(L, arg, "dromozoa.sqlite3.context");
     }
 
     void impl_result_int64(lua_State* L) {
-      sqlite3_context* context = get_context(L, 1);
+      sqlite3_context* context = check_context(L, 1);
       lua_Integer value = luaL_checkinteger(L, 2);
       sqlite3_result_int64(context, value);
       luaX_push_success(L);
     }
 
     void impl_result_double(lua_State* L) {
-      sqlite3_context* context = get_context(L, 1);
+      sqlite3_context* context = check_context(L, 1);
       lua_Number value = luaL_checknumber(L, 2);
       sqlite3_result_double(context, value);
       luaX_push_success(L);
     }
 
     void impl_result_text(lua_State* L) {
-      sqlite3_context* context = get_context(L, 1);
+      sqlite3_context* context = check_context(L, 1);
       size_t size = 0;
       const char* text = luaL_checklstring(L, 2, &size);
       size_t i = luaX_opt_range_i(L, 3, size);
@@ -57,7 +52,7 @@ namespace dromozoa {
     }
 
     void impl_result_blob(lua_State* L) {
-      sqlite3_context* context = get_context(L, 1);
+      sqlite3_context* context = check_context(L, 1);
       size_t size = 0;
       const char* blob = luaL_checklstring(L, 2, &size);
       size_t i = luaX_opt_range_i(L, 3, size);
@@ -71,10 +66,15 @@ namespace dromozoa {
     }
 
     void impl_result_null(lua_State* L) {
-      sqlite3_context* context = get_context(L, 1);
+      sqlite3_context* context = check_context(L, 1);
       sqlite3_result_null(context);
       luaX_push_success(L);
     }
+  }
+
+  void new_context(lua_State* L, sqlite3_context* context) {
+    luaX_new<sqlite3_context*>(L, context);
+    luaX_set_metatable(L, "dromozoa.sqlite3.context");
   }
 
   void initialize_context(lua_State* L) {

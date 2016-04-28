@@ -60,7 +60,7 @@ namespace dromozoa {
       }
     }
 
-    void initialize(lua_State* L) {
+    void initialize_core(lua_State* L) {
       luaX_set_field(L, -1, "initialize", impl_initialize);
       luaX_set_field(L, -1, "shutdown", impl_shutdown);
       luaX_set_field(L, -1, "open", impl_open);
@@ -94,25 +94,27 @@ namespace dromozoa {
     }
   }
 
-  int open(lua_State* L) {
-    lua_newtable(L);
+  void initialize_dbh(lua_State* L);
+  void initialize_sth(lua_State* L);
+  void initialize_context(lua_State* L);
+
+  void initialize(lua_State* L) {
 
     initialize_context(L);
 
     initialize_dbh(L);
 
-    open_sth(L);
-    lua_setfield(L, -2, "sth");
+    initialize_sth(L);
 
     open_entity(L);
     lua_setfield(L, -2, "entity");
 
-    initialize(L);
-
-    return 1;
+    initialize_core(L);
   }
 }
 
 extern "C" int luaopen_dromozoa_sqlite3(lua_State* L) {
-  return dromozoa::open(L);
+  lua_newtable(L);
+  dromozoa::initialize(L);
+  return 1;
 }

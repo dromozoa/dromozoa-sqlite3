@@ -18,6 +18,53 @@
 #include "common.hpp"
 
 namespace dromozoa {
+  namespace {
+    bool push_value(lua_State* L, sqlite3_value* value) {
+      switch (sqlite3_value_type(value)) {
+        case SQLITE_INTEGER:
+          luaX_push(L, sqlite3_value_int64(value));
+          return true;
+        case SQLITE_FLOAT:
+          luaX_push(L, sqlite3_value_double(value));
+          return true;
+        case SQLITE_TEXT:
+          if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
+            lua_pushlstring(L, text, sqlite3_value_bytes(value));
+            return true;
+          } else {
+            return false;
+          }
+        case SQLITE_BLOB:
+          if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
+            lua_pushlstring(L, blob, sqlite3_value_bytes(value));
+            return true;
+          } else {
+            return false;
+          }
+        case SQLITE_NULL:
+          push_null(L);
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    void call(lua_State* L, int ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
+      int top = lua_gettop(L);
+      luaX_get_field(L, LUA_REGISTRYINDEX, ref);
+      new_context(L, context);
+      for (int i = 0; i < argc; ++i) {
+        if (!push_value(L, argv[i])) {
+          luaX_push(L, luaX_nil);
+        }
+      }
+      if (lua_pcall(L, argc + 1, 0, 0) != 0) {
+        sqlite3_result_error(context, lua_tostring(L, -1), -1);
+      }
+      lua_settop(L, top);
+    }
+  }
+
   function_handle::function_handle(lua_State* L, int arg) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
     lua_pushvalue(L, arg);
     ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -35,53 +82,6 @@ namespace dromozoa {
     luaL_unref(L_, LUA_REGISTRYINDEX, ref_final_);
   }
 
-  namespace {
-    void push_value(lua_State* L, sqlite3_value* value) {
-      switch (sqlite3_value_type(value)) {
-        case SQLITE_INTEGER:
-          luaX_push(L, sqlite3_value_int64(value));
-          break;
-        case SQLITE_FLOAT:
-          luaX_push(L, sqlite3_value_double(value));
-          break;
-        case SQLITE_TEXT:
-          if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
-            lua_pushlstring(L, text, sqlite3_value_bytes(value));
-          } else {
-            luaX_push(L, luaX_nil);
-          }
-          break;
-        case SQLITE_BLOB:
-          if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
-            lua_pushlstring(L, blob, sqlite3_value_bytes(value));
-          } else {
-            luaX_push(L, luaX_nil);
-          }
-          break;
-        case SQLITE_NULL:
-          push_null(L);
-          break;
-        default:
-          luaX_push(L, luaX_nil);
-          break;
-      }
-    }
-
-    void call(lua_State* L, int ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
-      int top = lua_gettop(L);
-      luaX_push(L, ref);
-      lua_gettable(L, LUA_REGISTRYINDEX);
-      new_context(L, context);
-      for (int i = 0; i < argc; ++i) {
-        push_value(L, argv[i]);
-      }
-      if (lua_pcall(L, argc + 1, 0, 0) != 0) {
-        sqlite3_result_error(context, lua_tostring(L, -1), -1);
-      }
-      lua_settop(L, top);
-    }
-  }
-
   void function_handle::call_func(sqlite3_context* context, int argc, sqlite3_value** argv) const {
     call(L_, ref_, context, argc, argv);
   }
@@ -91,30 +91,26 @@ namespace dromozoa {
   }
 
   int function_handle::call_exec(int count, char** columns, char** names) const {
-    lua_State* L = L_;
-    int top = lua_gettop(L);
-    luaX_push(L, ref_);
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    lua_newtable(L);
+    int top = lua_gettop(L_);
+    luaX_get_field(L_, LUA_REGISTRYINDEX, ref_);
+    lua_newtable(L_);
     for (int i = 0; i < count; ++i) {
       if (columns[i]) {
-        luaX_push(L, columns[i]);
-      } else {
-        push_null(L);
+        luaX_push(L_, columns[i]);
+        lua_pushvalue(L_, -1);
+        luaX_set_field(L_, -3, i + 1);
+        luaX_set_field(L_, -2, names[i]);
       }
-      lua_pushvalue(L, -2); // [TODO] fix?
-      luaX_set_field(L, -3, i + 1);
-      luaX_set_field(L, -2, names[i]);
     }
     int result = 0;
-    if (lua_pcall(L, 1, 1, 0) != 0) {
+    if (lua_pcall(L_, 1, 1, 0) != 0) {
       result = 1;
     } else {
-      if (lua_isnumber(L, -1)) {
-        result = lua_tonumber(L, -1);
+      if (lua_isnumber(L_, -1)) {
+        result = lua_tointeger(L_, -1);
       }
     }
-    lua_settop(L, top);
+    lua_settop(L_, top);
     return result;
   }
 }
