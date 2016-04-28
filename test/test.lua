@@ -147,6 +147,30 @@ assert(getmetatable(a).a == "a")
 assert(getmetatable(a).b == "b")
 assert(b == nil)
 
+local DBL_MAX = 1.7976931348623157e+308
+local DBL_DENORM_MIN = 4.9406564584124654e-324
+local DBL_MIN = 2.2250738585072014e-308
+local DBL_EPSILON = 2.2204460492503131e-16
+
+assert(bind.is_integer(42))
+assert(bind.is_integer(42 / 2))
+assert(not bind.is_integer(1.25))
+assert(bind.is_integer(1.25e6))
+assert(bind.is_integer(1.25e12))
+assert(bind.is_integer(1.25e18))
+assert(not bind.is_integer(1.25e24))
+
+assert(not bind.is_integer(DBL_MAX))
+assert(not bind.is_integer(DBL_DENORM_MIN))
+assert(not bind.is_integer(DBL_MIN))
+assert(not bind.is_integer(DBL_EPSILON))
+assert(not bind.is_integer(math.pi))
+
+assert(bind.is_integer(-1 / math.huge)) -- -0
+assert(not bind.is_integer(math.huge))  -- inf
+assert(not bind.is_integer(-math.huge)) -- -inf
+assert(not bind.is_integer(0 / 0))      -- nan
+
 assert(bind():get() == 0)
 assert(bind():set(42):get() == 42)
 assert(bind(42):get() == 42)
