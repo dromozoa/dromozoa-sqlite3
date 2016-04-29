@@ -17,12 +17,9 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
-sqlite3.set_log_level(2)
-sqlite3.set_raise_error(true)
+local dbh = assert(sqlite3.open(":memory:"))
 
-local dbh = sqlite3.open(":memory:")
-
-dbh:exec([[
+assert(dbh:exec([[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
@@ -31,28 +28,26 @@ CREATE TABLE t (
 INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
 INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
-]])
+]]))
 
-dbh:create_function("dromozoa_function", 2, function (context, a, b)
+assert(dbh:create_function("dromozoa_function", 2, function (context, a, b)
   context:result_int64(a + b)
-end)
+end))
 
-local sth = dbh:prepare([[
+local sth = assert(dbh:prepare([[
 SELECT dromozoa_function(1, 2);
-]])
+]]))
 assert(sth:step() == sqlite3.SQLITE_ROW)
 assert(sth:column(1) == 3)
 assert(sth:step() == sqlite3.SQLITE_DONE)
-sth:finalize()
+assert(sth:finalize())
 
 local sum = 0
-dbh:create_aggregate("dromozoa_aggregate", 2, function (context, a, b)
-  -- print("a", a, b)
+assert(dbh:create_aggregate("dromozoa_aggregate", 2, function (context, a, b)
   sum = sum + a + b
 end, function (context)
-  -- print("f", sum)
   context:result_double(sum)
-end)
+end))
 
 local sth = dbh:prepare([[
 SELECT dromozoa_aggregate(f, i) FROM t;
@@ -60,18 +55,16 @@ SELECT dromozoa_aggregate(f, i) FROM t;
 assert(sth:step() == sqlite3.SQLITE_ROW)
 assert(sth:column(1) == 78.5)
 assert(sth:step() == sqlite3.SQLITE_DONE)
-sth:finalize()
+assert(sth:finalize())
 
-dbh:create_function("dromozoa_error", 0, function (context)
+assert(dbh:create_function("dromozoa_error", 0, function (context)
   error("error")
-end)
-local sth = dbh:prepare([[
+end))
+local sth = assert(dbh:prepare([[
 SELECT dromozoa_error();
-]])
-local result, message = pcall(sth.step, sth)
--- print(result, message)
-assert(not result)
-sth:reset()
-sth:finalize()
+]]))
+assert(not sth:step())
+assert(sth:reset())
+assert(sth:finalize())
 
-dbh:close()
+assert(dbh:close())

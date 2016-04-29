@@ -15,55 +15,40 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-extern "C" {
-#include <lua.h>
-}
+#include <sstream>
 
-#include <sqlite3.h>
-
-#include <iostream>
-
-#include "error.hpp"
+#include "common.hpp"
 
 namespace dromozoa {
-  int push_error(lua_State* L, int code) {
-    lua_pushnil(L);
+  std::string error_to_string(int code) {
 #if SQLITE_VERSION_NUMBER >= 3007015
     if (const char* what = sqlite3_errstr(code)) {
-      lua_pushstring(L, what);
-    } else
-#endif
-    {
-      lua_pushfstring(L, "error number %d", code);
+      return what;
     }
-    lua_pushinteger(L, code);
-    return 3;
+#endif
+    std::ostringstream out;
+    out << "error number " << code;
+    return out.str();
   }
 
-  int push_error(lua_State* L, sqlite3* dbh) {
+  void push_error(lua_State* L, int code) {
+    luaX_push(L, luaX_nil);
+    luaX_push(L, error_to_string(code));
+    luaX_push(L, code);
+  }
+
+  void push_error(lua_State* L, sqlite3* dbh) {
     int code = sqlite3_extended_errcode(dbh);
-    lua_pushnil(L);
+    luaX_push(L, luaX_nil);
     if (const char* what = sqlite3_errmsg(dbh)) {
-      lua_pushstring(L, what);
+      luaX_push(L, what);
     } else {
-      lua_pushfstring(L, "error number %d", code);
+      luaX_push(L, error_to_string(code));
     }
-    lua_pushinteger(L, code);
-    return 3;
+    luaX_push(L, code);
   }
 
-  int push_error(lua_State* L, sqlite3_stmt* sth) {
-    return push_error(L, sqlite3_db_handle(sth));
-  }
-
-  void print_error(std::ostream& out, int code) {
-#if SQLITE_VERSION_NUMBER >= 3007015
-    if (const char* what = sqlite3_errstr(code)) {
-      out << what;
-    } else
-#endif
-    {
-      out << "error number " << code;
-    }
+  void push_error(lua_State* L, sqlite3_stmt* sth) {
+    push_error(L, sqlite3_db_handle(sth));
   }
 }

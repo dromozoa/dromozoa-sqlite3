@@ -15,20 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with dromozoa-bind.  If not, see <http://www.gnu.org/licenses/>.
 
-EXTRA_DIST = \
-	.gitignore \
-	COPYING \
-	README.md \
-	dromozoa \
-	dromozoa-bind-*.rockspec \
-	module.cpp \
-	module.mk \
-	test \
-	test.sh \
-	version
+CPPFLAGS = -I$(LUA_INCDIR)
+CXXFLAGS = -Wall -W $(CFLAGS)
+LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
+LDLIBS = -ldl
 
-noinst_LTLIBRARIES = libdromozoa-bind.la
+OBJS = module.o
+TARGET = bind.so
 
-libdromozoa_bind_la_LDFLAGS = -static
-libdromozoa_bind_la_SOURCES = \
-	bind.cpp
+all: $(TARGET)
+
+clean:
+	rm -f *.o $(TARGET)
+
+bind.so: $(OBJS)
+	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+.cpp.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+install:
+	mkdir -p $(LIBDIR)/dromozoa
+	cp $(TARGET) $(LIBDIR)/dromozoa

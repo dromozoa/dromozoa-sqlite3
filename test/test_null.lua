@@ -17,10 +17,7 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
-sqlite3.set_log_level(2)
-sqlite3.set_raise_error(true)
-
-local dbh = sqlite3.open(":memory:")
+local dbh = assert(sqlite3.open(":memory:"))
 
 dbh:exec([[
 CREATE TABLE t (
@@ -33,9 +30,9 @@ CREATE TABLE t (
 INSERT INTO t (e) VALUES('end');
 ]])
 
-local sth = dbh:prepare([[
+local sth = assert(dbh:prepare([[
 SELECT * FROM t;
-]])
+]]))
 assert(sth:step() == sqlite3.SQLITE_ROW)
 assert(sth:column(1) == 1)
 assert(sth:column(2) == sqlite3.null)
@@ -60,9 +57,9 @@ assert(r.b == sqlite3.null)
 assert(r.e == "end")
 
 assert(sth:step() == sqlite3.SQLITE_DONE)
-sth:finalize()
+assert(sth:finalize())
 
-dbh:exec([[
+assert(dbh:exec([[
 SELECT * FROM t;
 ]], function (r)
   assert(#r == 6)
@@ -78,9 +75,9 @@ SELECT * FROM t;
   assert(r.t == sqlite3.null)
   assert(r.b == sqlite3.null)
   assert(r.e == "end")
-end)
+end))
 
-dbh:create_aggregate("dromozoa_test", 6, function (context, id, i, f, t, b, e)
+assert(dbh:create_aggregate("dromozoa_test", 6, function (context, id, i, f, t, b, e)
   assert(id == 1)
   assert(i == sqlite3.null)
   assert(f == sqlite3.null)
@@ -89,10 +86,10 @@ dbh:create_aggregate("dromozoa_test", 6, function (context, id, i, f, t, b, e)
   assert(e == "end")
 end, function (context)
   context:result_null()
-end)
+end))
 
-dbh:exec([[
+assert(dbh:exec([[
 SELECT dromozoa_test(id, i, f, t, b, e) FROM t;
-]])
+]]))
 
-dbh:close()
+assert(dbh:close())

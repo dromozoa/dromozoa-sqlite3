@@ -119,7 +119,7 @@ function class:bind(sth, i, object)
         else
           sth:bind_int64(i, 0)
         end
-      elseif value == class.null then
+      elseif value == class.super.null then
         sth:bind_null(i)
       else
         sth:bind_text(i, tostring(value))

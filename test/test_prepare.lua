@@ -17,9 +17,6 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
-sqlite3.set_log_level(2)
-sqlite3.set_raise_error(true)
-
 local dbh = assert(sqlite3.open(":memory:"))
 
 local sql = "SELECT 1; SELECT 2"
@@ -36,13 +33,11 @@ assert(sth1:step() == sqlite3.SQLITE_ROW)
 assert(sth1:column(1) == 1)
 assert(sth1:step() == sqlite3.SQLITE_DONE)
 
-local sth3, i = dbh:prepare("")
+local sth3, i = assert(dbh:prepare(""))
 assert(i == nil)
-local result, message  = pcall(sth3.step, sth3)
--- print(result, message)
-assert(not result)
+assert(not sth3:step())
 
-sth1:finalize()
-sth2:finalize()
-sth3:finalize()
-dbh:close()
+assert(sth1:finalize())
+assert(sth2:finalize())
+assert(sth3:finalize())
+assert(dbh:close())

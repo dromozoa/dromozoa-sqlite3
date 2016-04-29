@@ -19,12 +19,9 @@ local equal = require "dromozoa.commons.equal"
 local sequence = require "dromozoa.commons.sequence"
 local sqlite3 = require "dromozoa.sqlite3"
 
-sqlite3.set_log_level(2)
-sqlite3.set_raise_error(true)
+local dbh = assert(sqlite3.open(":memory:"))
 
-local dbh = sqlite3.open(":memory:")
-
-dbh:exec([[
+assert(dbh:exec([[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
@@ -33,16 +30,16 @@ CREATE TABLE t (
 INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
 INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
-]])
+]]))
 
 local data = sequence()
-dbh:exec([[
+assert(dbh:exec([[
 SELECT * FROM t;
 UPDATE t SET i = 42 WHERE t = 'foo';
 SELECT * FROM t WHERE t = 'foo';
 ]], function (columns)
   data:push({ columns.i, columns.t })
-end)
+end))
 
 assert(equal(data, {
   { "17", "foo" };
@@ -51,4 +48,4 @@ assert(equal(data, {
   { "42", "foo" };
 }))
 
-dbh:close()
+assert(dbh:close())
