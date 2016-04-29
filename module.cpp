@@ -18,17 +18,6 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  namespace {
-    void initialize_entity(lua_State* L) {
-      lua_getglobal(L, "require");
-      luaX_push(L, "dromozoa.sqlite3.entity");
-      lua_call(L, 1, 1);
-      lua_pushvalue(L, -2);
-      luaX_set_field(L, -2, "super");
-      luaX_set_field(L, -2, "entity");
-    }
-  }
-
   void initialize_context(lua_State* L);
   void initialize_dbh(lua_State* L);
   void initialize_main(lua_State* L);
@@ -39,7 +28,6 @@ namespace dromozoa {
     initialize_dbh(L);
     initialize_main(L);
     initialize_sth(L);
-    initialize_entity(L);
   }
 }
 

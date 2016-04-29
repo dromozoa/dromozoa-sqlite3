@@ -18,33 +18,30 @@
 local equal = require "dromozoa.commons.equal"
 local sqlite3 = require "dromozoa.sqlite3"
 
-sqlite3.set_log_level(2)
-sqlite3.set_raise_error(true)
-
 os.remove("test.db")
 local dbh = assert(sqlite3.open("test.db"))
-dbh:busy_timeout(60000)
+assert(dbh:busy_timeout(60000))
 
-dbh:exec([[
+assert(dbh:exec([[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
   i INTEGER,
   t TEXT UNIQUE);
-INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
-INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
-INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
-]])
-
+INSERT INTO t (f, i, t) VALUES (0.25, 17, 'foo');
+INSERT INTO t (f, i, t) VALUES (0.50, 23, 'bar');
+INSERT INTO t (f, i, t) VALUES (0.75, 37, 'baz');
+]]))
 assert(dbh:last_insert_rowid() == 3)
 
-local result, message = pcall(dbh.exec, dbh, "INSERT INTO t (f, i, t) VALUES(1, 42, 'foo')")
--- print(result, message)
-assert(not result)
+assert(not dbh:exec([[
+INSERT INTO t (f, i, t) VALUES (1, 42, 'foo')")
+]]))
 
-local sth = dbh:prepare([[
+local sth = assert(dbh:prepare([[
 SELECT * FROM t
-]])
+]]))
+
 assert(sth:step() == sqlite3.SQLITE_ROW)
 assert(sth:column_count() == 4)
 assert(sth:column_type(1) == sqlite3.SQLITE_INTEGER)
@@ -81,11 +78,13 @@ assert(sth:bind_parameter_index(":t") == 3)
 assert(sth:bind_parameter_name(1) == ":f")
 assert(sth:bind_parameter_name(2) == ":i")
 assert(sth:bind_parameter_name(3) == ":t")
-sth:bind_double(":f", 1):bind_int64(":i", 42):bind_text(":t", "qux")
+assert(sth:bind_double(":f", 1))
+assert(sth:bind_int64(":i", 42))
+assert(sth:bind_text(":t", "qux"))
 
 assert(dbh:last_insert_rowid() == 3)
 assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(dbh:last_insert_rowid() == 4)
-sth:finalize()
+assert(sth:finalize())
 
-dbh:close()
+assert(dbh:close())

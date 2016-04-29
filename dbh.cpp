@@ -106,7 +106,7 @@ namespace dromozoa {
 
   void new_dbh(lua_State* L, sqlite3* dbh) {
     luaX_new<database_handle>(L, dbh);
-    luaL_getmetatable(L, "dromozoa.sqlite3.dbh");
+    luaX_set_metatable(L, "dromozoa.sqlite3.dbh");
   }
 
   database_handle* check_database_handle(lua_State* L, int arg) {

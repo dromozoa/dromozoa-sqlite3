@@ -97,10 +97,12 @@ namespace dromozoa {
     for (int i = 0; i < count; ++i) {
       if (columns[i]) {
         luaX_push(L_, columns[i]);
-        lua_pushvalue(L_, -1);
-        luaX_set_field(L_, -3, i + 1);
-        luaX_set_field(L_, -2, names[i]);
+      } else {
+        push_null(L_);
       }
+      lua_pushvalue(L_, -1);
+      luaX_set_field(L_, -3, i + 1);
+      luaX_set_field(L_, -2, names[i]);
     }
     int result = 0;
     if (lua_pcall(L_, 1, 1, 0) != 0) {
