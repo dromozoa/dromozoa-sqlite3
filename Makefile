@@ -47,7 +47,5 @@ sqlite3.so: $(OBJS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 install:
-	mkdir -p $(LUADIR)/dromozoa/sqlite3
-	cp dromozoa/sqlite3/entity.lua $(LUADIR)/dromozoa/sqlite3
 	mkdir -p $(LIBDIR)/dromozoa
 	cp $(TARGET) $(LIBDIR)/dromozoa
