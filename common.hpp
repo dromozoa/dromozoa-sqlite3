@@ -46,7 +46,7 @@ namespace dromozoa {
   public:
     explicit statement_handle(sqlite3_stmt* sth);
     ~statement_handle();
-    int finalize();
+    void finalize();
     sqlite3_stmt* get() const;
   private:
     sqlite3_stmt* sth_;

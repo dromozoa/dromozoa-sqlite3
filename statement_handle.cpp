@@ -22,17 +22,14 @@ namespace dromozoa {
 
   statement_handle::~statement_handle() {
     if (sth_) {
-      int code = finalize();
-      if (code != SQLITE_OK) {
-        DROMOZOA_UNEXPECTED(error_to_string(code));
-      }
+      finalize();
     }
   }
 
-  int statement_handle::finalize() {
+  void statement_handle::finalize() {
     sqlite3_stmt* sth = sth_;
     sth_ = 0;
-    return sqlite3_finalize(sth);
+    sqlite3_finalize(sth);
   }
 
   sqlite3_stmt* statement_handle::get() const {

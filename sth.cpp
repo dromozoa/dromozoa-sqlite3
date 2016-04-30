@@ -70,15 +70,10 @@ namespace dromozoa {
     }
 
     void impl_finalize(lua_State* L) {
-      int code = check_statement_handle(L, 1)->finalize();
-      if (code == SQLITE_OK) {
-        luaX_push_success(L);
-      } else {
-        push_error(L, code);
-      }
+      check_statement_handle(L, 1)->finalize();
+      luaX_push_success(L);
     }
 
-    // [TODO] fix interface
     void impl_step(lua_State* L) {
       sqlite3_stmt* sth = check_sth(L, 1);
       int code = sqlite3_step(sth);
@@ -89,11 +84,9 @@ namespace dromozoa {
       }
     }
 
-    // [TODO] fix interface
     void impl_reset(lua_State* L) {
-      sqlite3_stmt* sth = check_sth(L, 1);
-      int code = sqlite3_reset(sth);
-      luaX_push(L, code);
+      sqlite3_reset(check_sth(L, 1));
+      luaX_push_success(L);
     }
 
     void impl_bind_parameter_count(lua_State* L) {
