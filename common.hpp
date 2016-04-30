@@ -81,6 +81,7 @@ namespace dromozoa {
   void new_dbh(lua_State* L, sqlite3* dbh);
   database_handle* check_database_handle(lua_State* L, int arg);
   void new_sth(lua_State* L, sqlite3_stmt* sth);
+  sqlite3_stmt* check_sth(lua_State* L, int arg);
   void new_context(lua_State* L, sqlite3_context* context);
 }
 

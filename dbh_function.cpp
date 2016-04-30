@@ -63,7 +63,7 @@ namespace dromozoa {
     }
   }
 
-  void initialize_function(lua_State* L) {
+  void initialize_dbh_function(lua_State* L) {
     luaX_set_field(L, -1, "create_function", impl_create_function);
     luaX_set_field(L, -1, "create_aggregate", impl_create_aggregate);
   }

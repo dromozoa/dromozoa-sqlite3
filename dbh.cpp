@@ -113,7 +113,7 @@ namespace dromozoa {
     return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh");
   }
 
-  void initialize_function(lua_State* L);
+  void initialize_dbh_function(lua_State* L);
 
   void initialize_dbh(lua_State* L) {
     lua_newtable(L);
@@ -131,7 +131,7 @@ namespace dromozoa {
       luaX_set_field(L, -1, "changes", impl_changes);
       luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
 
-      initialize_function(L);
+      initialize_dbh_function(L);
     }
     luaX_set_field(L, -2, "dbh");
   }
