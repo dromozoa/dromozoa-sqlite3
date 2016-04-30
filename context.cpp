@@ -100,16 +100,17 @@ namespace dromozoa {
   void initialize_context(lua_State* L) {
     lua_newtable(L);
     {
+      luaL_newmetatable(L, "dromozoa.sqlite3.context");
+      lua_pushvalue(L, -2);
+      lua_setfield(L, -2, "__index");
+      lua_pop(L, 1);
+
       luaX_set_field(L, -1, "result_int64", impl_result_int64);
       luaX_set_field(L, -1, "result_double", impl_result_double);
       luaX_set_field(L, -1, "result_text", impl_result_text);
       luaX_set_field(L, -1, "result_blob", impl_result_blob);
       luaX_set_field(L, -1, "result_null", impl_result_null);
       luaX_set_field(L, -1, "result", impl_result);
-      luaL_newmetatable(L, "dromozoa.sqlite3.context");
-      lua_pushvalue(L, -2);
-      lua_setfield(L, -2, "__index");
-      lua_pop(L, 1);
     }
     luaX_set_field(L, -2, "context");
   }
