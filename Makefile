@@ -20,7 +20,19 @@ CXXFLAGS = -Wall -W $(CFLAGS)
 LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS = -lsqlite3 -ldl
 
-OBJS = bind.o context.o database_handle.o dbh.o error.o function.o function_handle.o null.o sth.o module.o
+OBJS = \
+	context.o \
+	database_handle.o \
+	dbh.o \
+	dbh_function.o \
+	error.o \
+	function_handle.o \
+	main.o \
+	module.o \
+	statement_handle.o \
+	sth.o \
+	sth_bind.o \
+	sth_column.o
 TARGET = sqlite3.so
 
 all: $(TARGET)
@@ -34,11 +46,6 @@ sqlite3.so: $(OBJS)
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-bind.o: bind/bind.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
 install:
-	mkdir -p $(LUADIR)/dromozoa/sqlite3
-	cp dromozoa/sqlite3/entity.lua $(LUADIR)/dromozoa/sqlite3
 	mkdir -p $(LIBDIR)/dromozoa
 	cp $(TARGET) $(LIBDIR)/dromozoa

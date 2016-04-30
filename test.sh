@@ -27,4 +27,4 @@ do
   "$lua" "$i"
 done
 
-rm -f test.db
+rm -f test.db*

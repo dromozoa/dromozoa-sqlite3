@@ -15,15 +15,24 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_NULL_HPP
-#define DROMOZOA_NULL_HPP
-
-extern "C" {
-#include <lua.h>
-}
+#include "common.hpp"
 
 namespace dromozoa {
-  int push_null(lua_State* L);
-}
+  statement_handle::statement_handle(sqlite3_stmt* sth) : sth_(sth) {}
 
-#endif
+  statement_handle::~statement_handle() {
+    if (sth_) {
+      finalize();
+    }
+  }
+
+  void statement_handle::finalize() {
+    sqlite3_stmt* sth = sth_;
+    sth_ = 0;
+    sqlite3_finalize(sth);
+  }
+
+  sqlite3_stmt* statement_handle::get() const {
+    return sth_;
+  }
+}
