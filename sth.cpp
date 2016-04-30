@@ -65,6 +65,18 @@ namespace dromozoa {
       }
     }
 
+    int bind_text(lua_State* L, sqlite3_stmt* sth, int param) {
+      size_t size = 0;
+      const char* text = luaL_checklstring(L, 3, &size);
+      size_t i = luaX_opt_range_i(L, 4, size);
+      size_t j = luaX_opt_range_j(L, 5, size);
+      if (i < j) {
+        return sqlite3_bind_text(sth, param, text + i, j - i, SQLITE_TRANSIENT);
+      } else {
+        return sqlite3_bind_text(sth, param, "", 0, SQLITE_STATIC);
+      }
+    }
+
     void impl_gc(lua_State* L) {
       check_statement_handle(L, 1)->~statement_handle();
     }
@@ -133,16 +145,7 @@ namespace dromozoa {
     void impl_bind_text(lua_State* L) {
       sqlite3_stmt* sth = check_sth(L, 1);
       int param = check_bind_parameter_index(L, 2, sth);
-      size_t size = 0;
-      const char* text = luaL_checklstring(L, 3, &size);
-      size_t i = luaX_opt_range_i(L, 4, size);
-      size_t j = luaX_opt_range_j(L, 5, size);
-      int code = SQLITE_ERROR;
-      if (i < j) {
-        code = sqlite3_bind_text(sth, param, text, size, SQLITE_TRANSIENT);
-      } else {
-        code = sqlite3_bind_text(sth, param, "", 0, SQLITE_STATIC);
-      }
+      int code = bind_text(L, sth, param);
       if (code == SQLITE_OK) {
         luaX_push_success(L);
       } else {
@@ -174,6 +177,34 @@ namespace dromozoa {
       sqlite3_stmt* sth = check_sth(L, 1);
       int param = check_bind_parameter_index(L, 2, sth);
       int code = sqlite3_bind_null(sth, param);
+      if (code == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, sth);
+      }
+    }
+
+    void impl_bind(lua_State* L) {
+      sqlite3_stmt* sth = check_sth(L, 1);
+      int param = check_bind_parameter_index(L, 2, sth);
+      int code = SQLITE_ERROR;
+      switch (lua_type(L, 3)) {
+        case LUA_TNUMBER:
+          if (luaX_is_integer(L, 3)) {
+            code = sqlite3_bind_int64(sth, param, luaX_check_integer<sqlite3_int64>(L, 3));
+          } else {
+            code = sqlite3_bind_double(sth, param, luaL_checknumber(L, 3));
+          }
+          break;
+        case LUA_TSTRING:
+          code = bind_text(L, sth, param);
+          break;
+        case LUA_TBOOLEAN:
+          code = sqlite3_bind_int64(sth, param, lua_toboolean(L, 3));
+          break;
+        default:
+          code = sqlite3_bind_null(sth, param);
+      }
       if (code == SQLITE_OK) {
         luaX_push_success(L);
       } else {
@@ -259,6 +290,7 @@ namespace dromozoa {
       luaX_set_field(L, -1, "bind_text", impl_bind_text);
       luaX_set_field(L, -1, "bind_blob", impl_bind_blob);
       luaX_set_field(L, -1, "bind_null", impl_bind_null);
+      luaX_set_field(L, -1, "bind", impl_bind);
       luaX_set_field(L, -1, "clear_bindings", impl_clear_bindings);
       luaX_set_field(L, -1, "column_count", impl_column_count);
       luaX_set_field(L, -1, "column_name", impl_column_name);
