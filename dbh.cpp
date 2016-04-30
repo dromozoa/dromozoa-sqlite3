@@ -34,8 +34,7 @@ namespace dromozoa {
     }
 
     void impl_close(lua_State* L) {
-      int code = check_database_handle(L, 1)->close();
-      if (code == SQLITE_OK) {
+      if (check_database_handle(L, 1)->close() == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, code);
@@ -84,8 +83,8 @@ namespace dromozoa {
       if (lua_isnoneornil(L, 3)) {
         code = sqlite3_exec(dbh, sql, 0, 0, 0);
       } else {
-        function_handle f(L, 3);
-        code = sqlite3_exec(dbh, sql, cb_exec, &f, 0);
+        function_handle function(L, 3);
+        code = sqlite3_exec(dbh, sql, cb_exec, &function, 0);
       }
       if (code == SQLITE_OK) {
         luaX_push_success(L);
@@ -95,8 +94,7 @@ namespace dromozoa {
     }
 
     void impl_changes(lua_State* L) {
-      sqlite3* dbh = check_dbh(L, 1);
-      luaX_push(L, sqlite3_changes(dbh));
+      luaX_push(L, sqlite3_changes(check_dbh(L, 1)));
     }
 
     void impl_last_insert_rowid(lua_State* L) {

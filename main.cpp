@@ -20,8 +20,7 @@
 namespace dromozoa {
   namespace {
     void impl_initialize(lua_State* L) {
-      int code = sqlite3_initialize();
-      if (code == SQLITE_OK) {
+      if (sqlite3_initialize() == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, code);
@@ -29,8 +28,7 @@ namespace dromozoa {
     }
 
     void impl_shutdown(lua_State* L) {
-      int code = sqlite3_shutdown();
-      if (code == SQLITE_OK) {
+      if (sqlite3_shutdown() == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, code);
@@ -42,8 +40,7 @@ namespace dromozoa {
       int flags = luaX_opt_integer<int>(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       const char* vfs = lua_tostring(L, 3);
       sqlite3* dbh = 0;
-      int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
-      if (code == SQLITE_OK) {
+      if (sqlite3_open_v2(filename, &dbh, flags, vfs) == SQLITE_OK) {
         new_dbh(L, dbh);
       } else {
         sqlite3_close(dbh);
@@ -64,6 +61,19 @@ namespace dromozoa {
     push_null(L);
     luaX_set_field(L, -2, "null");
 
+    // Fundamental Datatypes
+    luaX_set_field(L, -1, "SQLITE_INTEGER", SQLITE_INTEGER);
+    luaX_set_field(L, -1, "SQLITE_FLOAT", SQLITE_FLOAT);
+    luaX_set_field(L, -1, "SQLITE_TEXT", SQLITE_TEXT);
+    luaX_set_field(L, -1, "SQLITE_BLOB", SQLITE_BLOB);
+    luaX_set_field(L, -1, "SQLITE_NULL", SQLITE_NULL);
+
+    // Result Codes
+    luaX_set_field(L, -1, "SQLITE_OK", SQLITE_OK);     // (0)
+    luaX_set_field(L, -1, "SQLITE_ROW", SQLITE_ROW);   // (100)
+    luaX_set_field(L, -1, "SQLITE_DONE", SQLITE_DONE); // (101)
+
+    // Flags For File Open Operations
     luaX_set_field(L, -1, "SQLITE_OPEN_READONLY", SQLITE_OPEN_READONLY);
     luaX_set_field(L, -1, "SQLITE_OPEN_READWRITE", SQLITE_OPEN_READWRITE);
     luaX_set_field(L, -1, "SQLITE_OPEN_CREATE", SQLITE_OPEN_CREATE);
@@ -77,15 +87,5 @@ namespace dromozoa {
     luaX_set_field(L, -1, "SQLITE_OPEN_FULLMUTEX", SQLITE_OPEN_FULLMUTEX);
     luaX_set_field(L, -1, "SQLITE_OPEN_SHAREDCACHE", SQLITE_OPEN_SHAREDCACHE);
     luaX_set_field(L, -1, "SQLITE_OPEN_PRIVATECACHE", SQLITE_OPEN_PRIVATECACHE);
-
-    luaX_set_field(L, -1, "SQLITE_OK", SQLITE_OK);
-    luaX_set_field(L, -1, "SQLITE_ROW", SQLITE_ROW);
-    luaX_set_field(L, -1, "SQLITE_DONE", SQLITE_DONE);
-
-    luaX_set_field(L, -1, "SQLITE_INTEGER", SQLITE_INTEGER);
-    luaX_set_field(L, -1, "SQLITE_FLOAT", SQLITE_FLOAT);
-    luaX_set_field(L, -1, "SQLITE_TEXT", SQLITE_TEXT);
-    luaX_set_field(L, -1, "SQLITE_BLOB", SQLITE_BLOB);
-    luaX_set_field(L, -1, "SQLITE_NULL", SQLITE_NULL);
   }
 }
