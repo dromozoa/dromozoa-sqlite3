@@ -19,19 +19,20 @@
 
 namespace dromozoa {
   namespace {
+    function_handle* get_function_handle(sqlite3_context* context) {
+      return static_cast<function_handle*>(sqlite3_user_data(context));
+    }
+
     void cb_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      function_handle* f = static_cast<function_handle*>(sqlite3_user_data(context));
-      f->call_func(context, argc, argv);
+      get_function_handle(context)->call_func(context, argc, argv);
     }
 
     void cb_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      function_handle* f = static_cast<function_handle*>(sqlite3_user_data(context));
-      f->call_func(context, argc, argv);
+      get_function_handle(context)->call_func(context, argc, argv);
     }
 
     void cb_final(sqlite3_context* context) {
-      function_handle* f = static_cast<function_handle*>(sqlite3_user_data(context));
-      f->call_final(context);
+      get_function_handle(context)->call_final(context);
     }
 
     void impl_create_function(lua_State* L) {
@@ -40,8 +41,7 @@ namespace dromozoa {
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       function_handle* function = self->new_function(L, 4);
-      int code = sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, cb_func, 0, 0);
-      if (code == SQLITE_OK) {
+      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, cb_func, 0, 0) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, dbh);
@@ -54,8 +54,7 @@ namespace dromozoa {
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       function_handle* function = self->new_aggregate(L, 4, 5);
-      int code = sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, 0, cb_step, cb_final);
-      if (code == SQLITE_OK) {
+      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, 0, cb_step, cb_final) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, dbh);

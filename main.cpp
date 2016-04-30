@@ -20,7 +20,8 @@
 namespace dromozoa {
   namespace {
     void impl_initialize(lua_State* L) {
-      if (sqlite3_initialize() == SQLITE_OK) {
+      int code = sqlite3_initialize();
+      if (code == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, code);
@@ -28,7 +29,8 @@ namespace dromozoa {
     }
 
     void impl_shutdown(lua_State* L) {
-      if (sqlite3_shutdown() == SQLITE_OK) {
+      int code = sqlite3_shutdown();
+      if (code == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, code);
@@ -40,7 +42,8 @@ namespace dromozoa {
       int flags = luaX_opt_integer<int>(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       const char* vfs = lua_tostring(L, 3);
       sqlite3* dbh = 0;
-      if (sqlite3_open_v2(filename, &dbh, flags, vfs) == SQLITE_OK) {
+      int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
+      if (code == SQLITE_OK) {
         new_dbh(L, dbh);
       } else {
         sqlite3_close(dbh);

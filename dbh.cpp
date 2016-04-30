@@ -34,7 +34,8 @@ namespace dromozoa {
     }
 
     void impl_close(lua_State* L) {
-      if (check_database_handle(L, 1)->close() == SQLITE_OK) {
+      int code = check_database_handle(L, 1)->close();
+      if (code == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, code);
