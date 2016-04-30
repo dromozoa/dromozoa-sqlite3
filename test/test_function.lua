@@ -31,7 +31,7 @@ INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
 ]]))
 
 assert(dbh:create_function("dromozoa_function", 2, function (context, a, b)
-  context:result_int64(a + b)
+  context:result(a + b)
 end))
 
 local sth = assert(dbh:prepare([[
@@ -46,7 +46,7 @@ local sum = 0
 assert(dbh:create_aggregate("dromozoa_aggregate", 2, function (context, a, b)
   sum = sum + a + b
 end, function (context)
-  context:result_double(sum)
+  context:result(sum)
 end))
 
 local sth = dbh:prepare([[
