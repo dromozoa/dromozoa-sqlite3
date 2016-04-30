@@ -50,27 +50,19 @@ namespace dromozoa {
     }
 
     void impl_column_count(lua_State* L) {
-      sqlite3_stmt* sth = check_sth(L, 1);
-      luaX_push(L, sqlite3_column_count(sth));
+      luaX_push(L, sqlite3_column_count(check_sth(L, 1)));
     }
 
     void impl_column_name(lua_State* L) {
-      sqlite3_stmt* sth = check_sth(L, 1);
-      int column = luaX_check_integer<int>(L, 2) - 1;
-      luaX_push(L, sqlite3_column_name(sth, column));
+      luaX_push(L, sqlite3_column_name(check_sth(L, 1), luaX_check_integer<int>(L, 2) - 1));
     }
 
     void impl_column_type(lua_State* L) {
-      sqlite3_stmt* sth = check_sth(L, 1);
-      int column = luaX_check_integer<int>(L, 2) - 1;
-      int type = sqlite3_column_type(sth, column);
-      luaX_push(L, type);
+      luaX_push(L, sqlite3_column_type(check_sth(L, 1), luaX_check_integer<int>(L, 2) - 1));
     }
 
     void impl_column(lua_State* L) {
-      sqlite3_stmt* sth = check_sth(L, 1);
-      int column = luaX_check_integer<int>(L, 2) - 1;
-      push_column(L, sth, column);
+      push_column(L, check_sth(L, 1), luaX_check_integer<int>(L, 2) - 1);
     }
 
     void impl_columns(lua_State* L) {
