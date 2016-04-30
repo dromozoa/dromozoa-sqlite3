@@ -84,8 +84,8 @@ namespace dromozoa {
       if (lua_isnoneornil(L, 3)) {
         code = sqlite3_exec(dbh, sql, 0, 0, 0);
       } else {
-        function_handle f(L, 3);
-        code = sqlite3_exec(dbh, sql, cb_exec, &f, 0);
+        function_handle function(L, 3);
+        code = sqlite3_exec(dbh, sql, cb_exec, &function, 0);
       }
       if (code == SQLITE_OK) {
         luaX_push_success(L);
@@ -95,8 +95,7 @@ namespace dromozoa {
     }
 
     void impl_changes(lua_State* L) {
-      sqlite3* dbh = check_dbh(L, 1);
-      luaX_push(L, sqlite3_changes(dbh));
+      luaX_push(L, sqlite3_changes(check_dbh(L, 1)));
     }
 
     void impl_last_insert_rowid(lua_State* L) {
@@ -113,7 +112,7 @@ namespace dromozoa {
     return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh");
   }
 
-  void initialize_function(lua_State* L);
+  void initialize_dbh_function(lua_State* L);
 
   void initialize_dbh(lua_State* L) {
     lua_newtable(L);
@@ -131,7 +130,7 @@ namespace dromozoa {
       luaX_set_field(L, -1, "changes", impl_changes);
       luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
 
-      initialize_function(L);
+      initialize_dbh_function(L);
     }
     luaX_set_field(L, -2, "dbh");
   }

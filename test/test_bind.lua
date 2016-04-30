@@ -24,47 +24,42 @@ CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
   i INTEGER,
-  t TEXT);
-INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
-INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
-INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
+  t TEXT UNIQUE);
 ]]))
-
-assert(dbh:create_function("dromozoa_function", 2, function (context, a, b)
-  context:result(a + b)
-end))
 
 local sth = assert(dbh:prepare([[
-SELECT dromozoa_function(1, 2);
+INSERT INTO t (f, i, t) VALUES (:f, :i, :t);
 ]]))
-assert(sth:step() == sqlite3.SQLITE_ROW)
-assert(sth:column(1) == 3)
+
+assert(sth:bind(":f", 0.25))
+assert(sth:bind(":i", 42))
+assert(sth:bind(":t", "foobarbaz"))
 assert(sth:step() == sqlite3.SQLITE_DONE)
-assert(sth:finalize())
-
-local sum = 0
-assert(dbh:create_aggregate("dromozoa_aggregate", 2, function (context, a, b)
-  sum = sum + a + b
-end, function (context)
-  context:result(sum)
-end))
-
-local sth = dbh:prepare([[
-SELECT dromozoa_aggregate(f, i) FROM t;
-]])
-assert(sth:step() == sqlite3.SQLITE_ROW)
-assert(sth:column(1) == 78.5)
-assert(sth:step() == sqlite3.SQLITE_DONE)
-assert(sth:finalize())
-
-assert(dbh:create_function("dromozoa_error", 0, function (context)
-  error("error")
-end))
-local sth = assert(dbh:prepare([[
-SELECT dromozoa_error();
-]]))
-assert(not sth:step())
 assert(sth:reset())
+
+assert(sth:bind(":f", 17))
+assert(sth:bind(":i", true))
+assert(sth:bind(":t", "foobarbaz", 4, 6))
+assert(sth:step() == sqlite3.SQLITE_DONE)
+assert(sth:finalize())
+
+local sth = assert(dbh:prepare([[
+SELECT * FROM t ORDER BY id;
+]]))
+
+assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column(1) == 1)
+assert(sth:column(2) == 0.25)
+assert(sth:column(3) == 42)
+assert(sth:column(4) == "foobarbaz")
+
+assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column(1) == 2)
+assert(sth:column(2) == 17)
+assert(sth:column(3) == 1)
+assert(sth:column(4) == "bar")
+
+assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(sth:finalize())
 
 assert(dbh:close())

@@ -65,25 +65,25 @@ namespace dromozoa {
     }
   }
 
-  function_handle::function_handle(lua_State* L, int arg) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
-    lua_pushvalue(L, arg);
-    ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
+  function_handle::function_handle(lua_State* L, int arg_func) : L_(L), ref_func_(LUA_NOREF), ref_final_(LUA_NOREF) {
+    lua_pushvalue(L, arg_func);
+    ref_func_ = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 
-  function_handle::function_handle(lua_State* L, int arg, int arg_final) : L_(L), ref_(LUA_NOREF), ref_final_(LUA_NOREF) {
-    lua_pushvalue(L, arg);
-    ref_ = luaL_ref(L, LUA_REGISTRYINDEX);
+  function_handle::function_handle(lua_State* L, int arg_func, int arg_final) : L_(L), ref_func_(LUA_NOREF), ref_final_(LUA_NOREF) {
+    lua_pushvalue(L, arg_func);
+    ref_func_ = luaL_ref(L, LUA_REGISTRYINDEX);
     lua_pushvalue(L, arg_final);
     ref_final_ = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 
   function_handle::~function_handle() {
-    luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
+    luaL_unref(L_, LUA_REGISTRYINDEX, ref_func_);
     luaL_unref(L_, LUA_REGISTRYINDEX, ref_final_);
   }
 
   void function_handle::call_func(sqlite3_context* context, int argc, sqlite3_value** argv) const {
-    call(L_, ref_, context, argc, argv);
+    call(L_, ref_func_, context, argc, argv);
   }
 
   void function_handle::call_final(sqlite3_context* context) const {
@@ -92,7 +92,7 @@ namespace dromozoa {
 
   int function_handle::call_exec(int count, char** columns, char** names) const {
     int top = lua_gettop(L_);
-    luaX_get_field(L_, LUA_REGISTRYINDEX, ref_);
+    luaX_get_field(L_, LUA_REGISTRYINDEX, ref_func_);
     lua_newtable(L_);
     for (int i = 0; i < count; ++i) {
       if (columns[i]) {

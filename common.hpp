@@ -33,8 +33,8 @@ namespace dromozoa {
     ~database_handle();
     int close();
     sqlite3* get() const;
-    function_handle* new_function(lua_State* L, int arg);
-    function_handle* new_aggregate(lua_State* L, int arg, int arg_final);
+    function_handle* new_function(lua_State* L, int arg_func);
+    function_handle* new_aggregate(lua_State* L, int arg_func, int arg_final);
   private:
     sqlite3* dbh_;
     std::set<function_handle*> function_;
@@ -46,7 +46,7 @@ namespace dromozoa {
   public:
     explicit statement_handle(sqlite3_stmt* sth);
     ~statement_handle();
-    int finalize();
+    void finalize();
     sqlite3_stmt* get() const;
   private:
     sqlite3_stmt* sth_;
@@ -57,8 +57,8 @@ namespace dromozoa {
   class function_handle {
     friend class database_handle;
   public:
-    function_handle(lua_State* L, int arg);
-    function_handle(lua_State* L, int arg, int arg_final);
+    function_handle(lua_State* L, int arg_func);
+    function_handle(lua_State* L, int arg_func, int arg_final);
     ~function_handle();
     void call_func(sqlite3_context* context, int argc, sqlite3_value** argv) const;
     void call_step(sqlite3_context* context, int argc, sqlite3_value** argv) const;
@@ -66,7 +66,7 @@ namespace dromozoa {
     int call_exec(int count, char** columns, char** names) const;
   private:
     lua_State* L_;
-    int ref_;
+    int ref_func_;
     int ref_final_;
     function_handle(const function_handle&);
     function_handle& operator=(const function_handle&);
@@ -81,6 +81,7 @@ namespace dromozoa {
   void new_dbh(lua_State* L, sqlite3* dbh);
   database_handle* check_database_handle(lua_State* L, int arg);
   void new_sth(lua_State* L, sqlite3_stmt* sth);
+  sqlite3_stmt* check_sth(lua_State* L, int arg);
   void new_context(lua_State* L, sqlite3_context* context);
 }
 
