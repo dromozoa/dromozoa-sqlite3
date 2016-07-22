@@ -1,3 +1,3 @@
 # dromozoa-sqlite3
 
-Lua bindigns for SQLite3.
+Lua bindings for SQLite3.
