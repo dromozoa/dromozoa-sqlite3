@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -20,7 +20,7 @@
 namespace dromozoa {
   namespace {
     int check_bind_parameter_index(lua_State* L, int arg, sqlite3_stmt* sth) {
-      if (lua_isnumber(L, arg)) {
+      if (luaX_is_integer(L, arg)) {
         return luaX_check_integer<int>(L, arg);
       } else {
         return sqlite3_bind_parameter_index(sth, luaL_checkstring(L, arg));
