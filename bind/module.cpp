@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -111,6 +111,15 @@ namespace dromozoa {
       luaX_push<int>(L, value);
     }
 
+    void impl_check_integer_field(lua_State* L) {
+      luaX_push(L, luaX_check_integer_field<uint16_t>(L, 1, "foo"));
+      luaX_push(L, luaX_check_integer_field<uint16_t>(L, 1, 42));
+    }
+
+    void impl_check_integer_field_range(lua_State* L) {
+      luaX_push(L, luaX_check_integer_field<int>(L, 1, "nice", -20, 19));
+    }
+
     void impl_opt_integer_field(lua_State* L) {
       luaX_push(L, luaX_opt_integer_field<uint16_t>(L, 1, "foo", 0));
       luaX_push(L, luaX_opt_integer_field<uint16_t>(L, 1, 42, 0));
@@ -201,6 +210,51 @@ namespace dromozoa {
     void impl_unexpected(lua_State*) {
       DROMOZOA_UNEXPECTED("error");
     }
+
+    typedef void (*api_callback_type)(int v, void* userdata);
+    api_callback_type api_callback = 0;
+    void* api_userdata = 0;
+
+    void api_set_callback(api_callback_type callback, void* userdata) {
+      api_callback = callback;
+      api_userdata = userdata;
+    }
+
+    void api_run_callback(int v) {
+      if (api_callback) {
+        api_callback(v, api_userdata);
+      }
+    }
+
+    luaX_reference callback_ref;
+
+    void callback(int v, void* userdata) {
+      luaX_reference* callback = static_cast<luaX_reference*>(userdata);
+      lua_State* L = callback->state();
+      int top = lua_gettop(L);
+      callback->get_field();
+      luaX_push(L, v);
+      lua_pcall(L, 1, 1, 0);
+      lua_settop(L, top);
+    }
+
+    void impl_set_callback(lua_State* L) {
+      if (lua_isnil(L, 1)) {
+        luaX_reference().swap(callback_ref);
+        api_set_callback(0, 0);
+      } else {
+        lua_pushvalue(L, 1);
+        luaX_reference(L).swap(callback_ref);
+        api_set_callback(&callback, &callback_ref);
+      }
+    }
+
+    void impl_run_callback(lua_State*) {
+      api_run_callback(17);
+      api_run_callback(23);
+      api_run_callback(37);
+      api_run_callback(42);
+    }
   }
 
   void initialize(lua_State* L) {
@@ -217,6 +271,8 @@ namespace dromozoa {
     luaX_set_field(L, -1, "opt_integer", impl_opt_integer);
     luaX_set_field(L, -1, "check_enum", impl_check_enum);
     luaX_set_field(L, -1, "opt_enum", impl_opt_enum);
+    luaX_set_field(L, -1, "check_integer_field", impl_check_integer_field);
+    luaX_set_field(L, -1, "check_integer_field_range", impl_check_integer_field_range);
     luaX_set_field(L, -1, "opt_integer_field", impl_opt_integer_field);
     luaX_set_field(L, -1, "opt_integer_field_range", impl_opt_integer_field_range);
     luaX_set_field(L, -1, "field_error1", impl_field_error1);
@@ -258,6 +314,11 @@ namespace dromozoa {
     luaX_set_field(L, -1, "chain_gc_count", impl_chain_gc_count);
 
     luaX_set_field(L, -1, "unexpected", impl_unexpected);
+
+    luaX_set_field(L, -1, "set_callback", impl_set_callback);
+    luaX_set_field(L, -1, "run_callback", impl_run_callback);
+
+    luaX_set_field(L, -1, "sizeof_lua_integer", sizeof(lua_Integer));
   }
 }
 

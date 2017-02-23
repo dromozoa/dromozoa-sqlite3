@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -506,13 +506,49 @@ namespace dromozoa {
 #endif
     }
 
+    template <class T_key>
+    inline intmax_t luaX_check_integer_field_impl(lua_State* L, int index, const T_key& key) {
+      index = luaX_abs_index(L, index);
+      luaX_push(L, key);
+      lua_gettable(L, index);
+      if (lua_isnumber(L, -1)) {
+        intmax_t value = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        return value;
+      } else {
+        lua_pop(L, 1);
+        return luaX_field_error(L, key, "not an integer");
+      }
+    }
+
     template <class T, class T_key>
-    inline intmax_t luaX_opt_integer_field_impl(lua_State* L, int arg, const T_key& key, T d) {
+    inline T luaX_check_integer_field(lua_State* L, int index, const T_key& key) {
+      intmax_t source = luaX_check_integer_field_impl(L, index, key);
+      T target = 0;
+      if (luaX_integer_traits<T>::convert(source, target)) {
+        return target;
+      }
+      return luaX_field_error(L, key, "out of bounds");
+    }
+
+    template <class T, class T_key>
+    inline T luaX_check_integer_field(lua_State* L, int index, const T_key& key, T min, T max) {
+      intmax_t source = luaX_check_integer_field_impl(L, index, key);
+      T target = 0;
+      if (luaX_integer_traits<T>::convert(source, target, min, max)) {
+        return target;
+      }
+      return luaX_field_error(L, key, "out of bounds");
+    }
+
+    template <class T, class T_key>
+    inline intmax_t luaX_opt_integer_field_impl(lua_State* L, int index, const T_key& key, T d) {
+      index = luaX_abs_index(L, index);
       luaX_push(L, key);
 #if LUA_VERSION_NUM+0 >= 503
-      bool is_nil = lua_gettable(L, arg) == LUA_TNIL;
+      bool is_nil = lua_gettable(L, index) == LUA_TNIL;
 #else
-      lua_gettable(L, arg);
+      lua_gettable(L, index);
       bool is_nil = lua_isnil(L, -1);
 #endif
       if (lua_isnumber(L, -1)) {
@@ -530,8 +566,8 @@ namespace dromozoa {
     }
 
     template <class T, class T_key>
-    inline T luaX_opt_integer_field(lua_State* L, int arg, const T_key& key, T d) {
-      intmax_t source = luaX_opt_integer_field_impl(L, arg, key, d);
+    inline T luaX_opt_integer_field(lua_State* L, int index, const T_key& key, T d) {
+      intmax_t source = luaX_opt_integer_field_impl(L, index, key, d);
       T target = 0;
       if (luaX_integer_traits<T>::convert(source, target)) {
         return target;
@@ -540,8 +576,8 @@ namespace dromozoa {
     }
 
     template <class T, class T_key>
-    inline T luaX_opt_integer_field(lua_State* L, int arg, const T_key& key, T d, T min, T max) {
-      intmax_t source = luaX_opt_integer_field_impl(L, arg, key, d);
+    inline T luaX_opt_integer_field(lua_State* L, int index, const T_key& key, T d, T min, T max) {
+      intmax_t source = luaX_opt_integer_field_impl(L, index, key, d);
       T target = 0;
       if (luaX_integer_traits<T>::convert(source, target, min, max)) {
         return target;
@@ -786,11 +822,54 @@ namespace dromozoa {
         return false;
       }
     };
+
+    class luaX_reference {
+    public:
+      explicit luaX_reference(lua_State* state = 0) : state_(state), ref_(LUA_NOREF) {
+        if (state_) {
+          ref_ = luaL_ref(state_, LUA_REGISTRYINDEX);
+        }
+      }
+
+      ~luaX_reference() {
+        if (state_) {
+          luaL_unref(state_, LUA_REGISTRYINDEX, ref_);
+        }
+      }
+
+      lua_State* state() const {
+        return state_;
+      }
+
+      int get() const {
+        return ref_;
+      }
+
+      int get_field() const {
+        return luaX_get_field(state_, LUA_REGISTRYINDEX, ref_);
+      }
+
+      void swap(luaX_reference& that) {
+        lua_State* state = state_;
+        state_ = that.state_;
+        that.state_ = state;
+        int ref = ref_;
+        ref_ = that.ref_;
+        that.ref_ = ref;
+      }
+
+    private:
+      lua_State* state_;
+      int ref_;
+      luaX_reference(const luaX_reference&);
+      luaX_reference& operator=(const luaX_reference&);
+    };
   }
 
   using bind::luaX_abs_index;
   using bind::luaX_check_enum;
   using bind::luaX_check_integer;
+  using bind::luaX_check_integer_field;
   using bind::luaX_check_udata;
   using bind::luaX_field_error;
   using bind::luaX_get_field;
@@ -804,6 +883,7 @@ namespace dromozoa {
   using bind::luaX_opt_range_j;
   using bind::luaX_push;
   using bind::luaX_push_success;
+  using bind::luaX_reference;
   using bind::luaX_set_field;
   using bind::luaX_set_metafield;
   using bind::luaX_set_metatable;
