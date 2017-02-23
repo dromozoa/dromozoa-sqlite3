@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -108,7 +108,7 @@ namespace dromozoa {
     if (lua_pcall(L_, 1, 1, 0) != 0) {
       result = 1;
     } else {
-      if (lua_isnumber(L_, -1)) {
+      if (luaX_is_integer(L_, -1)) {
         result = lua_tointeger(L_, -1);
       }
     }
