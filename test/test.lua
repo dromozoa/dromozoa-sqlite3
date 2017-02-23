@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-bind.
 --
@@ -126,6 +126,18 @@ assert(bind.opt_enum(bind.ENUM42) == bind.ENUM42)
 assert(bind.opt_enum(bind.ENUM69) == bind.ENUM69)
 assert(not pcall(bind.check_enum, "foo"))
 
+local a, b = assert(bind.check_integer_field({ foo = 42, [42] = "42" }))
+assert(a == 42)
+assert(b == 42)
+assert(not pcall(bind.check_integer_field, {}))
+assert(not pcall(bind.check_integer_field, { foo = "bar" }))
+assert(not pcall(bind.check_integer_field, { foo = 42 }))
+assert(not pcall(bind.check_integer_field, { foo = 42, [42] = "bar" }))
+
+assert(bind.check_integer_field_range({ nice = 0 }) == 0)
+assert(not pcall(bind.check_integer_field_range, { nice = 42 }))
+assert(not pcall(bind.check_integer_field_range, { nice = "bar" }))
+
 assert(bind.opt_integer_field({}) == 0)
 assert(bind.opt_integer_field({ foo = 42 }) == 42)
 assert(not pcall(bind.opt_integer_field, { foo = "bar" }))
@@ -156,9 +168,13 @@ assert(bind.is_integer(42))
 assert(bind.is_integer(42 / 2))
 assert(not bind.is_integer(1.25))
 assert(bind.is_integer(1.25e6))
-assert(bind.is_integer(1.25e12))
-assert(bind.is_integer(1.25e18))
-assert(not bind.is_integer(1.25e24))
+if bind.sizeof_lua_integer == 4 then
+  assert(not bind.is_integer(1.25e12))
+else
+  assert(bind.is_integer(1.25e12))
+  assert(bind.is_integer(1.25e18))
+  assert(not bind.is_integer(1.25e24))
+end
 
 assert(not bind.is_integer(DBL_MAX))
 assert(not bind.is_integer(DBL_DENORM_MIN))
@@ -182,3 +198,18 @@ assert(bind(42):to("foo", "bar", "dromozoa.bind.int", "qux") == 42)
 assert(bind(42):to("foo", "bar", "baz", "dromozoa.bind.int") == 42)
 
 bind.unexpected()
+
+local sum = 0
+bind.set_callback(function (v)
+  sum = sum + v
+end)
+
+assert(sum == 0)
+bind.run_callback()
+assert(sum == 119)
+
+bind.set_callback()
+
+assert(sum == 119)
+bind.run_callback()
+assert(sum == 119)
