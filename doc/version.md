@@ -7,3 +7,9 @@ Amazon Linux AMI 2016.09 | 3.7.17 | https://aws.amazon.com/jp/amazon-linux-ami/2
 OS X 10.10.5 | 3.8.5 |
 OS X 10.12.3 | 3.14.0 |
 Raspbian GNU/Linux 8 (jessie) | 3.8.7 |
+
+Function | Version
+----|----
+sqlite3_create_function_v2|3.7.3
+sqlite3_close_v2|3.7.14
+sqlite3_errstr|3.7.15
