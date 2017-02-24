@@ -66,6 +66,7 @@ namespace dromozoa {
     int call_exec(int count, char** columns, char** names) const;
   private:
     lua_State* L_;
+    // [TODO] use luaX_reference
     int ref_func_;
     int ref_final_;
     function_handle(const function_handle&);
