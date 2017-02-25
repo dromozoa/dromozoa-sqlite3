@@ -49,11 +49,11 @@ namespace dromozoa {
       }
     }
 
-    void callback_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      luaX_reference<>* ref = static_cast<luaX_reference<>*>(sqlite3_user_data(context));
+    template <class T>
+    void callback_impl(T* ref, size_t i, sqlite3_context* context, int argc, sqlite3_value** argv) {
       lua_State* L = ref->state();
       int top = lua_gettop(L);
-      ref->get_field();
+      ref->get_field(i);
       new_context(L, context);
       for (int i = 0; i < argc; ++i) {
         if (!push_value(L, argv[i])) {
@@ -64,35 +64,18 @@ namespace dromozoa {
         sqlite3_result_error(context, lua_tostring(L, -1), -1);
       }
       lua_settop(L, top);
+    }
+
+    void callback_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
+      callback_impl(static_cast<luaX_reference<>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
     void callback_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      luaX_reference<2>* ref = static_cast<luaX_reference<2>*>(sqlite3_user_data(context));
-      lua_State* L = ref->state();
-      int top = lua_gettop(L);
-      ref->get_field();
-      new_context(L, context);
-      for (int i = 0; i < argc; ++i) {
-        if (!push_value(L, argv[i])) {
-          luaX_push(L, luaX_nil);
-        }
-      }
-      if (lua_pcall(L, argc + 1, 0, 0) != 0) {
-        sqlite3_result_error(context, lua_tostring(L, -1), -1);
-      }
-      lua_settop(L, top);
+      callback_impl(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
     void callback_final(sqlite3_context* context) {
-      luaX_reference<2>* ref = static_cast<luaX_reference<2>*>(sqlite3_user_data(context));
-      lua_State* L = ref->state();
-      int top = lua_gettop(L);
-      ref->get_field(1);
-      new_context(L, context);
-      if (lua_pcall(L, 1, 0, 0) != 0) {
-        sqlite3_result_error(context, lua_tostring(L, -1), -1);
-      }
-      lua_settop(L, top);
+      callback_impl(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 1, context, 0, 0);
     }
 
     int callback_exec(void* data, int count, char** columns, char** names) {
