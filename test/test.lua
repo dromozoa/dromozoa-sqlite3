@@ -200,16 +200,17 @@ assert(bind(42):to("foo", "bar", "baz", "dromozoa.bind.int") == 42)
 bind.unexpected()
 
 local sum = 0
-bind.set_callback(function (v)
-  sum = sum + v
-end)
+bind.set_callback(function (v) sum = sum + v end, print)
 
 assert(sum == 0)
-bind.run_callback()
+bind.run_callback_i(17)
+bind.run_callback_i(23)
+bind.run_callback_i(37)
+bind.run_callback_i(42)
 assert(sum == 119)
 
-bind.set_callback()
+bind.run_callback_s("foo")
+bind.run_callback_s("bar")
+bind.run_callback_s("baz")
 
-assert(sum == 119)
-bind.run_callback()
-assert(sum == 119)
+bind.run_destructor()
