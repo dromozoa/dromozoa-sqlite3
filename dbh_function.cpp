@@ -126,27 +126,25 @@ namespace dromozoa {
 
     void impl_create_function(lua_State* L) {
       database_handle* self = check_database_handle(L, 1);
-      sqlite3* dbh = self->get();
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       luaX_reference<>* function = self->new_function(L, 4);
-      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, callback_func, 0, 0) == SQLITE_OK) {
+      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, callback_func, 0, 0) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
-        push_error(L, dbh);
+        push_error(L, self->get());
       }
     }
 
     void impl_create_aggregate(lua_State* L) {
       database_handle* self = check_database_handle(L, 1);
-      sqlite3* dbh = self->get();
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       luaX_reference<2>* aggregate = self->new_aggregate(L, 4, 5);
-      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, aggregate, 0, callback_step, callback_final) == SQLITE_OK) {
+      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, callback_step, callback_final) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
-        push_error(L, dbh);
+        push_error(L, self->get());
       }
     }
 
