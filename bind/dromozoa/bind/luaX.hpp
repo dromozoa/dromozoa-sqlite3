@@ -823,50 +823,109 @@ namespace dromozoa {
       }
     };
 
-    class luaX_reference {
+    class luaX_binder {
     public:
-      explicit luaX_reference(lua_State* state = 0) : state_(state), ref_(LUA_NOREF) {
-        if (state_) {
-          ref_ = luaL_ref(state_, LUA_REGISTRYINDEX);
-        }
-      }
+      virtual ~luaX_binder() {};
+      virtual lua_State* state() const = 0;
+    protected:
+      luaX_binder() {}
+    private:
+      luaX_binder(const luaX_binder&);
+      luaX_binder& operator=(const luaX_binder&);
+    };
 
-      ~luaX_reference() {
-        if (state_) {
-          luaL_unref(state_, LUA_REGISTRYINDEX, ref_);
-        }
-      }
-
-      lua_State* state() const {
+    class luaX_binder_impl : public luaX_binder {
+    public:
+      virtual lua_State* state() const {
         return state_;
       }
+    protected:
+      explicit luaX_binder_impl(lua_State* state) : state_(state) {}
+    private:
+      lua_State* state_;
+    };
 
-      int get() const {
-        return ref_;
+    template <size_t T>
+    class luaX_reference_impl : public luaX_binder_impl {
+    public:
+      virtual ~luaX_reference_impl() {
+        lua_State* L = state();
+        for (size_t i = 0; i < T; ++i) {
+          luaL_unref(L, LUA_REGISTRYINDEX, references_[i]);
+        }
       }
 
-      int get_field() const {
-        return luaX_get_field(state_, LUA_REGISTRYINDEX, ref_);
+      int get_field(size_t i = 0) const {
+        lua_State* L = state();
+        if (i < T) {
+          return luaX_get_field(L, LUA_REGISTRYINDEX, references_[i]);
+        } else {
+          luaX_push(L, luaX_nil);
+          return LUA_TNIL;
+        }
       }
 
-      void swap(luaX_reference& that) {
-        lua_State* state = state_;
-        state_ = that.state_;
-        that.state_ = state;
-        int ref = ref_;
-        ref_ = that.ref_;
-        that.ref_ = ref;
+    protected:
+      explicit luaX_reference_impl(lua_State* state) : luaX_binder_impl(state) {
+        for (size_t i = 0; i < T; ++i) {
+          references_[i] = LUA_NOREF;
+        }
+      }
+
+      void ref(size_t i, int index) {
+        lua_State* L = state();
+        lua_pushvalue(L, index);
+        references_[i] = luaL_ref(L, LUA_REGISTRYINDEX);
       }
 
     private:
-      lua_State* state_;
-      int ref_;
-      luaX_reference(const luaX_reference&);
-      luaX_reference& operator=(const luaX_reference&);
+      int references_[T];
+    };
+
+    template <size_t T = 1>
+    class luaX_reference;
+
+    template <>
+    class luaX_reference<1> : public luaX_reference_impl<1> {
+    public:
+      luaX_reference(lua_State* state, int index0) : luaX_reference_impl(state) {
+        ref(0, index0);
+      }
+    };
+
+    template <>
+    class luaX_reference<2> : public luaX_reference_impl<2> {
+    public:
+      luaX_reference(lua_State* state, int index0, int index1) : luaX_reference_impl(state) {
+        ref(0, index0);
+        ref(1, index1);
+      }
+    };
+
+    template <>
+    class luaX_reference<3> : public luaX_reference_impl<3> {
+    public:
+      luaX_reference(lua_State* state, int index0, int index1, int index2) : luaX_reference_impl(state) {
+        ref(0, index0);
+        ref(1, index1);
+        ref(2, index2);
+      }
+    };
+
+    template <>
+    class luaX_reference<4> : public luaX_reference_impl<4> {
+    public:
+      luaX_reference(lua_State* state, int index0, int index1, int index2, int index3) : luaX_reference_impl(state) {
+        ref(0, index0);
+        ref(1, index1);
+        ref(2, index2);
+        ref(3, index3);
+      }
     };
   }
 
   using bind::luaX_abs_index;
+  using bind::luaX_binder;
   using bind::luaX_check_enum;
   using bind::luaX_check_integer;
   using bind::luaX_check_integer_field;

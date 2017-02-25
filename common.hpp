@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -25,22 +25,24 @@
 #include <dromozoa/bind.hpp>
 
 namespace dromozoa {
-  class function_handle;
-
   class database_handle {
   public:
     explicit database_handle(sqlite3* dbh);
     ~database_handle();
     int close();
     sqlite3* get() const;
-    function_handle* new_function(lua_State* L, int arg_func);
-    function_handle* new_aggregate(lua_State* L, int arg_func, int arg_final);
+    luaX_reference<>* new_function(lua_State* L, int index_func);
+    luaX_reference<2>* new_aggregate(lua_State* L, int index_step, int index_final);
   private:
     sqlite3* dbh_;
-    std::set<function_handle*> function_;
+    std::set<luaX_binder*> references_;
     database_handle(const database_handle&);
     database_handle& operator=(const database_handle&);
   };
+
+  void new_dbh(lua_State* L, sqlite3* dbh);
+  database_handle* check_database_handle(lua_State* L, int arg);
+  sqlite3* check_dbh(lua_State* L, int arg);
 
   class statement_handle {
   public:
@@ -54,36 +56,16 @@ namespace dromozoa {
     statement_handle& operator=(const statement_handle&);
   };
 
-  class function_handle {
-    friend class database_handle;
-  public:
-    function_handle(lua_State* L, int arg_func);
-    function_handle(lua_State* L, int arg_func, int arg_final);
-    ~function_handle();
-    void call_func(sqlite3_context* context, int argc, sqlite3_value** argv) const;
-    void call_step(sqlite3_context* context, int argc, sqlite3_value** argv) const;
-    void call_final(sqlite3_context* context) const;
-    int call_exec(int count, char** columns, char** names) const;
-  private:
-    lua_State* L_;
-    // [TODO] use luaX_reference
-    int ref_func_;
-    int ref_final_;
-    function_handle(const function_handle&);
-    function_handle& operator=(const function_handle&);
-  };
+  void new_sth(lua_State* L, sqlite3_stmt* sth);
+  sqlite3_stmt* check_sth(lua_State* L, int arg);
+
+  void new_context(lua_State* L, sqlite3_context* context);
 
   std::string error_to_string(int code);
   void push_error(lua_State* L, int code);
   void push_error(lua_State* L, sqlite3* dbh);
   void push_error(lua_State* L, sqlite3_stmt* sth);
   void push_null(lua_State* L);
-
-  void new_dbh(lua_State* L, sqlite3* dbh);
-  database_handle* check_database_handle(lua_State* L, int arg);
-  void new_sth(lua_State* L, sqlite3_stmt* sth);
-  sqlite3_stmt* check_sth(lua_State* L, int arg);
-  void new_context(lua_State* L, sqlite3_context* context);
 }
 
 #endif

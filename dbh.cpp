@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -15,20 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <iostream>
-
 #include "common.hpp"
 
 namespace dromozoa {
   namespace {
-    sqlite3* check_dbh(lua_State* L, int arg) {
-      return check_database_handle(L, arg)->get();
-    }
-
-    int cb_exec(void* data, int count, char** columns, char** names) {
-      return static_cast<function_handle*>(data)->call_exec(count, columns, names);
-    }
-
     void impl_gc(lua_State* L) {
       check_database_handle(L, 1)->~database_handle();
     }
@@ -77,23 +67,6 @@ namespace dromozoa {
       }
     }
 
-    void impl_exec(lua_State* L) {
-      sqlite3* dbh = check_dbh(L, 1);
-      const char* sql = luaL_checkstring(L, 2);
-      int code = SQLITE_ERROR;
-      if (lua_isnoneornil(L, 3)) {
-        code = sqlite3_exec(dbh, sql, 0, 0, 0);
-      } else {
-        function_handle function(L, 3);
-        code = sqlite3_exec(dbh, sql, cb_exec, &function, 0);
-      }
-      if (code == SQLITE_OK) {
-        luaX_push_success(L);
-      } else {
-        push_error(L, dbh);
-      }
-    }
-
     void impl_changes(lua_State* L) {
       luaX_push(L, sqlite3_changes(check_dbh(L, 1)));
     }
@@ -112,6 +85,10 @@ namespace dromozoa {
     return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh");
   }
 
+  sqlite3* check_dbh(lua_State* L, int arg) {
+    return check_database_handle(L, arg)->get();
+  }
+
   void initialize_dbh_function(lua_State* L);
 
   void initialize_dbh(lua_State* L) {
@@ -126,7 +103,6 @@ namespace dromozoa {
       luaX_set_field(L, -1, "close", impl_close);
       luaX_set_field(L, -1, "busy_timeout", impl_busy_timeout);
       luaX_set_field(L, -1, "prepare", impl_prepare);
-      luaX_set_field(L, -1, "exec", impl_exec);
       luaX_set_field(L, -1, "changes", impl_changes);
       luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
 
