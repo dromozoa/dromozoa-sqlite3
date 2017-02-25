@@ -87,8 +87,8 @@ namespace dromozoa {
     luaX_set_field(L, -1, "SQLITE_NULL", SQLITE_NULL);
 
     // Result Codes
-    luaX_set_field(L, -1, "SQLITE_OK", SQLITE_OK);     // (0)
-    luaX_set_field(L, -1, "SQLITE_ROW", SQLITE_ROW);   // (100)
+    luaX_set_field(L, -1, "SQLITE_OK", SQLITE_OK); // (0)
+    luaX_set_field(L, -1, "SQLITE_ROW", SQLITE_ROW); // (100)
     luaX_set_field(L, -1, "SQLITE_DONE", SQLITE_DONE); // (101)
 
     // Flags For File Open Operations
