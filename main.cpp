@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -50,6 +50,18 @@ namespace dromozoa {
         push_error(L, code);
       }
     }
+
+    void impl_libversion(lua_State* L) {
+      luaX_push(L, sqlite3_libversion());
+    }
+
+    void impl_libversion_number(lua_State* L) {
+      luaX_push(L, sqlite3_libversion_number());
+    }
+
+    void impl_sourceid(lua_State* L) {
+      luaX_push(L, sqlite3_sourceid());
+    }
   }
 
   void push_null(lua_State* L) {
@@ -60,6 +72,9 @@ namespace dromozoa {
     luaX_set_field(L, -1, "initialize", impl_initialize);
     luaX_set_field(L, -1, "shutdown", impl_shutdown);
     luaX_set_field(L, -1, "open", impl_open);
+    luaX_set_field(L, -1, "libversion", impl_libversion);
+    luaX_set_field(L, -1, "libversion_number", impl_libversion_number);
+    luaX_set_field(L, -1, "sourceid", impl_sourceid);
 
     push_null(L);
     luaX_set_field(L, -2, "null");
@@ -72,8 +87,8 @@ namespace dromozoa {
     luaX_set_field(L, -1, "SQLITE_NULL", SQLITE_NULL);
 
     // Result Codes
-    luaX_set_field(L, -1, "SQLITE_OK", SQLITE_OK);     // (0)
-    luaX_set_field(L, -1, "SQLITE_ROW", SQLITE_ROW);   // (100)
+    luaX_set_field(L, -1, "SQLITE_OK", SQLITE_OK); // (0)
+    luaX_set_field(L, -1, "SQLITE_ROW", SQLITE_ROW); // (100)
     luaX_set_field(L, -1, "SQLITE_DONE", SQLITE_DONE); // (101)
 
     // Flags For File Open Operations

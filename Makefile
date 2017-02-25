@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-sqlite3.
 #
@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-CPPFLAGS = -Ibind -I$(LUA_INCDIR)
-CXXFLAGS = -Wall -W $(CFLAGS)
-LDFLAGS = -L$(LUA_LIBDIR) $(LIBFLAG)
-LDLIBS = -lsqlite3 -ldl
+CPPFLAGS += -Ibind -I$(LUA_INCDIR)
+CXXFLAGS += -Wall -W $(CFLAGS)
+LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
+LDLIBS += -lsqlite3 -ldl
 
 OBJS = \
 	context.o \
@@ -26,7 +26,6 @@ OBJS = \
 	dbh.o \
 	dbh_function.o \
 	error.o \
-	function_handle.o \
 	main.o \
 	module.o \
 	statement_handle.o \
