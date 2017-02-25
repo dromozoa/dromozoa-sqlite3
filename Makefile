@@ -26,7 +26,6 @@ OBJS = \
 	dbh.o \
 	dbh_function.o \
 	error.o \
-	function_handle.o \
 	main.o \
 	module.o \
 	statement_handle.o \

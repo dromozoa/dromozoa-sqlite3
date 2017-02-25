@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -30,12 +30,12 @@ namespace dromozoa {
   }
 
   int database_handle::close() {
-    std::set<function_handle*>::iterator i = function_.begin();
-    std::set<function_handle*>::iterator end = function_.end();
+    std::set<luaX_binder*>::iterator i = references_.begin();
+    std::set<luaX_binder*>::iterator end = references_.end();
     for (; i != end; ++i) {
       delete *i;
     }
-    function_.clear();
+    references_.clear();
 
     sqlite3* dbh = dbh_;
     dbh_ = 0;
@@ -50,26 +50,26 @@ namespace dromozoa {
     return dbh_;
   }
 
-  function_handle* database_handle::new_function(lua_State* L, int arg_func) {
-    function_handle* function = 0;
+  luaX_reference<>* database_handle::new_function(lua_State* L, int index_func) {
+    luaX_reference<>* reference = 0;
     try {
-      function = new function_handle(L, arg_func);
-      function_.insert(function);
-      return function;
+      reference = new luaX_reference<>(L, index_func);
+      references_.insert(reference);
+      return reference;
     } catch (...) {
-      delete function;
+      delete reference;
       throw;
     }
   }
 
-  function_handle* database_handle::new_aggregate(lua_State* L, int arg_func, int arg_final) {
-    function_handle* function = 0;
+  luaX_reference<2>* database_handle::new_aggregate(lua_State* L, int index_step, int index_final) {
+    luaX_reference<2>* reference = 0;
     try {
-      function = new function_handle(L, arg_func, arg_final);
-      function_.insert(function);
-      return function;
+      reference = new luaX_reference<2>(L, index_step, index_final);
+      references_.insert(reference);
+      return reference;
     } catch (...) {
-      delete function;
+      delete reference;
       throw;
     }
   }

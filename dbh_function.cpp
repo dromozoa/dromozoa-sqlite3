@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -19,20 +19,109 @@
 
 namespace dromozoa {
   namespace {
-    function_handle* get_function_handle(sqlite3_context* context) {
-      return static_cast<function_handle*>(sqlite3_user_data(context));
+    bool push_value(lua_State* L, sqlite3_value* value) {
+      switch (sqlite3_value_type(value)) {
+        case SQLITE_INTEGER:
+          luaX_push(L, sqlite3_value_int64(value));
+          return true;
+        case SQLITE_FLOAT:
+          luaX_push(L, sqlite3_value_double(value));
+          return true;
+        case SQLITE_TEXT:
+          if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
+            lua_pushlstring(L, text, sqlite3_value_bytes(value));
+            return true;
+          } else {
+            return false;
+          }
+        case SQLITE_BLOB:
+          if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
+            lua_pushlstring(L, blob, sqlite3_value_bytes(value));
+            return true;
+          } else {
+            return false;
+          }
+        case SQLITE_NULL:
+          push_null(L);
+          return true;
+        default:
+          return false;
+      }
     }
 
-    void cb_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      get_function_handle(context)->call_func(context, argc, argv);
+    void callback_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
+      luaX_reference<>* ref = static_cast<luaX_reference<>*>(sqlite3_user_data(context));
+      lua_State* L = ref->state();
+      int top = lua_gettop(L);
+      ref->get_field();
+      new_context(L, context);
+      for (int i = 0; i < argc; ++i) {
+        if (!push_value(L, argv[i])) {
+          luaX_push(L, luaX_nil);
+        }
+      }
+      if (lua_pcall(L, argc + 1, 0, 0) != 0) {
+        sqlite3_result_error(context, lua_tostring(L, -1), -1);
+      }
+      lua_settop(L, top);
     }
 
-    void cb_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      get_function_handle(context)->call_func(context, argc, argv);
+    void callback_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
+      luaX_reference<2>* ref = static_cast<luaX_reference<2>*>(sqlite3_user_data(context));
+      lua_State* L = ref->state();
+      int top = lua_gettop(L);
+      ref->get_field();
+      new_context(L, context);
+      for (int i = 0; i < argc; ++i) {
+        if (!push_value(L, argv[i])) {
+          luaX_push(L, luaX_nil);
+        }
+      }
+      if (lua_pcall(L, argc + 1, 0, 0) != 0) {
+        sqlite3_result_error(context, lua_tostring(L, -1), -1);
+      }
+      lua_settop(L, top);
     }
 
-    void cb_final(sqlite3_context* context) {
-      get_function_handle(context)->call_final(context);
+    void callback_final(sqlite3_context* context) {
+      luaX_reference<2>* ref = static_cast<luaX_reference<2>*>(sqlite3_user_data(context));
+      lua_State* L = ref->state();
+      int top = lua_gettop(L);
+      ref->get_field(1);
+      new_context(L, context);
+      if (lua_pcall(L, 1, 0, 0) != 0) {
+        sqlite3_result_error(context, lua_tostring(L, -1), -1);
+      }
+      lua_settop(L, top);
+    }
+
+    int callback_exec(void* data, int count, char** columns, char** names) {
+      luaX_reference<>* ref = static_cast<luaX_reference<>*>(data);
+      lua_State* L = ref->state();
+      int top = lua_gettop(L);
+      ref->get_field();
+      lua_newtable(L);
+      for (int i = 0; i < count; ++i) {
+        if (columns[i]) {
+          luaX_push(L, columns[i]);
+        } else {
+          push_null(L);
+        }
+        lua_pushvalue(L, -1);
+        luaX_set_field(L, -3, i + 1);
+        luaX_set_field(L, -2, names[i]);
+      }
+      int result = 0;
+      if (lua_pcall(L, 1, 1, 0) == 0) {
+        if (luaX_is_integer(L, -1)) {
+          result = lua_tointeger(L, -1);
+        }
+      } else {
+        DROMOZOA_UNEXPECTED(lua_tostring(L, -1));
+        result = 1;
+      }
+      lua_settop(L, top);
+      return result;
     }
 
     void impl_create_function(lua_State* L) {
@@ -40,8 +129,8 @@ namespace dromozoa {
       sqlite3* dbh = self->get();
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
-      function_handle* function = self->new_function(L, 4);
-      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, cb_func, 0, 0) == SQLITE_OK) {
+      luaX_reference<>* function = self->new_function(L, 4);
+      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, callback_func, 0, 0) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, dbh);
@@ -53,8 +142,25 @@ namespace dromozoa {
       sqlite3* dbh = self->get();
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
-      function_handle* function = self->new_aggregate(L, 4, 5);
-      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, function, 0, cb_step, cb_final) == SQLITE_OK) {
+      luaX_reference<2>* aggregate = self->new_aggregate(L, 4, 5);
+      if (sqlite3_create_function(dbh, name, narg, SQLITE_UTF8, aggregate, 0, callback_step, callback_final) == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, dbh);
+      }
+    }
+
+    void impl_exec(lua_State* L) {
+      sqlite3* dbh = check_dbh(L, 1);
+      const char* sql = luaL_checkstring(L, 2);
+      int code = SQLITE_ERROR;
+      if (lua_isnoneornil(L, 3)) {
+        code = sqlite3_exec(dbh, sql, 0, 0, 0);
+      } else {
+        luaX_reference<> reference(L, 3);
+        code = sqlite3_exec(dbh, sql, callback_exec, &reference, 0);
+      }
+      if (code == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, dbh);
@@ -65,5 +171,6 @@ namespace dromozoa {
   void initialize_dbh_function(lua_State* L) {
     luaX_set_field(L, -1, "create_function", impl_create_function);
     luaX_set_field(L, -1, "create_aggregate", impl_create_aggregate);
+    luaX_set_field(L, -1, "exec", impl_exec);
   }
 }
