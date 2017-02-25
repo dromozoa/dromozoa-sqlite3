@@ -128,6 +128,7 @@ namespace dromozoa {
       database_handle* self = check_database_handle(L, 1);
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
+      luaL_checkany(L, 4);
       luaX_reference<>* function = self->new_function(L, 4);
       if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, callback_func, 0, 0) == SQLITE_OK) {
         luaX_push_success(L);
@@ -140,6 +141,8 @@ namespace dromozoa {
       database_handle* self = check_database_handle(L, 1);
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
+      luaL_checkany(L, 4);
+      luaL_checkany(L, 5);
       luaX_reference<2>* aggregate = self->new_aggregate(L, 4, 5);
       if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, callback_step, callback_final) == SQLITE_OK) {
         luaX_push_success(L);
