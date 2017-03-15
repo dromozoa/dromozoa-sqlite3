@@ -16,6 +16,7 @@
 // along with dromozoa-bind.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdexcept>
+#include <iostream>
 
 #include "dromozoa/bind.hpp"
 
@@ -294,7 +295,12 @@ namespace dromozoa {
       luaX_reference<1>(L, 1).swap(reference);
     }
 
-    void impl_get_field(lua_State*) {
+    void impl_get_field_with_state(lua_State* L) {
+      std::cout << reference.state() << " " << L << "\n";
+      reference.get_field(L);
+    }
+
+    void impl_get_field_without_state(lua_State*) {
       reference.get_field();
     }
 
@@ -367,7 +373,8 @@ namespace dromozoa {
     luaX_set_field(L, -1, "run_destructor", impl_run_destructor);
 
     luaX_set_field(L, -1, "ref", impl_ref);
-    luaX_set_field(L, -1, "get_field", impl_get_field);
+    luaX_set_field(L, -1, "get_field_with_state", impl_get_field_with_state);
+    luaX_set_field(L, -1, "get_field_without_state", impl_get_field_without_state);
     luaX_set_field(L, -1, "unref", impl_unref);
 
     luaX_set_field(L, -1, "sizeof_lua_integer", sizeof(lua_Integer));
