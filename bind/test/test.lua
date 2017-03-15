@@ -214,3 +214,10 @@ bind.run_callback_s("bar")
 bind.run_callback_s("baz")
 
 bind.run_destructor()
+
+bind.ref(42)
+assert(bind.get_field() == 42)
+bind.unref()
+local result, message = pcall(bind.get_field)
+print(result, message)
+assert(not result)
