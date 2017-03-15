@@ -216,8 +216,18 @@ bind.run_callback_s("baz")
 bind.run_destructor()
 
 bind.ref(42)
-assert(bind.get_field() == 42)
+assert(bind.get_field_with_state() == 42)
+
+local thread = coroutine.create(function ()
+  assert(bind.get_field_with_state() == 42)
+end)
+assert(coroutine.resume(thread))
+
 bind.unref()
-local result, message = pcall(bind.get_field)
+local result, message = pcall(bind.get_field_without_state)
 print(result, message)
 assert(not result)
+
+
+
+
