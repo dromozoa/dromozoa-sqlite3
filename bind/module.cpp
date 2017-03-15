@@ -287,6 +287,20 @@ namespace dromozoa {
     void impl_run_destructor(lua_State*) {
       api_run_destructor();
     }
+
+    luaX_reference<1> reference;
+
+    void impl_ref(lua_State* L) {
+      luaX_reference<1>(L, 1).swap(reference);
+    }
+
+    void impl_get_field(lua_State*) {
+      reference.get_field();
+    }
+
+    void impl_unref(lua_State*) {
+      luaX_reference<1>().swap(reference);
+    }
   }
 
   void initialize(lua_State* L) {
@@ -351,6 +365,10 @@ namespace dromozoa {
     luaX_set_field(L, -1, "run_callback_i", impl_run_callback_i);
     luaX_set_field(L, -1, "run_callback_s", impl_run_callback_s);
     luaX_set_field(L, -1, "run_destructor", impl_run_destructor);
+
+    luaX_set_field(L, -1, "ref", impl_ref);
+    luaX_set_field(L, -1, "get_field", impl_get_field);
+    luaX_set_field(L, -1, "unref", impl_unref);
 
     luaX_set_field(L, -1, "sizeof_lua_integer", sizeof(lua_Integer));
   }
