@@ -878,6 +878,15 @@ namespace dromozoa {
         }
       }
 
+      int get_field(lua_State* L, size_t i = 0) const {
+        if (i < T) {
+          return luaX_get_field(L, LUA_REGISTRYINDEX, references_[i]);
+        } else {
+          luaX_push(L, luaX_nil);
+          return LUA_TNIL;
+        }
+      }
+
       void swap(luaX_reference_impl& that) {
         luaX_binder_impl::swap(that);
         for (size_t i = 0; i < T; ++i) {
