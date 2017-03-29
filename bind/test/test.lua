@@ -200,13 +200,14 @@ assert(bind(42):to("foo", "bar", "baz", "dromozoa.bind.int") == 42)
 bind.unexpected()
 
 local sum = 0
-bind.set_callback(function (v) sum = sum + v end, print)
+bind.set_callback(function (v) print(sum, v) sum = sum + v end, print)
 
 assert(sum == 0)
 bind.run_callback_i(17)
 bind.run_callback_i(23)
 bind.run_callback_i(37)
 bind.run_callback_i(42)
+print(sum)
 assert(sum == 119)
 
 bind.run_callback_s("foo")
@@ -228,6 +229,35 @@ local result, message = pcall(bind.get_field_without_state)
 print(result, message)
 assert(not result)
 
+local thread = coroutine.create(function ()
+  local thread = coroutine.create(function ()
+    local thread = coroutine.create(function ()
+      local thread = coroutine.create(function ()
+        bind.set_callback(print, print)
+        collectgarbage()
+        collectgarbage()
+      end)
+      assert(coroutine.resume(thread))
+      thread = nil
+      collectgarbage()
+      collectgarbage()
+    end)
+    assert(coroutine.resume(thread))
+    thread = nil
+    collectgarbage()
+    collectgarbage()
+  end)
+  assert(coroutine.resume(thread))
+  thread = nil
+  collectgarbage()
+  collectgarbage()
+end)
+assert(coroutine.resume(thread))
+thread = nil
+collectgarbage()
+collectgarbage()
 
-
-
+bind.run_callback_s("foo")
+bind.run_callback_s("bar")
+bind.run_callback_s("baz")
+bind.run_destructor()
