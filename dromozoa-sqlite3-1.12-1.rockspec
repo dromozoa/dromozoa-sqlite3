@@ -1,14 +1,17 @@
-package = "dromozoa-bind"
-version = "1.34-1"
+package = "dromozoa-sqlite3"
+version = "1.12-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-bind/archive/v1.34.tar.gz";
-  file = "dromozoa-bind-1.34.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-sqlite3/archive/v1.12.tar.gz";
+  file = "dromozoa-sqlite3-1.12.tar.gz";
 }
 description = {
-  summary = "Helper library for creating bindings between C++ and Lua";
+  summary = "Lua bindings for SQLite3";
   license = "GPL-3";
-  homepage = "https://github.com/dromozoa/dromozoa-bind/";
+  homepage = "https://github.com/dromozoa/dromozoa-sqlite3/";
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
+}
+dependencies = {
+  "dromozoa-commons";
 }
 build = {
   type = "make";
