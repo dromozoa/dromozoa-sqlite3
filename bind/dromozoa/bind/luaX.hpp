@@ -837,12 +837,23 @@ namespace dromozoa {
 
     class luaX_binder_impl : public luaX_binder {
     public:
+      virtual ~luaX_binder_impl() {
+        if (state_) {
+          luaL_unref(state_, LUA_REGISTRYINDEX, state_reference_);
+        }
+      }
+
       virtual lua_State* state() const {
         return state_;
       }
 
     protected:
-      explicit luaX_binder_impl(lua_State* state) : state_(state) {}
+      explicit luaX_binder_impl(lua_State* state) : state_(), state_reference_(LUA_NOREF) {
+        if (state) {
+          state_ = lua_newthread(state);
+          state_reference_ = luaL_ref(state, LUA_REGISTRYINDEX);
+        }
+      }
 
       void swap(luaX_binder_impl& that) {
         lua_State* state = state_;
@@ -852,6 +863,7 @@ namespace dromozoa {
 
     private:
       lua_State* state_;
+      int state_reference_;
     };
 
     template <size_t T>
@@ -903,13 +915,9 @@ namespace dromozoa {
         }
       }
 
-      void ref(size_t i, int index) {
-        if (lua_State* L = state()) {
-          lua_pushvalue(L, index);
-          references_[i] = luaL_ref(L, LUA_REGISTRYINDEX);
-        } else {
-          throw std::logic_error("invalid state");
-        }
+      void ref(lua_State* L, size_t i, int index) {
+        lua_pushvalue(L, index);
+        references_[i] = luaL_ref(L, LUA_REGISTRYINDEX);
       }
 
     private:
@@ -925,7 +933,7 @@ namespace dromozoa {
       luaX_reference() : luaX_reference_impl(0) {}
 
       luaX_reference(lua_State* state, int index0) : luaX_reference_impl(state) {
-        ref(0, index0);
+        ref(state, 0, index0);
       }
     };
 
@@ -935,8 +943,8 @@ namespace dromozoa {
       luaX_reference() : luaX_reference_impl(0) {}
 
       luaX_reference(lua_State* state, int index0, int index1) : luaX_reference_impl(state) {
-        ref(0, index0);
-        ref(1, index1);
+        ref(state, 0, index0);
+        ref(state, 1, index1);
       }
     };
 
@@ -946,9 +954,9 @@ namespace dromozoa {
       luaX_reference() : luaX_reference_impl(0) {}
 
       luaX_reference(lua_State* state, int index0, int index1, int index2) : luaX_reference_impl(state) {
-        ref(0, index0);
-        ref(1, index1);
-        ref(2, index2);
+        ref(state, 0, index0);
+        ref(state, 1, index1);
+        ref(state, 2, index2);
       }
     };
 
@@ -958,10 +966,10 @@ namespace dromozoa {
       luaX_reference() : luaX_reference_impl(0) {}
 
       luaX_reference(lua_State* state, int index0, int index1, int index2, int index3) : luaX_reference_impl(state) {
-        ref(0, index0);
-        ref(1, index1);
-        ref(2, index2);
-        ref(3, index3);
+        ref(state, 0, index0);
+        ref(state, 1, index1);
+        ref(state, 2, index2);
+        ref(state, 3, index3);
       }
     };
   }
