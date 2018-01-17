@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -930,9 +930,9 @@ namespace dromozoa {
     template <>
     class luaX_reference<1> : public luaX_reference_impl<1> {
     public:
-      luaX_reference() : luaX_reference_impl(0) {}
+      luaX_reference() : luaX_reference_impl<1>(0) {}
 
-      luaX_reference(lua_State* state, int index0) : luaX_reference_impl(state) {
+      luaX_reference(lua_State* state, int index0) : luaX_reference_impl<1>(state) {
         ref(state, 0, index0);
       }
     };
@@ -940,9 +940,9 @@ namespace dromozoa {
     template <>
     class luaX_reference<2> : public luaX_reference_impl<2> {
     public:
-      luaX_reference() : luaX_reference_impl(0) {}
+      luaX_reference() : luaX_reference_impl<2>(0) {}
 
-      luaX_reference(lua_State* state, int index0, int index1) : luaX_reference_impl(state) {
+      luaX_reference(lua_State* state, int index0, int index1) : luaX_reference_impl<2>(state) {
         ref(state, 0, index0);
         ref(state, 1, index1);
       }
@@ -951,9 +951,9 @@ namespace dromozoa {
     template <>
     class luaX_reference<3> : public luaX_reference_impl<3> {
     public:
-      luaX_reference() : luaX_reference_impl(0) {}
+      luaX_reference() : luaX_reference_impl<3>(0) {}
 
-      luaX_reference(lua_State* state, int index0, int index1, int index2) : luaX_reference_impl(state) {
+      luaX_reference(lua_State* state, int index0, int index1, int index2) : luaX_reference_impl<3>(state) {
         ref(state, 0, index0);
         ref(state, 1, index1);
         ref(state, 2, index2);
@@ -963,9 +963,9 @@ namespace dromozoa {
     template <>
     class luaX_reference<4> : public luaX_reference_impl<4> {
     public:
-      luaX_reference() : luaX_reference_impl(0) {}
+      luaX_reference() : luaX_reference_impl<4>(0) {}
 
-      luaX_reference(lua_State* state, int index0, int index1, int index2, int index3) : luaX_reference_impl(state) {
+      luaX_reference(lua_State* state, int index0, int index1, int index2, int index3) : luaX_reference_impl<4>(state) {
         ref(state, 0, index0);
         ref(state, 1, index1);
         ref(state, 2, index2);
