@@ -30,6 +30,14 @@ namespace dromozoa {
   }
 
   int database_handle::close() {
+    sqlite3* dbh = dbh_;
+    dbh_ = 0;
+#if SQLITE_VERSION_NUMBER >= 3007014
+    int result = sqlite3_close_v2(dbh);
+#else
+    int result = sqlite3_close(dbh);
+#endif
+
     std::set<luaX_binder*>::iterator i = references_.begin();
     std::set<luaX_binder*>::iterator end = references_.end();
     for (; i != end; ++i) {
@@ -37,13 +45,7 @@ namespace dromozoa {
     }
     references_.clear();
 
-    sqlite3* dbh = dbh_;
-    dbh_ = 0;
-#if SQLITE_VERSION_NUMBER >= 3007014
-    return sqlite3_close_v2(dbh);
-#else
-    return sqlite3_close(dbh);
-#endif
+    return result;
   }
 
   sqlite3* database_handle::get() const {
