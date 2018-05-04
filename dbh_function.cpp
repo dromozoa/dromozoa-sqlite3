@@ -117,7 +117,7 @@ namespace dromozoa {
       int narg = luaX_check_integer<int>(L, 3);
       if (lua_isnoneornil(L, 4)) {
         if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0) == SQLITE_OK) {
-          self->delete_function(name, narg);
+          self->delete_reference(name, narg);
           luaX_push_success(L);
         } else {
           push_error(L, self->get());
