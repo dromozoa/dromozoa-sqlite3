@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -53,15 +53,17 @@ namespace dromozoa {
     void callback_impl(T* ref, size_t i, sqlite3_context* context, int argc, sqlite3_value** argv) {
       lua_State* L = ref->state();
       int top = lua_gettop(L);
-      ref->get_field(i);
-      new_context(L, context);
-      for (int i = 0; i < argc; ++i) {
-        if (!push_value(L, argv[i])) {
-          luaX_push(L, luaX_nil);
+      {
+        ref->get_field(L, i);
+        new_context(L, context);
+        for (int i = 0; i < argc; ++i) {
+          if (!push_value(L, argv[i])) {
+            luaX_push(L, luaX_nil);
+          }
         }
-      }
-      if (lua_pcall(L, argc + 1, 0, 0) != 0) {
-        sqlite3_result_error(context, lua_tostring(L, -1), -1);
+        if (lua_pcall(L, argc + 1, 0, 0) != 0) {
+          sqlite3_result_error(context, lua_tostring(L, -1), -1);
+        }
       }
       lua_settop(L, top);
     }
@@ -81,27 +83,29 @@ namespace dromozoa {
     int callback_exec(void* data, int count, char** columns, char** names) {
       luaX_reference<>* ref = static_cast<luaX_reference<>*>(data);
       lua_State* L = ref->state();
-      int top = lua_gettop(L);
-      ref->get_field();
-      lua_newtable(L);
-      for (int i = 0; i < count; ++i) {
-        if (columns[i]) {
-          luaX_push(L, columns[i]);
-        } else {
-          push_null(L);
-        }
-        lua_pushvalue(L, -1);
-        luaX_set_field(L, -3, i + 1);
-        luaX_set_field(L, -2, names[i]);
-      }
       int result = 0;
-      if (lua_pcall(L, 1, 1, 0) == 0) {
-        if (luaX_is_integer(L, -1)) {
-          result = lua_tointeger(L, -1);
+      int top = lua_gettop(L);
+      {
+        ref->get_field(L);
+        lua_newtable(L);
+        for (int i = 0; i < count; ++i) {
+          if (columns[i]) {
+            luaX_push(L, columns[i]);
+          } else {
+            push_null(L);
+          }
+          lua_pushvalue(L, -1);
+          luaX_set_field(L, -3, i + 1);
+          luaX_set_field(L, -2, names[i]);
         }
-      } else {
-        DROMOZOA_UNEXPECTED(lua_tostring(L, -1));
-        result = 1;
+        if (lua_pcall(L, 1, 1, 0) == 0) {
+          if (luaX_is_integer(L, -1)) {
+            result = lua_tointeger(L, -1);
+          }
+        } else {
+          DROMOZOA_UNEXPECTED(lua_tostring(L, -1));
+          result = 1;
+        }
       }
       lua_settop(L, top);
       return result;
