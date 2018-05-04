@@ -68,19 +68,19 @@ namespace dromozoa {
       lua_settop(L, top);
     }
 
-    void callback_func(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    void func_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
       callback_impl(static_cast<luaX_reference<>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
-    void callback_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    void step_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
       callback_impl(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
-    void callback_final(sqlite3_context* context) {
+    void final_callback(sqlite3_context* context) {
       callback_impl(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 1, context, 0, 0);
     }
 
-    int callback_exec(void* data, int count, char** columns, char** names) {
+    int exec_callback(void* data, int count, char** columns, char** names) {
       luaX_reference<>* ref = static_cast<luaX_reference<>*>(data);
       lua_State* L = ref->state();
       int result = 0;
@@ -117,7 +117,7 @@ namespace dromozoa {
       int narg = luaX_check_integer<int>(L, 3);
       luaL_checkany(L, 4);
       luaX_reference<>* function = self->new_function(L, 4);
-      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, callback_func, 0, 0) == SQLITE_OK) {
+      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, func_callback, 0, 0) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -131,7 +131,7 @@ namespace dromozoa {
       luaL_checkany(L, 4);
       luaL_checkany(L, 5);
       luaX_reference<2>* aggregate = self->new_aggregate(L, 4, 5);
-      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, callback_step, callback_final) == SQLITE_OK) {
+      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, step_callback, final_callback) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -146,7 +146,7 @@ namespace dromozoa {
         code = sqlite3_exec(dbh, sql, 0, 0, 0);
       } else {
         luaX_reference<> reference(L, 3);
-        code = sqlite3_exec(dbh, sql, callback_exec, &reference, 0);
+        code = sqlite3_exec(dbh, sql, exec_callback, &reference, 0);
       }
       if (code == SQLITE_OK) {
         luaX_push_success(L);
