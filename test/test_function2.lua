@@ -17,6 +17,8 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
+local verbose = os.getenv "VERBOSE" == "1"
+
 local dbh = assert(sqlite3.open ":memory:")
 
 assert(dbh:create_function("dromozoa_function", -1, function (context)
@@ -25,9 +27,18 @@ end))
 assert(dbh:create_function("dromozoa_function", 0, function (context)
   context:result(23)
 end))
-assert(dbh:create_function("dromozoa_function", 1, function (context)
-  context:result(42)
-end))
+do
+  local data = ("X"):rep(1024)
+  assert(dbh:create_function("dromozoa_function", 1, function (context)
+    context:result(42)
+    if verbose then
+      io.stderr:write(#data, "\n")
+    end
+  end))
+end
+collectgarbage()
+collectgarbage()
+local c1 = collectgarbage "count"
 
 assert(dbh:exec("select dromozoa_function() as v", function (columns)
   assert(columns.v == "23")
@@ -39,9 +50,18 @@ assert(dbh:exec("select dromozoa_function('foo', 'bar') as v", function (columns
   assert(columns.v == "17")
 end))
 
-assert(dbh:create_function("dromozoa_function", 1, function (context)
-  context:result(69)
-end))
+do
+  local data = ("X"):rep(256)
+  assert(dbh:create_function("dromozoa_function", 1, function (context)
+    context:result(69)
+    if verbose then
+      io.stderr:write(#data, "\n")
+    end
+  end))
+end
+collectgarbage()
+collectgarbage()
+local c2 = collectgarbage "count"
 
 assert(dbh:exec("select dromozoa_function() as v", function (columns)
   assert(columns.v == "23")
@@ -52,3 +72,16 @@ end))
 assert(dbh:exec("select dromozoa_function('foo', 'bar') as v", function (columns)
   assert(columns.v == "17")
 end))
+
+assert(dbh:create_function("dromozoa_function", 1))
+collectgarbage()
+collectgarbage()
+local c3 = collectgarbage "count"
+
+if verbose then
+  io.stderr:write(c1, "\n")
+  io.stderr:write(c2, "\n")
+  io.stderr:write(c3, "\n")
+end
+assert(c1 > c2)
+assert(c2 > c3)

@@ -38,12 +38,23 @@ namespace dromozoa {
     int result = sqlite3_close(dbh);
 #endif
 
-    std::set<luaX_binder*>::iterator i = references_.begin();
-    std::set<luaX_binder*>::iterator end = references_.end();
-    for (; i != end; ++i) {
-      scoped_ptr<luaX_binder> deleter(*i);
+    {
+      std::map<std::pair<std::string, int>, luaX_reference<>*>::iterator i = functions_.begin();
+      std::map<std::pair<std::string, int>, luaX_reference<>*>::iterator end = functions_.end();
+      for (; i != end; ++i) {
+        scoped_ptr<luaX_reference<> > deleter(i->second);
+      }
+      functions_.clear();
     }
-    references_.clear();
+
+    {
+      std::map<std::pair<std::string, int>, luaX_reference<2>*>::iterator i = aggregates_.begin();
+      std::map<std::pair<std::string, int>, luaX_reference<2>*>::iterator end = aggregates_.end();
+      for (; i != end; ++i) {
+        scoped_ptr<luaX_reference<2> > deleter(i->second);
+      }
+      aggregates_.clear();
+    }
 
     return result;
   }
@@ -52,15 +63,45 @@ namespace dromozoa {
     return dbh_;
   }
 
-  luaX_reference<>* database_handle::new_function(lua_State* L, int index_func) {
+  luaX_reference<>* database_handle::new_function(const char* name, int narg, lua_State* L, int index_func) {
+    std::pair<std::string, int> key(name, narg);
     scoped_ptr<luaX_reference<> > reference(new luaX_reference<>(L, index_func));
-    references_.insert(reference.get());
+    std::map<std::pair<std::string, int>, luaX_reference<>*>::iterator i = functions_.find(key);
+    if (i == functions_.end()) {
+      functions_.insert(std::make_pair(key, reference.get()));
+    } else {
+      scoped_ptr<luaX_reference<> > deleter(i->second);
+      i->second = reference.get();
+    }
     return reference.release();
   }
 
-  luaX_reference<2>* database_handle::new_aggregate(lua_State* L, int index_step, int index_final) {
+  luaX_reference<2>* database_handle::new_aggregate(const char* name, int narg, lua_State* L, int index_step, int index_final) {
+    std::pair<std::string, int> key(name, narg);
     scoped_ptr<luaX_reference<2> > reference(new luaX_reference<2>(L, index_step, index_final));
-    references_.insert(reference.get());
+    std::map<std::pair<std::string, int>, luaX_reference<2>*>::iterator i = aggregates_.find(key);
+    if (i == aggregates_.end()) {
+      aggregates_.insert(std::make_pair(key, reference.get()));
+    } else {
+      scoped_ptr<luaX_reference<2> > deleter(i->second);
+      i->second = reference.get();
+    }
     return reference.release();
+  }
+
+  void database_handle::delete_function(const char* name, int narg) {
+    std::map<std::pair<std::string, int>, luaX_reference<>*>::iterator i = functions_.find(std::make_pair(name, narg));
+    if (i != functions_.end()) {
+      scoped_ptr<luaX_reference<> > deleter(i->second);
+      functions_.erase(i);
+    }
+  }
+
+  void database_handle::delete_aggregate(const char* name, int narg) {
+    std::map<std::pair<std::string, int>, luaX_reference<2>*>::iterator i = aggregates_.find(std::make_pair(name, narg));
+    if (i != aggregates_.end()) {
+      scoped_ptr<luaX_reference<2> > deleter(i->second);
+      aggregates_.erase(i);
+    }
   }
 }
