@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-bind.
 --
@@ -17,22 +17,4 @@
 
 local bind = require "dromozoa.bind"
 
-assert(bind.chain_gc_count() == 0)
-
-do
-  local a = bind.chain_new_a(42)
-  assert(getmetatable(a))
-  assert(a:get() == 42)
-end
-collectgarbage()
-collectgarbage()
-assert(bind.chain_gc_count() == 1)
-
-do
-  local b = bind.chain_new_b(42)
-  assert(getmetatable(b))
-  assert(b:get() == 42)
-end
-collectgarbage()
-collectgarbage()
-assert(bind.chain_gc_count() == 2)
+assert(bind.scoped_ptr.test())

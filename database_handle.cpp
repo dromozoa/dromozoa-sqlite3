@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -30,20 +30,22 @@ namespace dromozoa {
   }
 
   int database_handle::close() {
-    std::set<luaX_binder*>::iterator i = references_.begin();
-    std::set<luaX_binder*>::iterator end = references_.end();
-    for (; i != end; ++i) {
-      delete *i;
-    }
-    references_.clear();
-
     sqlite3* dbh = dbh_;
     dbh_ = 0;
 #if SQLITE_VERSION_NUMBER >= 3007014
-    return sqlite3_close_v2(dbh);
+    int result = sqlite3_close_v2(dbh);
 #else
-    return sqlite3_close(dbh);
+    int result = sqlite3_close(dbh);
 #endif
+
+    std::set<luaX_binder*>::iterator i = references_.begin();
+    std::set<luaX_binder*>::iterator end = references_.end();
+    for (; i != end; ++i) {
+      scoped_ptr<luaX_binder> deleter(*i);
+    }
+    references_.clear();
+
+    return result;
   }
 
   sqlite3* database_handle::get() const {
@@ -51,26 +53,14 @@ namespace dromozoa {
   }
 
   luaX_reference<>* database_handle::new_function(lua_State* L, int index_func) {
-    luaX_reference<>* reference = 0;
-    try {
-      reference = new luaX_reference<>(L, index_func);
-      references_.insert(reference);
-      return reference;
-    } catch (...) {
-      delete reference;
-      throw;
-    }
+    scoped_ptr<luaX_reference<> > reference(new luaX_reference<>(L, index_func));
+    references_.insert(reference.get());
+    return reference.release();
   }
 
   luaX_reference<2>* database_handle::new_aggregate(lua_State* L, int index_step, int index_final) {
-    luaX_reference<2>* reference = 0;
-    try {
-      reference = new luaX_reference<2>(L, index_step, index_final);
-      references_.insert(reference);
-      return reference;
-    } catch (...) {
-      delete reference;
-      throw;
-    }
+    scoped_ptr<luaX_reference<2> > reference(new luaX_reference<2>(L, index_step, index_final));
+    references_.insert(reference.get());
+    return reference.release();
   }
 }
