@@ -10,9 +10,6 @@ description = {
   homepage = "https://github.com/dromozoa/dromozoa-sqlite3/";
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
 }
-dependencies = {
-  "dromozoa-commons";
-}
 build = {
   type = "make";
   build_variables = {
