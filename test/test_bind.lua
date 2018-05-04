@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -17,19 +17,19 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
-local dbh = assert(sqlite3.open(":memory:"))
+local dbh = assert(sqlite3.open ":memory:")
 
-assert(dbh:exec([[
+assert(dbh:exec [[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
   i INTEGER,
   t TEXT UNIQUE);
-]]))
+]])
 
-local sth = assert(dbh:prepare([[
+local sth = assert(dbh:prepare [[
 INSERT INTO t (f, i, t) VALUES (:f, :i, :t);
-]]))
+]])
 
 assert(sth:bind(":f", 0.25))
 assert(sth:bind(":i", 42))
@@ -43,9 +43,9 @@ assert(sth:bind(":t", "foobarbaz", 4, 6))
 assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(sth:finalize())
 
-local sth = assert(dbh:prepare([[
+local sth = assert(dbh:prepare [[
 SELECT * FROM t ORDER BY id;
-]]))
+]])
 
 assert(sth:step() == sqlite3.SQLITE_ROW)
 assert(sth:column(1) == 1)

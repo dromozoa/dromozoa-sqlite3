@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
+LUA_PATH="test/?.lua;;"
+export LUA_PATH
+
 for i in test/test*.lua
 do
   case X$# in
