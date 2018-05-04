@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -15,8 +15,8 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-local equal = require "dromozoa.commons.equal"
 local sqlite3 = require "dromozoa.sqlite3"
+local equal = require "equal"
 
 os.remove("test.db")
 local dbh = assert(sqlite3.open("test.db"))
