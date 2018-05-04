@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -17,7 +17,7 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
-local dbh = assert(sqlite3.open(":memory:"))
+local dbh = assert(sqlite3.open ":memory:")
 
 local sql = "SELECT 1; SELECT 2"
 local sth1, i = assert(dbh:prepare(sql))

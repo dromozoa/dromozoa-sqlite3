@@ -18,9 +18,9 @@
 local sqlite3 = require "dromozoa.sqlite3"
 local equal = require "equal"
 
-local dbh = assert(sqlite3.open(":memory:"))
+local dbh = assert(sqlite3.open ":memory:")
 
-assert(dbh:exec([[
+assert(dbh:exec [[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
@@ -29,7 +29,7 @@ CREATE TABLE t (
 INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
 INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
-]]))
+]])
 
 local data = {}
 assert(dbh:exec([[
