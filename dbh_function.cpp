@@ -115,20 +115,12 @@ namespace dromozoa {
       database_handle* self = check_database_handle(L, 1);
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
-      if (lua_isnoneornil(L, 4)) {
-        if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0) == SQLITE_OK) {
-          self->delete_reference(name, narg);
-          luaX_push_success(L);
-        } else {
-          push_error(L, self->get());
-        }
+      luaL_checkany(L, 4);
+      luaX_reference<>* function = self->new_function(name, narg, L, 4);
+      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, func_callback, 0, 0) == SQLITE_OK) {
+        luaX_push_success(L);
       } else {
-        luaX_reference<>* function = self->new_function(name, narg, L, 4);
-        if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, func_callback, 0, 0) == SQLITE_OK) {
-          luaX_push_success(L);
-        } else {
-          push_error(L, self->get());
-        }
+        push_error(L, self->get());
       }
     }
 
@@ -140,6 +132,18 @@ namespace dromozoa {
       luaL_checkany(L, 5);
       luaX_reference<2>* aggregate = self->new_aggregate(name, narg, L, 4, 5);
       if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, step_callback, final_callback) == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, self->get());
+      }
+    }
+
+    void impl_delete_function(lua_State* L) {
+      database_handle* self = check_database_handle(L, 1);
+      const char* name = luaL_checkstring(L, 2);
+      int narg = luaX_check_integer<int>(L, 3);
+      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0) == SQLITE_OK) {
+        self->delete_reference(name, narg);
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -167,6 +171,7 @@ namespace dromozoa {
   void initialize_dbh_function(lua_State* L) {
     luaX_set_field(L, -1, "create_function", impl_create_function);
     luaX_set_field(L, -1, "create_aggregate", impl_create_aggregate);
+    luaX_set_field(L, -1, "delete_function", impl_delete_function);
     luaX_set_field(L, -1, "exec", impl_exec);
   }
 }

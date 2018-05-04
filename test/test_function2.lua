@@ -73,7 +73,7 @@ assert(dbh:exec("select dromozoa_function('foo', 'bar') as v", function (columns
   assert(columns.v == "17")
 end))
 
-assert(dbh:create_function("dromozoa_function", 1))
+assert(dbh:delete_function("dromozoa_function", 1))
 collectgarbage()
 collectgarbage()
 local c3 = collectgarbage "count"
