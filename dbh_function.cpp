@@ -50,7 +50,7 @@ namespace dromozoa {
     }
 
     template <class T>
-    void callback_impl(T* ref, size_t i, sqlite3_context* context, int argc, sqlite3_value** argv) {
+    void callback(T* ref, size_t i, sqlite3_context* context, int argc, sqlite3_value** argv) {
       lua_State* L = ref->state();
       int top = lua_gettop(L);
       {
@@ -69,15 +69,15 @@ namespace dromozoa {
     }
 
     void func_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      callback_impl(static_cast<luaX_reference<>*>(sqlite3_user_data(context)), 0, context, argc, argv);
+      callback(static_cast<luaX_reference<>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
     void step_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      callback_impl(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 0, context, argc, argv);
+      callback(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
     void final_callback(sqlite3_context* context) {
-      callback_impl(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 1, context, 0, 0);
+      callback(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 1, context, 0, 0);
     }
 
     int exec_callback(void* data, int count, char** columns, char** names) {
