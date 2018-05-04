@@ -78,7 +78,7 @@ namespace dromozoa {
     return reference.release();
   }
 
-  void database_handle::delete_reference(const char* name, int narg) {
+  void database_handle::delete_function(const char* name, int narg) {
     std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.find(std::make_pair(name, narg));
     if (i != references_.end()) {
       scoped_ptr<luaX_binder> deleter(i->second);

@@ -34,7 +34,7 @@ namespace dromozoa {
     sqlite3* get() const;
     luaX_reference<>* new_function(const char* name, int narg, lua_State* L, int index_func);
     luaX_reference<2>* new_aggregate(const char* name, int narg, lua_State* L, int index_step, int index_final);
-    void delete_reference(const char* name, int narg);
+    void delete_function(const char* name, int narg);
   private:
     sqlite3* dbh_;
     std::map<std::pair<std::string, int>, luaX_binder*> references_;
