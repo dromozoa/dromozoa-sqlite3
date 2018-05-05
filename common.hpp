@@ -36,7 +36,9 @@ namespace dromozoa {
   private:
     friend class database_handle_impl;
     sqlite3* dbh_;
+#if SQLITE_VERSION_NUMBER < 3007003
     std::map<std::pair<std::string, int>, luaX_binder*> references_;
+#endif
     database_handle(const database_handle&);
     database_handle& operator=(const database_handle&);
   };
