@@ -18,8 +18,25 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  namespace {
-    bool push_value(lua_State* L, sqlite3_value* value) {
+  class database_handle_impl {
+  public:
+    static int create_function(database_handle* self, const char* name, int narg, lua_State* L, int index_func) {
+      luaX_reference<>* function = self->new_function(name, narg, L, index_func);
+      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, func_callback, 0, 0);
+    }
+
+    static int create_aggregate(database_handle* self, const char* name, int narg, lua_State* L, int index_step, int index_final) {
+      luaX_reference<2>* aggregate = self->new_aggregate(name, narg, L, index_step, index_final);
+      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, step_callback, final_callback);
+    }
+
+    static int delete_function(database_handle* self, const char* name, int narg) {
+      self->delete_function(name, narg);
+      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0);
+    }
+
+  private:
+    static bool push_value(lua_State* L, sqlite3_value* value) {
       switch (sqlite3_value_type(value)) {
         case SQLITE_INTEGER:
           luaX_push(L, sqlite3_value_int64(value));
@@ -50,7 +67,7 @@ namespace dromozoa {
     }
 
     template <class T>
-    void callback(T* ref, size_t i, sqlite3_context* context, int argc, sqlite3_value** argv) {
+    static void callback(T* ref, size_t i, sqlite3_context* context, int argc, sqlite3_value** argv) {
       lua_State* L = ref->state();
       int top = lua_gettop(L);
       {
@@ -68,18 +85,20 @@ namespace dromozoa {
       lua_settop(L, top);
     }
 
-    void func_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    static void func_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
       callback(static_cast<luaX_reference<>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
-    void step_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    static void step_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
       callback(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 0, context, argc, argv);
     }
 
-    void final_callback(sqlite3_context* context) {
+    static void final_callback(sqlite3_context* context) {
       callback(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 1, context, 0, 0);
     }
+  };
 
+  namespace {
     int exec_callback(void* data, int count, char** columns, char** names) {
       luaX_reference<>* ref = static_cast<luaX_reference<>*>(data);
       lua_State* L = ref->state();
@@ -116,8 +135,7 @@ namespace dromozoa {
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       luaL_checkany(L, 4);
-      luaX_reference<>* function = self->new_function(name, narg, L, 4);
-      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, func_callback, 0, 0) == SQLITE_OK) {
+      if (database_handle_impl::create_function(self, name, narg, L, 4) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -130,8 +148,7 @@ namespace dromozoa {
       int narg = luaX_check_integer<int>(L, 3);
       luaL_checkany(L, 4);
       luaL_checkany(L, 5);
-      luaX_reference<2>* aggregate = self->new_aggregate(name, narg, L, 4, 5);
-      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, step_callback, final_callback) == SQLITE_OK) {
+      if (database_handle_impl::create_aggregate(self, name, narg, L, 4, 5) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -142,8 +159,7 @@ namespace dromozoa {
       database_handle* self = check_database_handle(L, 1);
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
-      if (sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0) == SQLITE_OK) {
-        self->delete_function(name, narg);
+      if (database_handle_impl::delete_function(self, name, narg) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
