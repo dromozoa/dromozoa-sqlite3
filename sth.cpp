@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -34,9 +34,9 @@ namespace dromozoa {
 
     void impl_step(lua_State* L) {
       sqlite3_stmt* sth = check_sth(L, 1);
-      int code = sqlite3_step(sth);
-      if (code == SQLITE_ROW || code == SQLITE_DONE) {
-        luaX_push(L, code);
+      int result = sqlite3_step(sth);
+      if (result == SQLITE_ROW || result == SQLITE_DONE) {
+        luaX_push(L, result);
       } else {
         push_error(L, sth);
       }
@@ -48,8 +48,11 @@ namespace dromozoa {
     }
 
     void impl_sql(lua_State* L) {
-      sqlite3_stmt* sth = check_sth(L, 1);
-      luaX_push(L, sqlite3_sql(sth));
+      luaX_push(L, sqlite3_sql(check_sth(L, 1)));
+    }
+
+    void impl_data_count(lua_State* L) {
+      luaX_push(L, sqlite3_data_count(check_sth(L, 1)));
     }
   }
 
@@ -78,6 +81,7 @@ namespace dromozoa {
       luaX_set_field(L, -1, "step", impl_step);
       luaX_set_field(L, -1, "reset", impl_reset);
       luaX_set_field(L, -1, "sql", impl_sql);
+      luaX_set_field(L, -1, "data_count", impl_data_count);
 
       initialize_sth_bind(L);
       initialize_sth_column(L);

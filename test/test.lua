@@ -22,17 +22,23 @@ os.remove "test.db"
 local dbh = assert(sqlite3.open "test.db")
 assert(dbh:busy_timeout(60000))
 
+assert(dbh:changes() == 0)
+assert(dbh:total_changes() == 0)
+
 assert(dbh:exec [[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
-  i INTEGER,
+  i MY_INTEGER,
   t TEXT UNIQUE);
 INSERT INTO t (f, i, t) VALUES (0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES (0.50, 23, 'bar');
 INSERT INTO t (f, i, t) VALUES (0.75, 37, 'baz');
 ]])
 assert(dbh:last_insert_rowid() == 3)
+
+assert(dbh:changes() == 1)
+assert(dbh:total_changes() == 3)
 
 assert(not dbh:exec [[
 INSERT INTO t (f, i, t) VALUES (1, 42, 'foo')")
@@ -48,6 +54,7 @@ assert(sth:column_type(1) == sqlite3.SQLITE_INTEGER)
 assert(sth:column_type(2) == sqlite3.SQLITE_FLOAT)
 assert(sth:column_type(3) == sqlite3.SQLITE_INTEGER)
 assert(sth:column_type(4) == sqlite3.SQLITE_TEXT)
+assert(sth:column_decltype(3) == "MY_INTEGER")
 assert(sth:column(1) == 1)
 assert(sth:column(2) == 0.25)
 assert(sth:column(3) == 17)
@@ -65,7 +72,11 @@ assert(equal(sth:columns(), {
   t = "bar";
 }))
 assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column_count() == 4)
+assert(sth:data_count() == 4)
 assert(sth:step() == sqlite3.SQLITE_DONE)
+assert(sth:column_count() == 4)
+assert(sth:data_count() == 0)
 assert(sth:finalize())
 
 local sth = assert(dbh:prepare [[

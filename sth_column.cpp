@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -61,6 +61,10 @@ namespace dromozoa {
       luaX_push(L, sqlite3_column_type(check_sth(L, 1), luaX_check_integer<int>(L, 2) - 1));
     }
 
+    void impl_column_decltype(lua_State* L) {
+      luaX_push(L, sqlite3_column_decltype(check_sth(L, 1), luaX_check_integer<int>(L, 2) - 1));
+    }
+
     void impl_column(lua_State* L) {
       push_column(L, check_sth(L, 1), luaX_check_integer<int>(L, 2) - 1);
     }
@@ -83,6 +87,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "column_count", impl_column_count);
     luaX_set_field(L, -1, "column_name", impl_column_name);
     luaX_set_field(L, -1, "column_type", impl_column_type);
+    luaX_set_field(L, -1, "column_decltype", impl_column_decltype);
     luaX_set_field(L, -1, "column", impl_column);
     luaX_set_field(L, -1, "columns", impl_columns);
   }

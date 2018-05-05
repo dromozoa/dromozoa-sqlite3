@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -20,20 +20,20 @@
 namespace dromozoa {
   namespace {
     void impl_initialize(lua_State* L) {
-      int code = sqlite3_initialize();
-      if (code == SQLITE_OK) {
+      int result = sqlite3_initialize();
+      if (result == SQLITE_OK) {
         luaX_push_success(L);
       } else {
-        push_error(L, code);
+        push_error(L, result);
       }
     }
 
     void impl_shutdown(lua_State* L) {
-      int code = sqlite3_shutdown();
-      if (code == SQLITE_OK) {
+      int result = sqlite3_shutdown();
+      if (result == SQLITE_OK) {
         luaX_push_success(L);
       } else {
-        push_error(L, code);
+        push_error(L, result);
       }
     }
 
@@ -42,12 +42,12 @@ namespace dromozoa {
       int flags = luaX_opt_integer<int>(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
       const char* vfs = lua_tostring(L, 3);
       sqlite3* dbh = 0;
-      int code = sqlite3_open_v2(filename, &dbh, flags, vfs);
-      if (code == SQLITE_OK) {
+      int result = sqlite3_open_v2(filename, &dbh, flags, vfs);
+      if (result == SQLITE_OK) {
         new_dbh(L, dbh);
       } else {
         sqlite3_close(dbh);
-        push_error(L, code);
+        push_error(L, result);
       }
     }
 
