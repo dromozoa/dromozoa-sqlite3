@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -90,13 +90,13 @@ namespace dromozoa {
       const char* blob = luaL_checklstring(L, 3, &size);
       size_t i = luaX_opt_range_i(L, 4, size);
       size_t j = luaX_opt_range_j(L, 5, size);
-      int code = SQLITE_ERROR;
+      int result = SQLITE_ERROR;
       if (i < j) {
-        code = sqlite3_bind_blob(sth, param, blob + i, j - i, SQLITE_TRANSIENT);
+        result = sqlite3_bind_blob(sth, param, blob + i, j - i, SQLITE_TRANSIENT);
       } else {
-        code = sqlite3_bind_zeroblob(sth, param, 0);
+        result = sqlite3_bind_zeroblob(sth, param, 0);
       }
-      if (code == SQLITE_OK) {
+      if (result == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, sth);

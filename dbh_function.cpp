@@ -110,12 +110,12 @@ namespace dromozoa {
       }
     }
 
-    template <class T>
-    static void callback(T* ref, size_t i, sqlite3_context* context, int argc, sqlite3_value** argv) {
+    template <size_t T_i, class T>
+    static void callback(T* ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
       lua_State* L = ref->state();
       int top = lua_gettop(L);
       {
-        ref->get_field(L, i);
+        ref->get_field(L, T_i);
         new_context(L, context);
         for (int i = 0; i < argc; ++i) {
           if (!push_value(L, argv[i])) {
@@ -130,15 +130,15 @@ namespace dromozoa {
     }
 
     static void func_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      callback(static_cast<luaX_reference<>*>(sqlite3_user_data(context)), 0, context, argc, argv);
+      callback<0>(static_cast<luaX_reference<>*>(sqlite3_user_data(context)), context, argc, argv);
     }
 
     static void step_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
-      callback(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 0, context, argc, argv);
+      callback<0>(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), context, argc, argv);
     }
 
     static void final_callback(sqlite3_context* context) {
-      callback(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), 1, context, 0, 0);
+      callback<1>(static_cast<luaX_reference<2>*>(sqlite3_user_data(context)), context, 0, 0);
     }
   };
 
@@ -213,14 +213,14 @@ namespace dromozoa {
     void impl_exec(lua_State* L) {
       sqlite3* dbh = check_dbh(L, 1);
       const char* sql = luaL_checkstring(L, 2);
-      int code = SQLITE_ERROR;
+      int result = SQLITE_ERROR;
       if (lua_isnoneornil(L, 3)) {
-        code = sqlite3_exec(dbh, sql, 0, 0, 0);
+        result = sqlite3_exec(dbh, sql, 0, 0, 0);
       } else {
         luaX_reference<> reference(L, 3);
-        code = sqlite3_exec(dbh, sql, exec_callback, &reference, 0);
+        result = sqlite3_exec(dbh, sql, exec_callback, &reference, 0);
       }
-      if (code == SQLITE_OK) {
+      if (result == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, dbh);

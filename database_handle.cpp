@@ -22,9 +22,9 @@ namespace dromozoa {
 
   database_handle::~database_handle() {
     if (dbh_) {
-      int code = close();
-      if (code != SQLITE_OK) {
-        DROMOZOA_UNEXPECTED(error_to_string(code));
+      int result = close();
+      if (result != SQLITE_OK) {
+        DROMOZOA_UNEXPECTED(error_to_string(result));
       }
     }
   }

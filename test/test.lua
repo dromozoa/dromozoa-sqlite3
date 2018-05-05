@@ -22,8 +22,8 @@ os.remove "test.db"
 local dbh = assert(sqlite3.open "test.db")
 assert(dbh:busy_timeout(60000))
 
-assert(dbh:changes() == 0)
 assert(dbh:total_changes() == 0)
+assert(dbh:changes() == 0)
 
 assert(dbh:exec [[
 CREATE TABLE t (
@@ -37,8 +37,8 @@ INSERT INTO t (f, i, t) VALUES (0.75, 37, 'baz');
 ]])
 assert(dbh:last_insert_rowid() == 3)
 
-assert(dbh:changes() == 1)
 assert(dbh:total_changes() == 3)
+assert(dbh:changes() == 1)
 
 assert(not dbh:exec [[
 INSERT INTO t (f, i, t) VALUES (1, 42, 'foo')")
