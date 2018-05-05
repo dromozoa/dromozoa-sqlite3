@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -22,13 +22,12 @@
 namespace dromozoa {
   std::string error_to_string(int code) {
 #if SQLITE_VERSION_NUMBER >= 3007015
-    if (const char* what = sqlite3_errstr(code)) {
-      return what;
-    }
-#endif
+    return sqlite3_errstr(code);
+#else
     std::ostringstream out;
     out << "error number " << code;
     return out.str();
+#endif
   }
 
   void push_error(lua_State* L, int code) {
@@ -40,11 +39,7 @@ namespace dromozoa {
   void push_error(lua_State* L, sqlite3* dbh) {
     int code = sqlite3_extended_errcode(dbh);
     luaX_push(L, luaX_nil);
-    if (const char* what = sqlite3_errmsg(dbh)) {
-      luaX_push(L, what);
-    } else {
-      luaX_push(L, error_to_string(code));
-    }
+    luaX_push(L, sqlite3_errmsg(dbh));
     luaX_push(L, code);
   }
 
