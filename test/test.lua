@@ -26,7 +26,7 @@ assert(dbh:exec [[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
-  i INTEGER,
+  i MY_INTEGER,
   t TEXT UNIQUE);
 INSERT INTO t (f, i, t) VALUES (0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES (0.50, 23, 'bar');
@@ -48,6 +48,7 @@ assert(sth:column_type(1) == sqlite3.SQLITE_INTEGER)
 assert(sth:column_type(2) == sqlite3.SQLITE_FLOAT)
 assert(sth:column_type(3) == sqlite3.SQLITE_INTEGER)
 assert(sth:column_type(4) == sqlite3.SQLITE_TEXT)
+assert(sth:column_decltype(3) == "MY_INTEGER")
 assert(sth:column(1) == 1)
 assert(sth:column(2) == 0.25)
 assert(sth:column(3) == 17)
