@@ -71,6 +71,10 @@ namespace dromozoa {
       luaX_push(L, sqlite3_changes(check_dbh(L, 1)));
     }
 
+    void impl_total_changes(lua_State* L) {
+      luaX_push(L, sqlite3_total_changes(check_dbh(L, 1)));
+    }
+
     void impl_last_insert_rowid(lua_State* L) {
       luaX_push(L, sqlite3_last_insert_rowid(check_dbh(L, 1)));
     }
@@ -104,6 +108,7 @@ namespace dromozoa {
       luaX_set_field(L, -1, "busy_timeout", impl_busy_timeout);
       luaX_set_field(L, -1, "prepare", impl_prepare);
       luaX_set_field(L, -1, "changes", impl_changes);
+      luaX_set_field(L, -1, "total_changes", impl_total_changes);
       luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
 
       initialize_dbh_function(L);
