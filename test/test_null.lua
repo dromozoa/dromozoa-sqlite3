@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -17,7 +17,7 @@
 
 local sqlite3 = require "dromozoa.sqlite3"
 
-local dbh = assert(sqlite3.open(":memory:"))
+local dbh = assert(sqlite3.open ":memory:")
 
 dbh:exec([[
 CREATE TABLE t (
@@ -88,8 +88,8 @@ end, function (context)
   context:result_null()
 end))
 
-assert(dbh:exec([[
+assert(dbh:exec [[
 SELECT dromozoa_test(id, i, f, t, b, e) FROM t;
-]]))
+]])
 
 assert(dbh:close())

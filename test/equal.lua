@@ -1,4 +1,4 @@
--- Copyright (C) 2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -15,12 +15,27 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-local sqlite3 = require "dromozoa.sqlite3"
-
-local verbose = os.getenv "VERBOSE" == "1"
-
-if verbose then
-  io.stderr:write(sqlite3.libversion(), "\n")
-  io.stderr:write(sqlite3.libversion_number(), "\n")
-  io.stderr:write(sqlite3.sourceid(), "\n")
+local function equal(a, b)
+  if a == b then
+    return true
+  else
+    if type(a) == "table" and type(b) == "table" then
+      for k, u in pairs(a) do
+        local v = b[k]
+        if v == nil or not equal(u, v) then
+          return false
+        end
+      end
+      for k in pairs(b) do
+        if a[k] == nil then
+          return false
+        end
+      end
+      return true
+    else
+      return false
+    end
+  end
 end
+
+return equal

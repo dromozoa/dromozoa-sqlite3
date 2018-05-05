@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2017 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -20,7 +20,9 @@
 
 #include <sqlite3.h>
 
-#include <set>
+#include <map>
+#include <string>
+#include <utility>
 
 #include <dromozoa/bind.hpp>
 
@@ -31,11 +33,12 @@ namespace dromozoa {
     ~database_handle();
     int close();
     sqlite3* get() const;
-    luaX_reference<>* new_function(lua_State* L, int index_func);
-    luaX_reference<2>* new_aggregate(lua_State* L, int index_step, int index_final);
   private:
+    friend class database_handle_impl;
     sqlite3* dbh_;
-    std::set<luaX_binder*> references_;
+#if SQLITE_VERSION_NUMBER < 3007003
+    std::map<std::pair<std::string, int>, luaX_binder*> references_;
+#endif
     database_handle(const database_handle&);
     database_handle& operator=(const database_handle&);
   };

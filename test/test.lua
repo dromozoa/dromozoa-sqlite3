@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -15,32 +15,38 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-local equal = require "dromozoa.commons.equal"
 local sqlite3 = require "dromozoa.sqlite3"
+local equal = require "equal"
 
-os.remove("test.db")
-local dbh = assert(sqlite3.open("test.db"))
+os.remove "test.db"
+local dbh = assert(sqlite3.open "test.db")
 assert(dbh:busy_timeout(60000))
 
-assert(dbh:exec([[
+assert(dbh:total_changes() == 0)
+assert(dbh:changes() == 0)
+
+assert(dbh:exec [[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
-  i INTEGER,
+  i MY_INTEGER,
   t TEXT UNIQUE);
 INSERT INTO t (f, i, t) VALUES (0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES (0.50, 23, 'bar');
 INSERT INTO t (f, i, t) VALUES (0.75, 37, 'baz');
-]]))
+]])
 assert(dbh:last_insert_rowid() == 3)
 
-assert(not dbh:exec([[
-INSERT INTO t (f, i, t) VALUES (1, 42, 'foo')")
-]]))
+assert(dbh:total_changes() == 3)
+assert(dbh:changes() == 1)
 
-local sth = assert(dbh:prepare([[
+assert(not dbh:exec [[
+INSERT INTO t (f, i, t) VALUES (1, 42, 'foo')")
+]])
+
+local sth = assert(dbh:prepare [[
 SELECT * FROM t
-]]))
+]])
 
 assert(sth:step() == sqlite3.SQLITE_ROW)
 assert(sth:column_count() == 4)
@@ -48,6 +54,7 @@ assert(sth:column_type(1) == sqlite3.SQLITE_INTEGER)
 assert(sth:column_type(2) == sqlite3.SQLITE_FLOAT)
 assert(sth:column_type(3) == sqlite3.SQLITE_INTEGER)
 assert(sth:column_type(4) == sqlite3.SQLITE_TEXT)
+assert(sth:column_decltype(3) == "MY_INTEGER")
 assert(sth:column(1) == 1)
 assert(sth:column(2) == 0.25)
 assert(sth:column(3) == 17)
@@ -65,16 +72,20 @@ assert(equal(sth:columns(), {
   t = "bar";
 }))
 assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column_count() == 4)
+assert(sth:data_count() == 4)
 assert(sth:step() == sqlite3.SQLITE_DONE)
+assert(sth:column_count() == 4)
+assert(sth:data_count() == 0)
 assert(sth:finalize())
 
-local sth = dbh:prepare([[
+local sth = assert(dbh:prepare [[
 INSERT INTO t (f, i, t) VALUES (:f, :i, :t)
 ]])
 assert(sth:bind_parameter_count() == 3)
-assert(sth:bind_parameter_index(":f") == 1)
-assert(sth:bind_parameter_index(":i") == 2)
-assert(sth:bind_parameter_index(":t") == 3)
+assert(sth:bind_parameter_index ":f" == 1)
+assert(sth:bind_parameter_index ":i" == 2)
+assert(sth:bind_parameter_index ":t" == 3)
 assert(sth:bind_parameter_name(1) == ":f")
 assert(sth:bind_parameter_name(2) == ":i")
 assert(sth:bind_parameter_name(3) == ":t")
@@ -88,3 +99,4 @@ assert(dbh:last_insert_rowid() == 4)
 assert(sth:finalize())
 
 assert(dbh:close())
+assert(os.remove "test.db")

@@ -1,4 +1,4 @@
--- Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -15,13 +15,12 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-local equal = require "dromozoa.commons.equal"
-local sequence = require "dromozoa.commons.sequence"
 local sqlite3 = require "dromozoa.sqlite3"
+local equal = require "equal"
 
-local dbh = assert(sqlite3.open(":memory:"))
+local dbh = assert(sqlite3.open ":memory:")
 
-assert(dbh:exec([[
+assert(dbh:exec [[
 CREATE TABLE t (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   f FLOAT,
@@ -30,15 +29,15 @@ CREATE TABLE t (
 INSERT INTO t (f, i, t) VALUES(0.25, 17, 'foo');
 INSERT INTO t (f, i, t) VALUES(0.50, 23, 'bar');
 INSERT INTO t (f, i, t) VALUES(0.75, 37, 'baz');
-]]))
+]])
 
-local data = sequence()
+local data = {}
 assert(dbh:exec([[
 SELECT * FROM t;
 UPDATE t SET i = 42 WHERE t = 'foo';
 SELECT * FROM t WHERE t = 'foo';
 ]], function (columns)
-  data:push({ columns.i, columns.t })
+  data[#data + 1] = { columns.i, columns.t }
 end))
 
 assert(equal(data, {

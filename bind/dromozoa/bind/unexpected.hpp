@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -18,7 +18,8 @@
 #ifndef DROMOZOA_BIND_UNEXPECTED_HPP
 #define DROMOZOA_BIND_UNEXPECTED_HPP
 
-#include <iostream>
+#include <stdio.h>
+
 #include <string>
 
 namespace dromozoa {
@@ -28,25 +29,24 @@ namespace dromozoa {
     inline void unexpected_noop(const char*, const char*, int, const char*) {}
 
     inline void unexpected_cerr(const char* what, const char* file, int line, const char* function) {
-      std::cerr << "unexpected";
-      if (what) {
-        std::cerr << ": " << what;
+      if (!what) {
+        what = "(null)";
       }
-      if (file) {
-        std::cerr << " at " << file << ":" << line;
+      if (!file) {
+        file = "(null)";
       }
-      if (function) {
-        std::cerr << " in " << function;
+      if (!function) {
+        function = "(null)";
       }
-      std::cerr << std::endl;
+      fprintf(stderr, "unexpected: %s at %s:%d in %s\n", what, file, line, function);
+      fflush(stderr);
     }
 
     inline unexpected_handler access_unexpected(bool set, unexpected_handler new_handler) {
       static unexpected_handler handler = unexpected_cerr;
       if (set) {
-        unexpected_handler old_handler = handler;
         handler = new_handler;
-        return old_handler;
+        return 0;
       } else {
         return handler;
       }
@@ -75,6 +75,6 @@ namespace dromozoa {
 }
 
 #define DROMOZOA_UNEXPECTED(what) \
-  dromozoa::bind::unexpected(what, __FILE__, __LINE__, __func__)
+  dromozoa::bind::unexpected((what), __FILE__, __LINE__, __func__)
 
 #endif

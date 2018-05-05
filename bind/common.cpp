@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -15,11 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-bind.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_BIND_HPP
-#define DROMOZOA_BIND_HPP
+#include <stdlib.h>
 
-#include "bind/luaX.hpp"
-#include "bind/scoped_ptr.hpp"
-#include "bind/unexpected.hpp"
-
-#endif
+namespace dromozoa {
+  bool verbose() {
+    if (const char* p = getenv("VERBOSE")) {
+      if (*p == '1') {
+        ++p;
+        return *p == '\0';
+      }
+    }
+    return false;
+  }
+}
