@@ -66,7 +66,11 @@ assert(equal(sth:columns(), {
   t = "bar";
 }))
 assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column_count() == 4)
+assert(sth:data_count() == 4)
 assert(sth:step() == sqlite3.SQLITE_DONE)
+assert(sth:column_count() == 4)
+assert(sth:data_count() == 0)
 assert(sth:finalize())
 
 local sth = assert(dbh:prepare [[

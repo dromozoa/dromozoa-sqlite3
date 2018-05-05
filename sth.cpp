@@ -50,6 +50,10 @@ namespace dromozoa {
     void impl_sql(lua_State* L) {
       luaX_push(L, sqlite3_sql(check_sth(L, 1)));
     }
+
+    void impl_data_count(lua_State* L) {
+      luaX_push(L, sqlite3_data_count(check_sth(L, 1)));
+    }
   }
 
   void new_sth(lua_State* L, sqlite3_stmt* sth) {
@@ -77,6 +81,7 @@ namespace dromozoa {
       luaX_set_field(L, -1, "step", impl_step);
       luaX_set_field(L, -1, "reset", impl_reset);
       luaX_set_field(L, -1, "sql", impl_sql);
+      luaX_set_field(L, -1, "data_count", impl_data_count);
 
       initialize_sth_bind(L);
       initialize_sth_column(L);
