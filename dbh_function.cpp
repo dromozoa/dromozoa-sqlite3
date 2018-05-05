@@ -21,21 +21,42 @@ namespace dromozoa {
   class database_handle_impl {
   public:
     static int create_function(database_handle* self, const char* name, int narg, lua_State* L, int index_func) {
-      luaX_reference<>* function = self->new_function(name, narg, L, index_func);
-      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, function, func_callback, 0, 0);
+      scoped_ptr<luaX_binder> reference(new luaX_reference<>(L, index_func));
+      create(self->references_, name, narg, reference.get());
+      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, reference.release(), func_callback, 0, 0);
     }
 
     static int create_aggregate(database_handle* self, const char* name, int narg, lua_State* L, int index_step, int index_final) {
-      luaX_reference<2>* aggregate = self->new_aggregate(name, narg, L, index_step, index_final);
-      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, aggregate, 0, step_callback, final_callback);
+      scoped_ptr<luaX_binder> reference(new luaX_reference<2>(L, index_step, index_final));
+      create(self->references_, name, narg, reference.get());
+      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, reference.release(), 0, step_callback, final_callback);
     }
 
     static int delete_function(database_handle* self, const char* name, int narg) {
-      self->delete_function(name, narg);
-      return sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0);
+      int result = sqlite3_create_function(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0);
+      if (result == SQLITE_OK) {
+        std::map<std::pair<std::string, int>, luaX_binder*>& references = self->references_;
+        std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references.find(std::make_pair(name, narg));
+        if (i != references.end()) {
+          scoped_ptr<luaX_binder> deleter(i->second);
+          references.erase(i);
+        }
+      }
+      return result;
     }
 
   private:
+    static void create(std::map<std::pair<std::string, int>, luaX_binder*>& references, const char* name, int narg, luaX_binder* reference) {
+      std::pair<std::string, int> key(name, narg);
+      std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references.find(key);
+      if (i == references.end()) {
+        references.insert(std::make_pair(key, reference));
+      } else {
+        scoped_ptr<luaX_binder> deleter(i->second);
+        i->second = reference;
+      }
+    }
+
     static bool push_value(lua_State* L, sqlite3_value* value) {
       switch (sqlite3_value_type(value)) {
         case SQLITE_INTEGER:

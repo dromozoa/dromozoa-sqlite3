@@ -22,6 +22,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 
 #include <dromozoa/bind.hpp>
 
@@ -38,9 +39,6 @@ namespace dromozoa {
     std::map<std::pair<std::string, int>, luaX_binder*> references_;
     database_handle(const database_handle&);
     database_handle& operator=(const database_handle&);
-    luaX_reference<>* new_function(const char* name, int narg, lua_State* L, int index_func);
-    luaX_reference<2>* new_aggregate(const char* name, int narg, lua_State* L, int index_step, int index_final);
-    void delete_function(const char* name, int narg);
   };
 
   void new_dbh(lua_State* L, sqlite3* dbh);

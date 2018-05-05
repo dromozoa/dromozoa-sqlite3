@@ -51,38 +51,4 @@ namespace dromozoa {
   sqlite3* database_handle::get() const {
     return dbh_;
   }
-
-  luaX_reference<>* database_handle::new_function(const char* name, int narg, lua_State* L, int index_func) {
-    std::pair<std::string, int> key(name, narg);
-    scoped_ptr<luaX_reference<> > reference(new luaX_reference<>(L, index_func));
-    std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.find(key);
-    if (i == references_.end()) {
-      references_.insert(std::make_pair(key, reference.get()));
-    } else {
-      scoped_ptr<luaX_binder> deleter(i->second);
-      i->second = reference.get();
-    }
-    return reference.release();
-  }
-
-  luaX_reference<2>* database_handle::new_aggregate(const char* name, int narg, lua_State* L, int index_step, int index_final) {
-    std::pair<std::string, int> key(name, narg);
-    scoped_ptr<luaX_reference<2> > reference(new luaX_reference<2>(L, index_step, index_final));
-    std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.find(key);
-    if (i == references_.end()) {
-      references_.insert(std::make_pair(key, reference.get()));
-    } else {
-      scoped_ptr<luaX_binder> deleter(i->second);
-      i->second = reference.get();
-    }
-    return reference.release();
-  }
-
-  void database_handle::delete_function(const char* name, int narg) {
-    std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.find(std::make_pair(name, narg));
-    if (i != references_.end()) {
-      scoped_ptr<luaX_binder> deleter(i->second);
-      references_.erase(i);
-    }
-  }
 }
