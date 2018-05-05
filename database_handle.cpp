@@ -38,10 +38,10 @@ namespace dromozoa {
     int result = sqlite3_close(dbh);
 #endif
 
-    std::set<luaX_binder*>::iterator i = references_.begin();
-    std::set<luaX_binder*>::iterator end = references_.end();
+    std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.begin();
+    std::map<std::pair<std::string, int>, luaX_binder*>::iterator end = references_.end();
     for (; i != end; ++i) {
-      scoped_ptr<luaX_binder> deleter(*i);
+      scoped_ptr<luaX_binder> deleter(i->second);
     }
     references_.clear();
 
@@ -50,17 +50,5 @@ namespace dromozoa {
 
   sqlite3* database_handle::get() const {
     return dbh_;
-  }
-
-  luaX_reference<>* database_handle::new_function(lua_State* L, int index_func) {
-    scoped_ptr<luaX_reference<> > reference(new luaX_reference<>(L, index_func));
-    references_.insert(reference.get());
-    return reference.release();
-  }
-
-  luaX_reference<2>* database_handle::new_aggregate(lua_State* L, int index_step, int index_final) {
-    scoped_ptr<luaX_reference<2> > reference(new luaX_reference<2>(L, index_step, index_final));
-    references_.insert(reference.get());
-    return reference.release();
   }
 }
