@@ -38,12 +38,14 @@ namespace dromozoa {
     int result = sqlite3_close(dbh);
 #endif
 
+#if SQLITE_VERSION_NUMBER < 3007003
     std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.begin();
     std::map<std::pair<std::string, int>, luaX_binder*>::iterator end = references_.end();
     for (; i != end; ++i) {
       scoped_ptr<luaX_binder> deleter(i->second);
     }
     references_.clear();
+#endif
 
     return result;
   }

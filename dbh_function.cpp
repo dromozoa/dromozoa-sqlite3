@@ -19,6 +19,7 @@
 
 namespace dromozoa {
   class database_handle_impl {
+#if SQLITE_VERSION_NUMBER < 3007003
   public:
     static int create_function(database_handle* self, const char* name, int narg, lua_State* L, int index_func) {
       scoped_ptr<luaX_binder> reference(new luaX_reference<>(L, index_func));
@@ -56,7 +57,29 @@ namespace dromozoa {
         i->second = reference;
       }
     }
+#else
+  public:
+    static int create_function(database_handle* self, const char* name, int narg, lua_State* L, int index_func) {
+      scoped_ptr<luaX_binder> reference(new luaX_reference<>(L, index_func));
+      return sqlite3_create_function_v2(self->get(), name, narg, SQLITE_UTF8, reference.release(), func_callback, 0, 0, destroy_callback);
+    }
 
+    static int create_aggregate(database_handle* self, const char* name, int narg, lua_State* L, int index_step, int index_final) {
+      scoped_ptr<luaX_binder> reference(new luaX_reference<2>(L, index_step, index_final));
+      return sqlite3_create_function_v2(self->get(), name, narg, SQLITE_UTF8, reference.release(), 0, step_callback, final_callback, destroy_callback);
+    }
+
+    static int delete_function(database_handle* self, const char* name, int narg) {
+      return sqlite3_create_function_v2(self->get(), name, narg, SQLITE_UTF8, 0, 0, 0, 0, 0);
+    }
+
+  private:
+    static void destroy_callback(void* data) {
+      scoped_ptr<luaX_binder> deleter(static_cast<luaX_binder*>(data));
+    }
+#endif
+
+  private:
     static bool push_value(lua_State* L, sqlite3_value* value) {
       switch (sqlite3_value_type(value)) {
         case SQLITE_INTEGER:
