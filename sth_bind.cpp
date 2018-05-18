@@ -28,12 +28,11 @@ namespace dromozoa {
     }
 
     int bind_text(lua_State* L, sqlite3_stmt* sth, int param) {
-      size_t size = 0;
-      const char* text = luaL_checklstring(L, 3, &size);
-      size_t i = luaX_opt_range_i(L, 4, size);
-      size_t j = luaX_opt_range_j(L, 5, size);
+      luaX_string_reference text = luaX_check_string(L, 3);
+      size_t i = luaX_opt_range_i(L, 4, text.size());
+      size_t j = luaX_opt_range_j(L, 5, text.size());
       if (i < j) {
-        return sqlite3_bind_text(sth, param, text + i, j - i, SQLITE_TRANSIENT);
+        return sqlite3_bind_text(sth, param, text.data() + i, j - i, SQLITE_TRANSIENT);
       } else {
         return sqlite3_bind_text(sth, param, "", 0, SQLITE_STATIC);
       }
@@ -86,13 +85,12 @@ namespace dromozoa {
     void impl_bind_blob(lua_State* L) {
       sqlite3_stmt* sth = check_sth(L, 1);
       int param = check_bind_parameter_index(L, 2, sth);
-      size_t size = 0;
-      const char* blob = luaL_checklstring(L, 3, &size);
-      size_t i = luaX_opt_range_i(L, 4, size);
-      size_t j = luaX_opt_range_j(L, 5, size);
+      luaX_string_reference blob = luaX_check_string(L, 3);
+      size_t i = luaX_opt_range_i(L, 4, blob.size());
+      size_t j = luaX_opt_range_j(L, 5, blob.size());
       int result = SQLITE_ERROR;
       if (i < j) {
-        result = sqlite3_bind_blob(sth, param, blob + i, j - i, SQLITE_TRANSIENT);
+        result = sqlite3_bind_blob(sth, param, blob.data() + i, j - i, SQLITE_TRANSIENT);
       } else {
         result = sqlite3_bind_zeroblob(sth, param, 0);
       }

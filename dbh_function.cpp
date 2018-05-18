@@ -89,15 +89,15 @@ namespace dromozoa {
           luaX_push(L, sqlite3_value_double(value));
           return true;
         case SQLITE_TEXT:
-          if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
-            lua_pushlstring(L, text, sqlite3_value_bytes(value));
+          if (const unsigned char* text = sqlite3_value_text(value)) {
+            luaX_push(L, luaX_string_reference(text, sqlite3_value_bytes(value)));
             return true;
           } else {
             return false;
           }
         case SQLITE_BLOB:
           if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
-            lua_pushlstring(L, blob, sqlite3_value_bytes(value));
+            luaX_push(L, luaX_string_reference(blob, sqlite3_value_bytes(value)));
             return true;
           } else {
             return false;
