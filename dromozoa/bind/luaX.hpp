@@ -26,6 +26,7 @@ extern "C" {
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <exception>
 #include <limits>
@@ -39,6 +40,39 @@ namespace dromozoa {
     struct luaX_nil_impl {};
     typedef int luaX_nil_impl::*luaX_nil_t;
     static const luaX_nil_t luaX_nil = 0;
+
+    class luaX_string_reference {
+    public:
+      typedef const char* (luaX_string_reference::*unspecified_bool_type)() const;
+
+      luaX_string_reference() : data_(), size_() {}
+
+      luaX_string_reference(const char* data, size_t size) : data_(data), size_(size) {}
+
+      luaX_string_reference(const signed char* data, size_t size) : data_(reinterpret_cast<const char*>(data)), size_(size) {}
+
+      luaX_string_reference(const unsigned char* data, size_t size) : data_(reinterpret_cast<const char*>(data)), size_(size) {}
+
+      const char* data() const {
+        return data_;
+      }
+
+      size_t size() const {
+        return size_;
+      }
+
+      operator unspecified_bool_type() const {
+        return data_ ? &luaX_string_reference::data : 0;
+      }
+
+      bool operator!() const {
+        return !data_;
+      }
+
+    private:
+      const char* data_;
+      size_t size_;
+    };
 
     struct luaX_type_nil {};
     struct luaX_type_number {};
@@ -142,6 +176,70 @@ namespace dromozoa {
       }
     }
 
+    template <class T = void>
+    class luaX_failure : public std::exception {};
+
+    template <>
+    class luaX_failure<int> : public std::exception {
+    public:
+      virtual int code() const = 0;
+    };
+
+    template <class T = void>
+    class luaX_failure_impl : public luaX_failure<T> {
+    public:
+      explicit luaX_failure_impl(const char* what) : what_(what) {}
+
+      explicit luaX_failure_impl(const std::string& what) : what_(what) {}
+
+      virtual ~luaX_failure_impl() throw() {}
+
+      virtual const char* what() const throw() {
+        return what_.c_str();
+      }
+
+    private:
+      std::string what_;
+    };
+
+    template <>
+    class luaX_failure_impl<int> : public luaX_failure<int> {
+    public:
+      luaX_failure_impl(const char* what, int code) : what_(what), code_(code) {}
+
+      luaX_failure_impl(const std::string& what, int code) : what_(what), code_(code) {}
+
+      virtual ~luaX_failure_impl() throw() {}
+
+      virtual const char* what() const throw() {
+        return what_.c_str();
+      }
+
+      virtual int code() const {
+        return code_;
+      }
+
+    private:
+      std::string what_;
+      int code_;
+    };
+
+    inline void luaX_throw_failure(const char* what) {
+      throw luaX_failure_impl<>(what);
+    }
+
+    inline void luaX_throw_failure(const std::string& what) {
+      throw luaX_failure_impl<>(what);
+    }
+
+    inline void luaX_throw_failure(const char* what, int code) {
+      throw luaX_failure_impl<int>(what, code);
+    }
+
+    inline void luaX_throw_failure(const std::string& what, int code) {
+      throw luaX_failure_impl<int>(what, code);
+    }
+
     template <class T>
     inline T* luaX_new(lua_State* L) {
       T* data = static_cast<T*>(lua_newuserdata(L, sizeof(T)));
@@ -203,6 +301,14 @@ namespace dromozoa {
       T* data = static_cast<T*>(lua_newuserdata(L, sizeof(T)));
       new(data) T(v1, v2, v3, v4, v5, v6, v7, v8);
       return data;
+    }
+
+    inline bool luaX_is_true(lua_State* L, int index) {
+      return lua_isboolean(L, index) && lua_toboolean(L, index);
+    }
+
+    inline bool luaX_is_false(lua_State* L, int index) {
+      return lua_isboolean(L, index) && !lua_toboolean(L, index);
     }
 
     inline bool luaX_is_integer(lua_State* L, int index) {
@@ -267,6 +373,18 @@ namespace dromozoa {
     template <class T>
     inline T luaX_opt_enum(lua_State* L, int arg, T d) {
       return static_cast<T>(luaL_optinteger(L, arg, d));
+    }
+
+    inline luaX_string_reference luaX_to_string(lua_State* L, int index) {
+      size_t size = 0;
+      const char* data = lua_tolstring(L, index, &size);
+      return luaX_string_reference(data, size);
+    }
+
+    inline luaX_string_reference luaX_check_string(lua_State* L, int arg) {
+      size_t size = 0;
+      const char* data = luaL_checklstring(L, arg, &size);
+      return luaX_string_reference(data, size);
     }
 
     inline bool luaX_to_udata_impl(lua_State* L, const char* name) {
@@ -667,14 +785,31 @@ namespace dromozoa {
     DROMOZOA_BIND_LUAX_TYPE(luaX_type_numint, unsigned long long)
     DROMOZOA_BIND_LUAX_TYPE(luaX_type_boolean, bool)
     DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, char*)
+    DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, signed char*)
+    DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, unsigned char*)
     DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, const char*)
+    DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, const signed char*)
+    DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, const unsigned char*)
     DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, std::string)
+    DROMOZOA_BIND_LUAX_TYPE(luaX_type_string, luaX_string_reference)
 
 #undef DROMOZOA_BIND_LUAX_TYPE
 
     template <size_t T>
     struct luaX_type<char[T]> {
       typedef const char* decay;
+      typedef luaX_type_string type;
+    };
+
+    template <size_t T>
+    struct luaX_type<signed char[T]> {
+      typedef const signed char* decay;
+      typedef luaX_type_string type;
+    };
+
+    template <size_t T>
+    struct luaX_type<unsigned char[T]> {
+      typedef const unsigned char* decay;
       typedef luaX_type_string type;
     };
 
@@ -734,21 +869,24 @@ namespace dromozoa {
 
     template <class T>
     struct luaX_type_traits_impl<T, luaX_type_string> {
-      static void push(lua_State* L, const char* value) {
-        lua_pushstring(L, value);
+      template <class T_char>
+      static void push(lua_State* L, const T_char* value) {
+        lua_pushstring(L, reinterpret_cast<const char*>(value));
       }
 
       static void push(lua_State* L, const std::string& value) {
         lua_pushlstring(L, value.data(), value.size());
       }
 
-      static void quote(lua_State* L, const std::string& value) {
+      static void push(lua_State* L, const luaX_string_reference& value) {
+        lua_pushlstring(L, value.data(), value.size());
+      }
+
+      static void quote_impl(lua_State* L, const char* data, size_t size) {
         std::ostringstream out;
         out << "\"";
-        std::string::const_iterator i = value.begin();
-        std::string::const_iterator end = value.end();
-        for (; i != end; ++i) {
-          std::string::value_type c = *i;
+        for (size_t i = 0; i < size; ++i) {
+          char c = data[i];
           switch (c) {
             case '\a': out << "\\a"; break;
             case '\b': out << "\\b"; break;
@@ -771,24 +909,50 @@ namespace dromozoa {
         out << "\"";
         luaX_push(L, out.str());
       }
+
+      template <class T_char>
+      static void quote(lua_State* L, const T_char* value) {
+        const char* data = reinterpret_cast<const char*>(value);
+        quote_impl(L, data, strlen(data));
+      }
+
+      static void quote(lua_State* L, const std::string& value) {
+        quote_impl(L, value.data(), value.size());
+      }
+
+      static void quote(lua_State* L, const luaX_string_reference& value) {
+        quote_impl(L, value.data(), value.size());
+      }
     };
 
     template <class T>
     struct luaX_type_traits_impl<T, luaX_type_function> {
-      static int call(lua_State* L, lua_CFunction function) {
+      static int call(lua_State* L, int, lua_CFunction function) {
         return function(L);
       }
 
-      static int call(lua_State* L, void (*function)(lua_State*)) {
-        int top = lua_gettop(L);
+      static int call(lua_State* L, int top, void (*function)(lua_State*)) {
         function(L);
         return lua_gettop(L) - top;
       }
 
       static int closure(lua_State* L) {
+        int top = lua_gettop(L);
         try {
-          return call(L, reinterpret_cast<T>(lua_touserdata(L, lua_upvalueindex(1))));
+          return call(L, top, reinterpret_cast<T>(lua_touserdata(L, lua_upvalueindex(1))));
+        } catch (const luaX_failure<>& e) {
+          lua_settop(L, top);
+          luaX_push(L, luaX_nil);
+          luaX_push(L, e.what());
+          return 2;
+        } catch (const luaX_failure<int>& e) {
+          lua_settop(L, top);
+          luaX_push(L, luaX_nil);
+          luaX_push(L, e.what());
+          luaX_push(L, e.code());
+          return 3;
         } catch (const std::exception& e) {
+          lua_settop(L, top);
           luaL_where(L, 1);
           luaX_push(L, "exception caught: ");
           luaX_push(L, e.what());
@@ -976,6 +1140,25 @@ namespace dromozoa {
         ref(L, 3, index3);
       }
     };
+
+    class luaX_top_saver {
+    public:
+      explicit luaX_top_saver(lua_State* L) : state_(L), top_(lua_gettop(L)) {}
+
+      ~luaX_top_saver() {
+        lua_settop(state_, top_);
+      }
+
+      int get() const {
+        return top_;
+      }
+
+    private:
+      lua_State* state_;
+      int top_;
+      luaX_top_saver(const luaX_top_saver&);
+      luaX_top_saver& operator=(const luaX_top_saver&);
+    };
   }
 
   using bind::luaX_abs_index;
@@ -983,10 +1166,14 @@ namespace dromozoa {
   using bind::luaX_check_enum;
   using bind::luaX_check_integer;
   using bind::luaX_check_integer_field;
+  using bind::luaX_check_string;
   using bind::luaX_check_udata;
+  using bind::luaX_failure;
   using bind::luaX_field_error;
   using bind::luaX_get_field;
+  using bind::luaX_is_false;
   using bind::luaX_is_integer;
+  using bind::luaX_is_true;
   using bind::luaX_new;
   using bind::luaX_nil;
   using bind::luaX_opt_enum;
@@ -1000,7 +1187,11 @@ namespace dromozoa {
   using bind::luaX_set_field;
   using bind::luaX_set_metafield;
   using bind::luaX_set_metatable;
+  using bind::luaX_string_reference;
+  using bind::luaX_throw_failure;
+  using bind::luaX_to_string;
   using bind::luaX_to_udata;
+  using bind::luaX_top_saver;
 }
 
 #endif

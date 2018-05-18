@@ -17,10 +17,20 @@
 
 #include <stdint.h>
 
+#include <vector>
+
 #include "dromozoa/bind.hpp"
 
 namespace dromozoa {
   namespace {
+    void impl_is_true(lua_State* L) {
+      luaX_push(L, luaX_is_true(L, 1));
+    }
+
+    void impl_is_false(lua_State* L) {
+      luaX_push(L, luaX_is_false(L, 1));
+    }
+
     void impl_is_integer(lua_State* L) {
       luaX_push(L, luaX_is_integer(L, 1));
     }
@@ -65,6 +75,25 @@ namespace dromozoa {
       luaX_push(L, v);
     }
 
+    void impl_to_string(lua_State* L) {
+      if (luaX_string_reference source = luaX_to_string(L, 1)) {
+        std::vector<char> buffer(source.size());
+        for (size_t i = 0; i < source.size(); ++i) {
+          buffer[i] = source.data()[i] + 1;
+        }
+        luaX_push(L, luaX_string_reference(&buffer[0], buffer.size()));
+      }
+    }
+
+    void impl_check_string(lua_State* L) {
+      luaX_string_reference source = luaX_check_string(L, 1);
+      std::vector<char> buffer(source.size());
+      for (size_t i = 0; i < source.size(); ++i) {
+        buffer[i] = source.data()[i] - 1;
+      }
+      luaX_push(L, luaX_string_reference(&buffer[0], buffer.size()));
+    }
+
     void impl_opt_range(lua_State* L) {
       size_t size = luaX_check_integer<size_t>(L, 1);
       size_t i = luaX_opt_range_i(L, 2, size);
@@ -76,6 +105,8 @@ namespace dromozoa {
   void initialize_util(lua_State* L) {
     lua_newtable(L);
     {
+      luaX_set_field(L, -1, "is_true", impl_is_true);
+      luaX_set_field(L, -1, "is_false", impl_is_false);
       luaX_set_field(L, -1, "is_integer", impl_is_integer);
       luaX_set_field(L, -1, "check_int16", impl_check_int16);
       luaX_set_field(L, -1, "check_uint16", impl_check_uint16);
@@ -85,6 +116,8 @@ namespace dromozoa {
       luaX_set_field(L, -1, "opt_int_range", impl_opt_int_range);
       luaX_set_field(L, -1, "check_int_field", impl_check_int_field);
       luaX_set_field(L, -1, "opt_int32_field", impl_opt_int32_field);
+      luaX_set_field(L, -1, "to_string", impl_to_string);
+      luaX_set_field(L, -1, "check_string", impl_check_string);
       luaX_set_field(L, -1, "opt_range", impl_opt_range);
 
       luaX_set_field(L, -1, "sizeof_integer", sizeof(lua_Integer));

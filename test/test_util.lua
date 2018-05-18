@@ -20,6 +20,22 @@ local bind = require "dromozoa.bind"
 local verbose = os.getenv "VERBOSE" == "1"
 
 --
+-- is_true / is_false
+--
+
+assert(bind.util.is_true(true))
+assert(not bind.util.is_true(false))
+assert(not bind.util.is_true(42))
+assert(not bind.util.is_true())
+assert(not bind.util.is_true(nil))
+
+assert(bind.util.is_false(false))
+assert(not bind.util.is_false(true))
+assert(not bind.util.is_false(42))
+assert(not bind.util.is_false())
+assert(not bind.util.is_false(nil))
+
+--
 -- is_integer
 --
 
@@ -128,6 +144,27 @@ check_integer(bind.util.opt_int32_field, { tv_nsec = -1 }, "out of bounds")
 check_integer(bind.util.opt_int32_field, { tv_nsec = 42 }, 42)
 check_integer(bind.util.opt_int32_field, { tv_nsec = 1000000000}, "out of bounds")
 check_integer(bind.util.opt_int32_field, { tv_nsec = "foo" }, "not an integer")
+
+--
+-- to_string / check_string
+--
+
+assert(bind.util.to_string("abc\0def") == "bcd\1efg")
+assert(not bind.util.to_string())
+assert(not bind.util.to_string(nil))
+assert(bind.util.check_string("bcd\1efg") == "abc\0def")
+
+local result, message = pcall(bind.util.check_string)
+if verbose then
+  print(result, message)
+end
+assert(not result)
+
+local result, message = pcall(bind.util.check_string, nil)
+if verbose then
+  print(result, message)
+end
+assert(not result)
 
 --
 -- opt_range
