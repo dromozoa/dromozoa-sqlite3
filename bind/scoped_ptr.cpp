@@ -66,7 +66,7 @@ namespace dromozoa {
         bool b = ptr1;
         DROMOZOA_CHECK(b == true);
 
-        DROMOZOA_CHECK(ptr2 == false);
+        DROMOZOA_CHECK(static_cast<bool>(ptr2) == false);
         DROMOZOA_CHECK(!ptr2);
         DROMOZOA_CHECK(!ptr2.get());
         DROMOZOA_CHECK(ptr2.get() == 0);
