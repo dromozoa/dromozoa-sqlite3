@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -24,12 +24,11 @@ namespace dromozoa {
     }
 
     void result_text(lua_State* L, sqlite3_context* context) {
-      size_t size = 0;
-      const char* text = luaL_checklstring(L, 2, &size);
-      size_t i = luaX_opt_range_i(L, 3, size);
-      size_t j = luaX_opt_range_i(L, 4, size);
+      luaX_string_reference text = luaX_check_string(L, 2);
+      size_t i = luaX_opt_range_i(L, 3, text.size());
+      size_t j = luaX_opt_range_i(L, 4, text.size());
       if (i < j) {
-        sqlite3_result_text(context, text + i, j - i, SQLITE_TRANSIENT);
+        sqlite3_result_text(context, text.data() + i, j - i, SQLITE_TRANSIENT);
       } else {
         sqlite3_result_text(context, "", 0, SQLITE_STATIC);
       }
@@ -52,12 +51,11 @@ namespace dromozoa {
 
     void impl_result_blob(lua_State* L) {
       sqlite3_context* context = check_context(L, 1);
-      size_t size = 0;
-      const char* blob = luaL_checklstring(L, 2, &size);
-      size_t i = luaX_opt_range_i(L, 3, size);
-      size_t j = luaX_opt_range_j(L, 4, size);
+      luaX_string_reference blob = luaX_check_string(L, 2);
+      size_t i = luaX_opt_range_i(L, 3, blob.size());
+      size_t j = luaX_opt_range_i(L, 4, blob.size());
       if (i < j) {
-        sqlite3_result_blob(context, blob + i, j - i, SQLITE_TRANSIENT);
+        sqlite3_result_blob(context, blob.data() + i, j - i, SQLITE_TRANSIENT);
       } else {
         sqlite3_result_zeroblob(context, 0);
       }

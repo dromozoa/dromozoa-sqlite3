@@ -31,16 +31,12 @@ namespace dromozoa {
   }
 
   void push_error(lua_State* L, int code) {
-    luaX_push(L, luaX_nil);
-    luaX_push(L, error_to_string(code));
-    luaX_push(L, code);
+    luaX_push(L, luaX_nil, error_to_string(code), code);
   }
 
   void push_error(lua_State* L, sqlite3* dbh) {
     int code = sqlite3_extended_errcode(dbh);
-    luaX_push(L, luaX_nil);
-    luaX_push(L, sqlite3_errmsg(dbh));
-    luaX_push(L, code);
+    luaX_push(L, luaX_nil, sqlite3_errmsg(dbh), code);
   }
 
   void push_error(lua_State* L, sqlite3_stmt* sth) {

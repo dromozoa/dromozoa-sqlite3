@@ -28,15 +28,15 @@ namespace dromozoa {
           luaX_push(L, sqlite3_column_double(sth, column));
           return true;
         case SQLITE_TEXT:
-          if (const char* text = reinterpret_cast<const char*>(sqlite3_column_text(sth, column))) {
-            lua_pushlstring(L, text, sqlite3_column_bytes(sth, column));
+          if (const unsigned char* text = sqlite3_column_text(sth, column)) {
+            luaX_push(L, luaX_string_reference(text, sqlite3_column_bytes(sth, column)));
             return true;
           } else {
             return false;
           }
         case SQLITE_BLOB:
           if (const char* blob = static_cast<const char*>(sqlite3_column_blob(sth, column))) {
-            lua_pushlstring(L, blob, sqlite3_column_bytes(sth, column));
+            luaX_push(L, luaX_string_reference(blob, sqlite3_column_bytes(sth, column)));
             return true;
           } else {
             return false;

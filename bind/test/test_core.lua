@@ -54,12 +54,19 @@ check_none_or_nil(1, bind.core.push_nil())
 assert(bind.core.push_enum() == 42)
 
 local function check_string(...)
-  assert(select("#", ...) == 5)
+  assert(select("#", ...) == 14)
   if verbose then
     print(...)
   end
   for i = 1, 5 do
     assert(select(i, ...) == "あいうえお")
+  end
+  assert(select(6, ...) == "foo\0bar\0baz")
+  for i = 7, 10 do
+    assert(select(i, ...) == "foo")
+  end
+  for i = 11, 14 do
+    assert(select(i, ...) == "bar")
   end
 end
 
@@ -88,6 +95,7 @@ check_error(bind.core.throw, "exception caught: runtime_error")
 check_error(bind.core.field_error1, "field nil not an integer")
 check_error(bind.core.field_error2, "field userdata:")
 check_error(bind.core.field_error3, [[field "\1\2\3\4\5\6\a\b\t\n\v\f\r\14\15\16]])
+check_error(bind.core.field_error4, [[field "foo\0bar\0baz"]])
 
 --
 -- field
@@ -104,3 +112,34 @@ assert(t.baz == "qux")
 local t = bind.core.set_metafield()
 assert(getmetatable(t)["dromozoa.bind.a"] == 42)
 assert(getmetatable(t)["dromozoa.bind.b"] == "あいうえお")
+
+--
+-- failure
+--
+
+local result, message, code = bind.core.failure1()
+assert(not result)
+assert(message == "failure1")
+assert(not code)
+
+local result, message, code = bind.core.failure2()
+assert(not result)
+assert(message == "failure2")
+assert(code == 69)
+
+local result, message, code = bind.core.failure3()
+assert(not result)
+assert(message == "failure3")
+assert(not code)
+
+local result, message, code = bind.core.failure4()
+assert(not result)
+assert(message == "failure4")
+assert(code == 69)
+
+--
+-- top_saver
+--
+
+local result = bind.core.top_saver()
+assert(result == 0)

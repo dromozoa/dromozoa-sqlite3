@@ -89,15 +89,15 @@ namespace dromozoa {
           luaX_push(L, sqlite3_value_double(value));
           return true;
         case SQLITE_TEXT:
-          if (const char* text = reinterpret_cast<const char*>(sqlite3_value_text(value))) {
-            lua_pushlstring(L, text, sqlite3_value_bytes(value));
+          if (const unsigned char* text = sqlite3_value_text(value)) {
+            luaX_push(L, luaX_string_reference(text, sqlite3_value_bytes(value)));
             return true;
           } else {
             return false;
           }
         case SQLITE_BLOB:
           if (const char* blob = static_cast<const char*>(sqlite3_value_blob(value))) {
-            lua_pushlstring(L, blob, sqlite3_value_bytes(value));
+            luaX_push(L, luaX_string_reference(blob, sqlite3_value_bytes(value)));
             return true;
           } else {
             return false;
@@ -113,7 +113,7 @@ namespace dromozoa {
     template <size_t T_i, class T>
     static void callback(T* ref, sqlite3_context* context, int argc, sqlite3_value** argv) {
       lua_State* L = ref->state();
-      int top = lua_gettop(L);
+      luaX_top_saver save_top(L);
       {
         ref->get_field(L, T_i);
         new_context(L, context);
@@ -126,7 +126,6 @@ namespace dromozoa {
           sqlite3_result_error(context, lua_tostring(L, -1), -1);
         }
       }
-      lua_settop(L, top);
     }
 
     static void func_callback(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -146,8 +145,7 @@ namespace dromozoa {
     int exec_callback(void* data, int count, char** columns, char** names) {
       luaX_reference<>* ref = static_cast<luaX_reference<>*>(data);
       lua_State* L = ref->state();
-      int result = 0;
-      int top = lua_gettop(L);
+      luaX_top_saver save_top(L);
       {
         ref->get_field(L);
         lua_newtable(L);
@@ -161,17 +159,13 @@ namespace dromozoa {
           luaX_set_field(L, -3, i + 1);
           luaX_set_field(L, -2, names[i]);
         }
-        if (lua_pcall(L, 1, 1, 0) == 0) {
-          if (luaX_is_integer(L, -1)) {
-            result = lua_tointeger(L, -1);
-          }
+        if (lua_pcall(L, 1, 0, 0) == 0) {
+          return 0;
         } else {
           DROMOZOA_UNEXPECTED(lua_tostring(L, -1));
-          result = 1;
         }
       }
-      lua_settop(L, top);
-      return result;
+      return 1;
     }
 
     void impl_create_function(lua_State* L) {

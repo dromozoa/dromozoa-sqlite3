@@ -44,22 +44,21 @@ namespace dromozoa {
 
     void impl_prepare(lua_State* L) {
       sqlite3* dbh = check_dbh(L, 1);
-      size_t size = 0;
-      const char* sql = luaL_checklstring(L, 2, &size);
-      size_t i = luaX_opt_range_i(L, 3, size);
-      size_t j = luaX_opt_range_j(L, 4, size);
+      luaX_string_reference sql = luaX_check_string(L, 2);
+      size_t i = luaX_opt_range_i(L, 3, sql.size());
+      size_t j = luaX_opt_range_j(L, 4, sql.size());
       sqlite3_stmt* sth = 0;
       const char* tail = 0;
       int result = SQLITE_ERROR;
       if (i < j) {
-        result = sqlite3_prepare_v2(dbh, sql + i, j - i, &sth, &tail);
+        result = sqlite3_prepare_v2(dbh, sql.data() + i, j - i, &sth, &tail);
       } else {
         result = sqlite3_prepare_v2(dbh, "", 0, &sth, 0);
       }
       if (result == SQLITE_OK) {
         new_sth(L, sth);
         if (tail) {
-          luaX_push(L, tail - sql + 1);
+          luaX_push(L, tail - sql.data() + 1);
         }
       } else {
         sqlite3_finalize(sth);
