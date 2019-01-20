@@ -1,4 +1,4 @@
--- Copyright (C) 2017,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2017-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -19,8 +19,12 @@ local sqlite3 = require "dromozoa.sqlite3"
 
 local verbose = os.getenv "VERBOSE" == "1"
 
+local libversion = assert(sqlite3.libversion())
+local libversion_number = assert(sqlite3.libversion_number())
+local sourceid = assert(sqlite3.sourceid())
+
 if verbose then
-  io.stderr:write(sqlite3.libversion(), "\n")
-  io.stderr:write(sqlite3.libversion_number(), "\n")
-  io.stderr:write(sqlite3.sourceid(), "\n")
+  io.stderr:write(libversion, "\n")
+  io.stderr:write(libversion_number, "\n")
+  io.stderr:write(sourceid, "\n")
 end
