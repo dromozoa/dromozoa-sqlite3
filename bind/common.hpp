@@ -1,4 +1,4 @@
-// Copyright (C) 2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2018,2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -21,5 +21,14 @@
 namespace dromozoa {
   bool verbose();
 }
+
+#define DROMOZOA_CHECK(expr) \
+  do { \
+    if (!(expr)) { \
+      luaX_push(L, luaX_nil); \
+      luaX_push(L, "assertion failed: " #expr); \
+      return; \
+    } \
+  } while (false)
 
 #endif
