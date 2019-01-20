@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -62,6 +62,10 @@ namespace dromozoa {
     void impl_sourceid(lua_State* L) {
       luaX_push(L, sqlite3_sourceid());
     }
+
+    void impl_threadsafe(lua_State* L) {
+      luaX_push(L, sqlite3_threadsafe());
+    }
   }
 
   void push_null(lua_State* L) {
@@ -75,6 +79,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "libversion", impl_libversion);
     luaX_set_field(L, -1, "libversion_number", impl_libversion_number);
     luaX_set_field(L, -1, "sourceid", impl_sourceid);
+    luaX_set_field(L, -1, "threadsafe", impl_threadsafe);
 
     push_null(L);
     luaX_set_field(L, -2, "null");
