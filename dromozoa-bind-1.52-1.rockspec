@@ -1,14 +1,19 @@
+rockspec_format = "3.0"
 package = "dromozoa-bind"
-version = "1.48-1"
+version = "1.52-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-bind/archive/v1.48.tar.gz";
-  file = "dromozoa-bind-1.48.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-bind/archive/v1.52.tar.gz";
+  file = "dromozoa-bind-1.52.tar.gz";
 }
 description = {
   summary = "Helper library for creating bindings between C++ and Lua";
   license = "GPL-3";
   homepage = "https://github.com/dromozoa/dromozoa-bind/";
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
+}
+test = {
+  type = "command";
+  command = "make check";
 }
 build = {
   type = "make";
