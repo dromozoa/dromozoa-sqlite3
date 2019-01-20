@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -1176,6 +1176,7 @@ namespace dromozoa {
   using bind::luaX_is_true;
   using bind::luaX_new;
   using bind::luaX_nil;
+  using bind::luaX_nil_t;
   using bind::luaX_opt_enum;
   using bind::luaX_opt_integer;
   using bind::luaX_opt_integer_field;

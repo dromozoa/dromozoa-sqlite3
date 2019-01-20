@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018,2019 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-bind.
 //
@@ -15,12 +15,37 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-bind.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DROMOZOA_BIND_HPP
-#define DROMOZOA_BIND_HPP
+#include <iostream>
 
-#include "bind/luaX.hpp"
-#include "bind/scoped_ptr.hpp"
-#include "bind/system_error.hpp"
-#include "bind/unexpected.hpp"
+#include "dromozoa/bind.hpp"
+#include "dromozoa/bind/condition_variable.hpp"
+#include "dromozoa/bind/mutex.hpp"
+#include "common.hpp"
 
-#endif
+namespace dromozoa {
+  namespace {
+    mutex m;
+
+    void impl_test(lua_State* L) {
+      lock_guard<> lock(m);
+      if (verbose()) {
+        std::cout << lock.mutex() << "\n";
+      }
+
+      if (false) {
+        condition_variable cond;
+        cond.wait(lock);
+      }
+
+      luaX_push_success(L);
+    }
+  }
+
+  void initialize_mutex(lua_State* L) {
+    lua_newtable(L);
+    {
+      luaX_set_field(L, -1, "test", impl_test);
+    }
+    luaX_set_field(L, -2, "mutex");
+  }
+}
