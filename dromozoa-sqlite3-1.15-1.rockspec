@@ -1,3 +1,4 @@
+rockspec_format = "3.0"
 package = "dromozoa-sqlite3"
 version = "1.15-1"
 source = {
@@ -9,6 +10,10 @@ description = {
   license = "GPL-3";
   homepage = "https://github.com/dromozoa/dromozoa-sqlite3/";
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
+}
+test = {
+  type = "command";
+  command = "./test.sh";
 }
 build = {
   type = "make";
