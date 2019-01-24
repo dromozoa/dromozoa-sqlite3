@@ -25,6 +25,7 @@
 #include <utility>
 
 #include <dromozoa/bind.hpp>
+#include <dromozoa/bind/mutex.hpp>
 
 namespace dromozoa {
   class database_handle_impl {
@@ -33,7 +34,13 @@ namespace dromozoa {
     ~database_handle_impl();
     void add_ref();
     void release();
+    sqlite3* get() const;
+    int close();
   private:
+    long counter_;
+    mutex counter_mutex_;
+    sqlite3* dbh_;
+    mutex dbh_mutex_;
     database_handle_impl(const database_handle_impl&);
     database_handle_impl& operator=(const database_handle_impl&);
   };
