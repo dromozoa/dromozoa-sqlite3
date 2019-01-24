@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-sqlite3.
 #
@@ -18,7 +18,7 @@
 CPPFLAGS += -Ibind -I$(LUA_INCDIR)
 CXXFLAGS += -Wall -W $(CFLAGS)
 LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
-LDLIBS += -lsqlite3 -ldl
+LDLIBS += -lsqlite3 -lpthread -ldl
 
 OBJS = \
 	context.o \
