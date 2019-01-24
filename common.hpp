@@ -28,10 +28,10 @@
 #include <dromozoa/bind/mutex.hpp>
 
 namespace dromozoa {
-  class database_handle_impl {
+  class sharable_database_handle_impl {
   public:
-    explicit database_handle_impl(sqlite3*);
-    ~database_handle_impl();
+    explicit sharable_database_handle_impl(sqlite3*);
+    ~sharable_database_handle_impl();
     void add_ref();
     void release();
     sqlite3* get();
@@ -41,9 +41,16 @@ namespace dromozoa {
     mutex counter_mutex_;
     sqlite3* dbh_;
     mutex dbh_mutex_;
-    database_handle_impl(const database_handle_impl&);
-    database_handle_impl& operator=(const database_handle_impl&);
+    sharable_database_handle_impl(const sharable_database_handle_impl&);
+    sharable_database_handle_impl& operator=(const sharable_database_handle_impl&);
   };
+
+  // class database_handle {
+  // public:
+  //   virtual ~database_handle() = 0;
+  //   virtual sqlite3* get() const = 0;
+  //   virtual int close() = 0;
+  // };
 
   class database_handle {
   public:
