@@ -18,9 +18,9 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  sharable_database_handle_impl::sharable_database_handle_impl(sqlite3* dbh) : counter_(), dbh_(dbh) {}
+  database_handle_sharable_impl::database_handle_sharable_impl(sqlite3* dbh) : counter_(), dbh_(dbh) {}
 
-  sharable_database_handle_impl::~sharable_database_handle_impl() {
+  database_handle_sharable_impl::~database_handle_sharable_impl() {
     lock_guard<> lock(dbh_mutex_);
     if (dbh_) {
       sqlite3* dbh = dbh_;
@@ -36,24 +36,24 @@ namespace dromozoa {
     }
   }
 
-  void sharable_database_handle_impl::add_ref() {
+  void database_handle_sharable_impl::add_ref() {
     lock_guard<> lock(counter_mutex_);
     ++counter_;
   }
 
-  void sharable_database_handle_impl::release() {
+  void database_handle_sharable_impl::release() {
     lock_guard<> lock(counter_mutex_);
     if (--counter_ == 0) {
       delete this;
     }
   }
 
-  sqlite3* sharable_database_handle_impl::get() {
+  sqlite3* database_handle_sharable_impl::get() {
     lock_guard<> lock(dbh_mutex_);
     return dbh_;
   }
 
-  int sharable_database_handle_impl::close() {
+  int database_handle_sharable_impl::close() {
     lock_guard<> lock(dbh_mutex_);
     sqlite3* dbh = dbh_;
     dbh_ = 0;
