@@ -123,12 +123,16 @@ namespace dromozoa {
   }
 
   void new_dbh(lua_State* L, sqlite3* dbh) {
-    luaX_new<database_handle>(L, dbh);
+    luaX_new<database_handle_impl>(L, dbh);
     luaX_set_metatable(L, "dromozoa.sqlite3.dbh");
   }
 
   database_handle* check_database_handle(lua_State* L, int arg) {
-    return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh");
+    return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh", "dromozoa.sqlite3.sharable_dbh");
+  }
+
+  database_handle_impl* check_database_handle_impl(lua_State* L, int arg) {
+    return luaX_check_udata<database_handle_impl>(L, arg, "dromozoa.sqlite3.dbh");
   }
 
   sqlite3* check_dbh(lua_State* L, int arg) {

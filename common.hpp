@@ -45,17 +45,17 @@ namespace dromozoa {
     sharable_database_handle_impl& operator=(const sharable_database_handle_impl&);
   };
 
-  // class database_handle {
-  // public:
-  //   virtual ~database_handle() = 0;
-  //   virtual sqlite3* get() const = 0;
-  //   virtual int close() = 0;
-  // };
-
   class database_handle {
   public:
-    explicit database_handle(sqlite3*);
-    ~database_handle();
+    virtual ~database_handle() = 0;
+    virtual sqlite3* get() const = 0;
+    virtual int close() = 0;
+  };
+
+  class database_handle_impl : public database_handle {
+  public:
+    explicit database_handle_impl(sqlite3*);
+    ~database_handle_impl();
     sqlite3* get() const;
     int close();
   private:
@@ -64,12 +64,13 @@ namespace dromozoa {
 #if SQLITE_VERSION_NUMBER < 3007003
     std::map<std::pair<std::string, int>, luaX_binder*> references_;
 #endif
-    database_handle(const database_handle&);
-    database_handle& operator=(const database_handle&);
+    database_handle_impl(const database_handle_impl&);
+    database_handle_impl& operator=(const database_handle_impl&);
   };
 
   void new_dbh(lua_State*, sqlite3*);
   database_handle* check_database_handle(lua_State*, int);
+  database_handle_impl* check_database_handle_impl(lua_State*, int);
   sqlite3* check_dbh(lua_State*, int);
 
   class statement_handle {

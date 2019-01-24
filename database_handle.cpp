@@ -65,9 +65,11 @@ namespace dromozoa {
     return result;
   }
 
-  database_handle::database_handle(sqlite3* dbh) : dbh_(dbh) {}
+  database_handle::~database_handle() {}
 
-  database_handle::~database_handle() {
+  database_handle_impl::database_handle_impl(sqlite3* dbh) : dbh_(dbh) {}
+
+  database_handle_impl::~database_handle_impl() {
     if (dbh_) {
       int result = close();
       if (result != SQLITE_OK) {
@@ -76,11 +78,11 @@ namespace dromozoa {
     }
   }
 
-  sqlite3* database_handle::get() const {
+  sqlite3* database_handle_impl::get() const {
     return dbh_;
   }
 
-  int database_handle::close() {
+  int database_handle_impl::close() {
     sqlite3* dbh = dbh_;
     dbh_ = 0;
 #if SQLITE_VERSION_NUMBER >= 3007014
