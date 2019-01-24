@@ -53,7 +53,7 @@ namespace dromozoa {
 
   class database_handle_sharable_impl {
   public:
-    explicit database_handle_sharable_impl(sqlite3*);
+    database_handle_sharable_impl(const char*, int, const char*);
     ~database_handle_sharable_impl();
     void add_ref();
     void release();
@@ -81,7 +81,6 @@ namespace dromozoa {
     database_handle_sharable& operator=(const database_handle_sharable&);
   };
 
-  void new_dbh(lua_State*, sqlite3*);
   database_handle* check_database_handle(lua_State*, int);
   database_handle_impl* check_database_handle_impl(lua_State*, int);
   database_handle_sharable* check_database_handle_sharable(lua_State*, int);

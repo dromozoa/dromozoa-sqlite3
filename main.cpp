@@ -44,10 +44,26 @@ namespace dromozoa {
       sqlite3* dbh = 0;
       int result = sqlite3_open_v2(filename, &dbh, flags, vfs);
       if (result == SQLITE_OK) {
-        new_dbh(L, dbh);
+        luaX_new<database_handle_impl>(L, dbh);
+        luaX_set_metatable(L, "dromozoa.sqlite3.dbh");
       } else {
         sqlite3_close(dbh);
         push_error(L, result);
+      }
+    }
+
+    void impl_open_sharable(lua_State* L) {
+      if (lua_islightuserdata(L, 1)) {
+        luaX_new<database_handle_sharable>(L, static_cast<database_handle_sharable_impl*>(lua_touserdata(L, 1)));
+        luaX_set_metatable(L, "dromozoa.sqlite3.dbh_sharable");
+      } else {
+        const char* filename = luaL_checkstring(L, 1);
+        int flags = luaX_opt_integer<int>(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+        const char* vfs = lua_tostring(L, 3);
+        scoped_ptr<database_handle_sharable_impl> impl(new database_handle_sharable_impl(filename, flags, vfs));
+        luaX_new<database_handle_sharable>(L, impl.get());
+        impl.release();
+        luaX_set_metatable(L, "dromozoa.sqlite3.dbh_sharable");
       }
     }
 
@@ -76,6 +92,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "initialize", impl_initialize);
     luaX_set_field(L, -1, "shutdown", impl_shutdown);
     luaX_set_field(L, -1, "open", impl_open);
+    luaX_set_field(L, -1, "open_sharable", impl_open_sharable);
     luaX_set_field(L, -1, "libversion", impl_libversion);
     luaX_set_field(L, -1, "libversion_number", impl_libversion_number);
     luaX_set_field(L, -1, "sourceid", impl_sourceid);

@@ -62,7 +62,14 @@ namespace dromozoa {
     return result;
   }
 
-  database_handle_sharable_impl::database_handle_sharable_impl(sqlite3* dbh) : counter_(), dbh_(dbh) {}
+  database_handle_sharable_impl::database_handle_sharable_impl(const char* filename, int flags, const char* vfs) : counter_(), dbh_() {
+    int result = sqlite3_open_v2(filename, &dbh_, flags, vfs);
+    if (result != SQLITE_OK) {
+      sqlite3_close(dbh_);
+      luaX_throw_failure(error_to_string(result), result);
+      return;
+    }
+  }
 
   database_handle_sharable_impl::~database_handle_sharable_impl() {
     lock_guard<> lock(dbh_mutex_);
