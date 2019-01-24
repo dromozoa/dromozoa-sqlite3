@@ -18,6 +18,16 @@
 #include "common.hpp"
 
 namespace dromozoa {
+  namespace {
+    int close_impl(sqlite3* dbh) {
+#if SQLITE_VERSION_NUMBER >= 3007014
+      return sqlite3_close_v2(dbh);
+#else
+      return sqlite3_close(dbh);
+#endif
+    }
+  }
+
   database_handle::~database_handle() {}
 
   database_handle_impl::database_handle_impl(sqlite3* dbh) : dbh_(dbh) {}
@@ -38,11 +48,7 @@ namespace dromozoa {
   int database_handle_impl::close() {
     sqlite3* dbh = dbh_;
     dbh_ = 0;
-#if SQLITE_VERSION_NUMBER >= 3007014
-    int result = sqlite3_close_v2(dbh);
-#else
-    int result = sqlite3_close(dbh);
-#endif
+    int result = close_impl(dbh);
 
 #if SQLITE_VERSION_NUMBER < 3007003
     std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.begin();
@@ -63,11 +69,7 @@ namespace dromozoa {
     if (dbh_) {
       sqlite3* dbh = dbh_;
       dbh_ = 0;
-#if SQLITE_VERSION_NUMBER >= 3007014
-      int result = sqlite3_close_v2(dbh);
-#else
-      int result = sqlite3_close(dbh);
-#endif
+      int result = close_impl(dbh);
       if (result != SQLITE_OK) {
         DROMOZOA_UNEXPECTED(error_to_string(result));
       }
@@ -95,11 +97,26 @@ namespace dromozoa {
     lock_guard<> lock(dbh_mutex_);
     sqlite3* dbh = dbh_;
     dbh_ = 0;
-#if SQLITE_VERSION_NUMBER >= 3007014
-    int result = sqlite3_close_v2(dbh);
-#else
-    int result = sqlite3_close(dbh);
-#endif
-    return result;
+    return close_impl(dbh);
+  }
+
+  database_handle_sharable::database_handle_sharable(database_handle_sharable_impl* impl) : impl_(impl) {
+    impl_->add_ref();
+  }
+
+  database_handle_sharable::~database_handle_sharable() {
+    impl_->release();
+  }
+
+  sqlite3* database_handle_sharable::get() const {
+    return impl_->get();
+  }
+
+  database_handle_sharable_impl* database_handle_sharable::share() const {
+    return impl_;
+  }
+
+  int database_handle_sharable::close() {
+    return impl_->close();
   }
 }
