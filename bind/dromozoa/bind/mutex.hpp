@@ -20,6 +20,8 @@
 
 #include <pthread.h>
 
+#include <exception>
+
 #include "system_error.hpp"
 
 namespace dromozoa {
