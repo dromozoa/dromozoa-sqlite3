@@ -18,6 +18,42 @@
 #include "common.hpp"
 
 namespace dromozoa {
+
+//  class database_handle_impl {
+//  public:
+//    explicit database_handle_impl(sqlite3*);
+//    ~database_handle_impl();
+//    void add_ref();
+//    void release();
+//    sqlite3* get() const;
+//    int close();
+//  private:
+//    long counter_;
+//    mutex counter_mutex_;
+//    sqlite3* dbh_;
+//    mutex dbh_mutex_;
+//    database_handle_impl(const database_handle_impl&);
+//    database_handle_impl& operator=(const database_handle_impl&);
+//  };
+
+  database_handle_impl::database_handle_impl(sqlite3* dbh) : counter_(), dbh_(dbh) {}
+
+  database_handle_impl::~database_handle_impl() {
+    lock_guard<> lock(dbh_mutex_);
+    if (dbh_) {
+      sqlite3* dbh = dbh_;
+      dbh_ = 0;
+#if SQLITE_VERSION_NUMBER >= 3007014
+      int result = sqlite3_close_v2(dbh);
+#else
+      int result = sqlite3_close(dbh);
+#endif
+      if (result != SQLITE_OK) {
+        DROMOZOA_UNEXPECTED(error_to_string(result));
+      }
+    }
+  }
+
   database_handle::database_handle(sqlite3* dbh) : dbh_(dbh) {}
 
   database_handle::~database_handle() {
