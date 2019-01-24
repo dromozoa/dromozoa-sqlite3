@@ -89,8 +89,12 @@ namespace dromozoa {
   }
 
   void database_handle_sharable_impl::release() {
-    lock_guard<> lock(counter_mutex_);
-    if (--counter_ == 0) {
+    bool reached_zero = false;
+    {
+      lock_guard<> lock(counter_mutex_);
+      reached_zero = --counter_ == 0;
+    }
+    if (reached_zero) {
       delete this;
     }
   }
