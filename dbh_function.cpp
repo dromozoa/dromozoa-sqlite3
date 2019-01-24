@@ -142,32 +142,6 @@ namespace dromozoa {
   };
 
   namespace {
-    int exec_callback(void* data, int count, char** columns, char** names) {
-      luaX_reference<>* ref = static_cast<luaX_reference<>*>(data);
-      lua_State* L = ref->state();
-      luaX_top_saver save_top(L);
-      {
-        ref->get_field(L);
-        lua_newtable(L);
-        for (int i = 0; i < count; ++i) {
-          if (columns[i]) {
-            luaX_push(L, columns[i]);
-          } else {
-            push_null(L);
-          }
-          lua_pushvalue(L, -1);
-          luaX_set_field(L, -3, i + 1);
-          luaX_set_field(L, -2, names[i]);
-        }
-        if (lua_pcall(L, 1, 0, 0) == 0) {
-          return 0;
-        } else {
-          DROMOZOA_UNEXPECTED(lua_tostring(L, -1));
-        }
-      }
-      return 1;
-    }
-
     void impl_create_function(lua_State* L) {
       database_handle* self = check_database_handle(L, 1);
       const char* name = luaL_checkstring(L, 2);
@@ -203,29 +177,11 @@ namespace dromozoa {
         push_error(L, self->get());
       }
     }
-
-    void impl_exec(lua_State* L) {
-      sqlite3* dbh = check_dbh(L, 1);
-      const char* sql = luaL_checkstring(L, 2);
-      int result = SQLITE_ERROR;
-      if (lua_isnoneornil(L, 3)) {
-        result = sqlite3_exec(dbh, sql, 0, 0, 0);
-      } else {
-        luaX_reference<> reference(L, 3);
-        result = sqlite3_exec(dbh, sql, exec_callback, &reference, 0);
-      }
-      if (result == SQLITE_OK) {
-        luaX_push_success(L);
-      } else {
-        push_error(L, dbh);
-      }
-    }
   }
 
   void initialize_dbh_function(lua_State* L) {
     luaX_set_field(L, -1, "create_function", impl_create_function);
     luaX_set_field(L, -1, "create_aggregate", impl_create_aggregate);
     luaX_set_field(L, -1, "delete_function", impl_delete_function);
-    luaX_set_field(L, -1, "exec", impl_exec);
   }
 }
