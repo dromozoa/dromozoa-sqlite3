@@ -43,6 +43,9 @@ local flags = unix.bor(
     sqlite3.SQLITE_OPEN_FULLMUTEX,
     sqlite3.SQLITE_OPEN_SHAREDCACHE)
 local dbh = assert(sqlite3.open("test.db", flags))
+dbh:exec [[
+PRAGMA read_uncommitted = true;
+]]
 
 local sth = assert(dbh:prepare [[
 SELECT COUNT(*) AS n FROM t;
