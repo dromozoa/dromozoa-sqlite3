@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -18,7 +18,7 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  class database_handle_impl {
+  class database_handle_access {
 #if SQLITE_VERSION_NUMBER < 3007003
   public:
     static int create_function(database_handle* self, const char* name, int narg, lua_State* L, int index_func) {
@@ -173,7 +173,7 @@ namespace dromozoa {
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       luaL_checkany(L, 4);
-      if (database_handle_impl::create_function(self, name, narg, L, 4) == SQLITE_OK) {
+      if (database_handle_access::create_function(self, name, narg, L, 4) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -186,7 +186,7 @@ namespace dromozoa {
       int narg = luaX_check_integer<int>(L, 3);
       luaL_checkany(L, 4);
       luaL_checkany(L, 5);
-      if (database_handle_impl::create_aggregate(self, name, narg, L, 4, 5) == SQLITE_OK) {
+      if (database_handle_access::create_aggregate(self, name, narg, L, 4, 5) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -197,7 +197,7 @@ namespace dromozoa {
       database_handle* self = check_database_handle(L, 1);
       const char* name = luaL_checkstring(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
-      if (database_handle_impl::delete_function(self, name, narg) == SQLITE_OK) {
+      if (database_handle_access::delete_function(self, name, narg) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());

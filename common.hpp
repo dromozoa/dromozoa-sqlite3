@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -34,7 +34,7 @@ namespace dromozoa {
     int close();
     sqlite3* get() const;
   private:
-    friend class database_handle_impl;
+    friend class database_handle_access;
     sqlite3* dbh_;
 #if SQLITE_VERSION_NUMBER < 3007003
     std::map<std::pair<std::string, int>, luaX_binder*> references_;
