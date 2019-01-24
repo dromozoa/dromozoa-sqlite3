@@ -18,6 +18,4 @@
 local sqlite3 = require "dromozoa.sqlite3"
 
 local dbh = assert(sqlite3.open_sharable ":memory:")
-print(1)
--- assert(dbh:close())
-print(2)
+assert(dbh:close())
