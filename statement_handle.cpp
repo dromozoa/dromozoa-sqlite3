@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -26,13 +26,13 @@ namespace dromozoa {
     }
   }
 
+  sqlite3_stmt* statement_handle::get() const {
+    return sth_;
+  }
+
   void statement_handle::finalize() {
     sqlite3_stmt* sth = sth_;
     sth_ = 0;
     sqlite3_finalize(sth);
-  }
-
-  sqlite3_stmt* statement_handle::get() const {
-    return sth_;
   }
 }

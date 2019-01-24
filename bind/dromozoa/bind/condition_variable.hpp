@@ -20,6 +20,8 @@
 
 #include <pthread.h>
 
+#include <exception>
+
 #include "mutex.hpp"
 #include "system_error.hpp"
 
