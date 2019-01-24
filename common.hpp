@@ -34,7 +34,7 @@ namespace dromozoa {
     ~database_handle_impl();
     void add_ref();
     void release();
-    sqlite3* get() const;
+    sqlite3* get();
     int close();
   private:
     long counter_;
