@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -29,6 +29,10 @@ namespace dromozoa {
     }
   }
 
+  sqlite3* database_handle::get() const {
+    return dbh_;
+  }
+
   int database_handle::close() {
     sqlite3* dbh = dbh_;
     dbh_ = 0;
@@ -48,9 +52,5 @@ namespace dromozoa {
 #endif
 
     return result;
-  }
-
-  sqlite3* database_handle::get() const {
-    return dbh_;
   }
 }

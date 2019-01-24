@@ -29,14 +29,21 @@
 namespace dromozoa {
   class database_handle_impl {
   public:
+    explicit database_handle_impl(sqlite3*);
+    ~database_handle_impl();
+    void add_ref();
+    void release();
+  private:
+    database_handle_impl(const database_handle_impl&);
+    database_handle_impl& operator=(const database_handle_impl&);
   };
 
   class database_handle {
   public:
     explicit database_handle(sqlite3*);
     ~database_handle();
-    int close();
     sqlite3* get() const;
+    int close();
   private:
     friend class database_handle_access;
     sqlite3* dbh_;
@@ -55,8 +62,8 @@ namespace dromozoa {
   public:
     explicit statement_handle(sqlite3_stmt*);
     ~statement_handle();
-    void finalize();
     sqlite3_stmt* get() const;
+    void finalize();
   private:
     sqlite3_stmt* sth_;
     statement_handle(const statement_handle&);
