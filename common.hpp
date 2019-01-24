@@ -28,23 +28,6 @@
 #include <dromozoa/bind/mutex.hpp>
 
 namespace dromozoa {
-  class database_handle_sharable_impl {
-  public:
-    explicit database_handle_sharable_impl(sqlite3*);
-    ~database_handle_sharable_impl();
-    void add_ref();
-    void release();
-    sqlite3* get();
-    int close();
-  private:
-    long counter_;
-    mutex counter_mutex_;
-    sqlite3* dbh_;
-    mutex dbh_mutex_;
-    database_handle_sharable_impl(const database_handle_sharable_impl&);
-    database_handle_sharable_impl& operator=(const database_handle_sharable_impl&);
-  };
-
   class database_handle {
   public:
     virtual ~database_handle() = 0;
@@ -67,6 +50,24 @@ namespace dromozoa {
     database_handle_impl(const database_handle_impl&);
     database_handle_impl& operator=(const database_handle_impl&);
   };
+
+  class database_handle_sharable_impl {
+  public:
+    explicit database_handle_sharable_impl(sqlite3*);
+    ~database_handle_sharable_impl();
+    void add_ref();
+    void release();
+    sqlite3* get();
+    int close();
+  private:
+    long counter_;
+    mutex counter_mutex_;
+    sqlite3* dbh_;
+    mutex dbh_mutex_;
+    database_handle_sharable_impl(const database_handle_sharable_impl&);
+    database_handle_sharable_impl& operator=(const database_handle_sharable_impl&);
+  };
+
 
   void new_dbh(lua_State*, sqlite3*);
   database_handle* check_database_handle(lua_State*, int);
