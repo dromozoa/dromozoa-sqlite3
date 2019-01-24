@@ -21,11 +21,13 @@ local sqlite3 = require "dromozoa.sqlite3"
 
 local verbose = os.getenv "VERBOSE" == "1"
 
+os.remove "test.db"
 local flags = unix.bor(
     sqlite3.SQLITE_OPEN_READWRITE,
     sqlite3.SQLITE_OPEN_CREATE,
-    sqlite3.SQLITE_OPEN_FULLMUTEX)
-local dbh = assert(sqlite3.open_sharable(":memory:", flags))
+    sqlite3.SQLITE_OPEN_FULLMUTEX,
+    sqlite3.SQLITE_OPEN_SHAREDCACHE)
+local dbh = assert(sqlite3.open("test.db", flags))
 dbh:exec [[
 CREATE TABLE t(id INTEGER PRIMARY KEY AUTOINCREMENT, v INTEGER);
 ]]
@@ -36,8 +38,12 @@ local sqlite3 = require "dromozoa.sqlite3"
 
 local verbose = os.getenv "VERBOSE" == "1"
 
-local ptr = ...
-local dbh = assert(sqlite3.open_sharable(ptr))
+local flags = unix.bor(
+    sqlite3.SQLITE_OPEN_READONLY,
+    sqlite3.SQLITE_OPEN_FULLMUTEX,
+    sqlite3.SQLITE_OPEN_SHAREDCACHE)
+local dbh = assert(sqlite3.open("test.db", flags))
+
 local sth = assert(dbh:prepare [[
 SELECT COUNT(*) AS n FROM t;
 ]])
@@ -58,7 +64,7 @@ while true do
 end
 ]====]
 
-local t = multi.thread(s, dbh:share())
+local t = multi.thread(s)
 
 local sth = assert(dbh:prepare [[
 INSERT INTO t(v) VALUES(:v);
