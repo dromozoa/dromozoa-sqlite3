@@ -144,10 +144,10 @@ namespace dromozoa {
   namespace {
     void impl_create_function(lua_State* L) {
       database_handle_impl* self = check_database_handle_impl(L, 1);
-      const char* name = luaL_checkstring(L, 2);
+      luaX_string_reference name = luaX_check_string(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       luaL_checkany(L, 4);
-      if (database_handle_access::create_function(self, name, narg, L, 4) == SQLITE_OK) {
+      if (database_handle_access::create_function(self, name.data(), narg, L, 4) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -156,11 +156,11 @@ namespace dromozoa {
 
     void impl_create_aggregate(lua_State* L) {
       database_handle_impl* self = check_database_handle_impl(L, 1);
-      const char* name = luaL_checkstring(L, 2);
+      luaX_string_reference name = luaX_check_string(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
       luaL_checkany(L, 4);
       luaL_checkany(L, 5);
-      if (database_handle_access::create_aggregate(self, name, narg, L, 4, 5) == SQLITE_OK) {
+      if (database_handle_access::create_aggregate(self, name.data(), narg, L, 4, 5) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());
@@ -169,9 +169,9 @@ namespace dromozoa {
 
     void impl_delete_function(lua_State* L) {
       database_handle_impl* self = check_database_handle_impl(L, 1);
-      const char* name = luaL_checkstring(L, 2);
+      luaX_string_reference name = luaX_check_string(L, 2);
       int narg = luaX_check_integer<int>(L, 3);
-      if (database_handle_access::delete_function(self, name, narg) == SQLITE_OK) {
+      if (database_handle_access::delete_function(self, name.data(), narg) == SQLITE_OK) {
         luaX_push_success(L);
       } else {
         push_error(L, self->get());

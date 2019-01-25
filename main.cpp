@@ -38,11 +38,11 @@ namespace dromozoa {
     }
 
     void impl_open(lua_State* L) {
-      const char* filename = luaL_checkstring(L, 1);
+      luaX_string_reference filename = luaX_check_string(L, 1);
       int flags = luaX_opt_integer<int>(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
-      const char* vfs = lua_tostring(L, 3);
+      luaX_string_reference vfs = luaX_to_string(L, 3);
       sqlite3* dbh = 0;
-      int result = sqlite3_open_v2(filename, &dbh, flags, vfs);
+      int result = sqlite3_open_v2(filename.data(), &dbh, flags, vfs.data());
       if (result == SQLITE_OK) {
         luaX_new<database_handle_impl>(L, dbh);
         luaX_set_metatable(L, "dromozoa.sqlite3.dbh");
@@ -57,10 +57,10 @@ namespace dromozoa {
         luaX_new<database_handle_sharable>(L, static_cast<database_handle_sharable_impl*>(lua_touserdata(L, 1)));
         luaX_set_metatable(L, "dromozoa.sqlite3.dbh_sharable");
       } else {
-        const char* filename = luaL_checkstring(L, 1);
+        luaX_string_reference filename = luaX_check_string(L, 1);
         int flags = luaX_opt_integer<int>(L, 2, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
         const char* vfs = lua_tostring(L, 3);
-        scoped_ptr<database_handle_sharable_impl> impl(new database_handle_sharable_impl(filename, flags, vfs));
+        scoped_ptr<database_handle_sharable_impl> impl(new database_handle_sharable_impl(filename.data(), flags, vfs));
         luaX_new<database_handle_sharable>(L, impl.get());
         impl.release();
         luaX_set_metatable(L, "dromozoa.sqlite3.dbh_sharable");

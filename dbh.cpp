@@ -106,13 +106,13 @@ namespace dromozoa {
 
     void impl_exec(lua_State* L) {
       sqlite3* dbh = check_dbh(L, 1);
-      const char* sql = luaL_checkstring(L, 2);
+      luaX_string_reference sql = luaX_check_string(L, 2);
       int result = SQLITE_ERROR;
       if (lua_isnoneornil(L, 3)) {
-        result = sqlite3_exec(dbh, sql, 0, 0, 0);
+        result = sqlite3_exec(dbh, sql.data(), 0, 0, 0);
       } else {
         luaX_reference<> reference(L, 3);
-        result = sqlite3_exec(dbh, sql, exec_callback, &reference, 0);
+        result = sqlite3_exec(dbh, sql.data(), exec_callback, &reference, 0);
       }
       if (result == SQLITE_OK) {
         luaX_push_success(L);
