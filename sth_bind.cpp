@@ -23,7 +23,8 @@ namespace dromozoa {
       if (luaX_is_integer(L, arg)) {
         return luaX_check_integer<int>(L, arg);
       } else {
-        return sqlite3_bind_parameter_index(sth, luaL_checkstring(L, arg));
+        luaX_string_reference name = luaX_check_string(L, arg);
+        return sqlite3_bind_parameter_index(sth, name.data());
       }
     }
 
@@ -43,7 +44,8 @@ namespace dromozoa {
     }
 
     void impl_bind_parameter_index(lua_State* L) {
-      luaX_push(L, sqlite3_bind_parameter_index(check_sth(L, 1), luaL_checkstring(L, 2)));
+      luaX_string_reference name = luaX_check_string(L, 2);
+      luaX_push(L, sqlite3_bind_parameter_index(check_sth(L, 1), name.data()));
     }
 
     void impl_bind_parameter_name(lua_State* L) {
