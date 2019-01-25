@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -18,9 +18,21 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  database_handle::database_handle(sqlite3* dbh) : dbh_(dbh) {}
+  namespace {
+    int close_impl(sqlite3* dbh) {
+#if SQLITE_VERSION_NUMBER >= 3007014
+      return sqlite3_close_v2(dbh);
+#else
+      return sqlite3_close(dbh);
+#endif
+    }
+  }
 
-  database_handle::~database_handle() {
+  database_handle::~database_handle() {}
+
+  database_handle_impl::database_handle_impl(sqlite3* dbh) : dbh_(dbh) {}
+
+  database_handle_impl::~database_handle_impl() {
     if (dbh_) {
       int result = close();
       if (result != SQLITE_OK) {
@@ -29,14 +41,14 @@ namespace dromozoa {
     }
   }
 
-  int database_handle::close() {
+  sqlite3* database_handle_impl::get() const {
+    return dbh_;
+  }
+
+  int database_handle_impl::close() {
     sqlite3* dbh = dbh_;
     dbh_ = 0;
-#if SQLITE_VERSION_NUMBER >= 3007014
-    int result = sqlite3_close_v2(dbh);
-#else
-    int result = sqlite3_close(dbh);
-#endif
+    int result = close_impl(dbh);
 
 #if SQLITE_VERSION_NUMBER < 3007003
     std::map<std::pair<std::string, int>, luaX_binder*>::iterator i = references_.begin();
@@ -50,7 +62,72 @@ namespace dromozoa {
     return result;
   }
 
-  sqlite3* database_handle::get() const {
+  database_handle_sharable_impl::database_handle_sharable_impl(const char* filename, int flags, const char* vfs) : counter_(), dbh_() {
+    int result = sqlite3_open_v2(filename, &dbh_, flags, vfs);
+    if (result != SQLITE_OK) {
+      sqlite3_close(dbh_);
+      luaX_throw_failure(error_to_string(result), result);
+      return;
+    }
+  }
+
+  database_handle_sharable_impl::~database_handle_sharable_impl() {
+    lock_guard<> lock(dbh_mutex_);
+    if (dbh_) {
+      sqlite3* dbh = dbh_;
+      dbh_ = 0;
+      int result = close_impl(dbh);
+      if (result != SQLITE_OK) {
+        DROMOZOA_UNEXPECTED(error_to_string(result));
+      }
+    }
+  }
+
+  void database_handle_sharable_impl::add_ref() {
+    lock_guard<> lock(counter_mutex_);
+    ++counter_;
+  }
+
+  void database_handle_sharable_impl::release() {
+    bool reached_zero = false;
+    {
+      lock_guard<> lock(counter_mutex_);
+      reached_zero = --counter_ == 0;
+    }
+    if (reached_zero) {
+      delete this;
+    }
+  }
+
+  sqlite3* database_handle_sharable_impl::get() {
+    lock_guard<> lock(dbh_mutex_);
     return dbh_;
+  }
+
+  int database_handle_sharable_impl::close() {
+    lock_guard<> lock(dbh_mutex_);
+    sqlite3* dbh = dbh_;
+    dbh_ = 0;
+    return close_impl(dbh);
+  }
+
+  database_handle_sharable::database_handle_sharable(database_handle_sharable_impl* impl) : impl_(impl) {
+    impl_->add_ref();
+  }
+
+  database_handle_sharable::~database_handle_sharable() {
+    impl_->release();
+  }
+
+  sqlite3* database_handle_sharable::get() const {
+    return impl_->get();
+  }
+
+  database_handle_sharable_impl* database_handle_sharable::share() const {
+    return impl_;
+  }
+
+  int database_handle_sharable::close() {
+    return impl_->close();
   }
 }

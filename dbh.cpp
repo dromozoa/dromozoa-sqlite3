@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -19,6 +19,32 @@
 
 namespace dromozoa {
   namespace {
+    int exec_callback(void* data, int count, char** columns, char** names) {
+      luaX_reference<>* ref = static_cast<luaX_reference<>*>(data);
+      lua_State* L = ref->state();
+      luaX_top_saver save_top(L);
+      {
+        ref->get_field(L);
+        lua_newtable(L);
+        for (int i = 0; i < count; ++i) {
+          if (columns[i]) {
+            luaX_push(L, columns[i]);
+          } else {
+            push_null(L);
+          }
+          lua_pushvalue(L, -1);
+          luaX_set_field(L, -3, i + 1);
+          luaX_set_field(L, -2, names[i]);
+        }
+        if (lua_pcall(L, 1, 0, 0) == 0) {
+          return 0;
+        } else {
+          DROMOZOA_UNEXPECTED(lua_tostring(L, -1));
+        }
+      }
+      return 1;
+    }
+
     void impl_gc(lua_State* L) {
       check_database_handle(L, 1)->~database_handle();
     }
@@ -77,19 +103,53 @@ namespace dromozoa {
     void impl_last_insert_rowid(lua_State* L) {
       luaX_push(L, sqlite3_last_insert_rowid(check_dbh(L, 1)));
     }
-  }
 
-  void new_dbh(lua_State* L, sqlite3* dbh) {
-    luaX_new<database_handle>(L, dbh);
-    luaX_set_metatable(L, "dromozoa.sqlite3.dbh");
+    void impl_exec(lua_State* L) {
+      sqlite3* dbh = check_dbh(L, 1);
+      luaX_string_reference sql = luaX_check_string(L, 2);
+      int result = SQLITE_ERROR;
+      if (lua_isnoneornil(L, 3)) {
+        result = sqlite3_exec(dbh, sql.data(), 0, 0, 0);
+      } else {
+        luaX_reference<> reference(L, 3);
+        result = sqlite3_exec(dbh, sql.data(), exec_callback, &reference, 0);
+      }
+      if (result == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, dbh);
+      }
+    }
+
+    void impl_share(lua_State* L) {
+      lua_pushlightuserdata(L, check_database_handle_sharable(L, 1)->share());
+    }
   }
 
   database_handle* check_database_handle(lua_State* L, int arg) {
-    return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh");
+    return luaX_check_udata<database_handle>(L, arg, "dromozoa.sqlite3.dbh", "dromozoa.sqlite3.dbh_sharable");
+  }
+
+  database_handle_impl* check_database_handle_impl(lua_State* L, int arg) {
+    return luaX_check_udata<database_handle_impl>(L, arg, "dromozoa.sqlite3.dbh");
+  }
+
+  database_handle_sharable* check_database_handle_sharable(lua_State* L, int arg) {
+    return luaX_check_udata<database_handle_sharable>(L, arg, "dromozoa.sqlite3.dbh_sharable");
   }
 
   sqlite3* check_dbh(lua_State* L, int arg) {
     return check_database_handle(L, arg)->get();
+  }
+
+  void initialize_dbh_core(lua_State* L) {
+    luaX_set_field(L, -1, "close", impl_close);
+    luaX_set_field(L, -1, "busy_timeout", impl_busy_timeout);
+    luaX_set_field(L, -1, "prepare", impl_prepare);
+    luaX_set_field(L, -1, "total_changes", impl_total_changes);
+    luaX_set_field(L, -1, "changes", impl_changes);
+    luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
+    luaX_set_field(L, -1, "exec", impl_exec);
   }
 
   void initialize_dbh_function(lua_State* L);
@@ -103,15 +163,22 @@ namespace dromozoa {
       luaX_set_field(L, -1, "__gc", impl_gc);
       lua_pop(L, 1);
 
-      luaX_set_field(L, -1, "close", impl_close);
-      luaX_set_field(L, -1, "busy_timeout", impl_busy_timeout);
-      luaX_set_field(L, -1, "prepare", impl_prepare);
-      luaX_set_field(L, -1, "total_changes", impl_total_changes);
-      luaX_set_field(L, -1, "changes", impl_changes);
-      luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
-
+      initialize_dbh_core(L);
       initialize_dbh_function(L);
     }
     luaX_set_field(L, -2, "dbh");
+
+    lua_newtable(L);
+    {
+      luaL_newmetatable(L, "dromozoa.sqlite3.dbh_sharable");
+      lua_pushvalue(L, -2);
+      luaX_set_field(L, -2, "__index");
+      luaX_set_field(L, -1, "__gc", impl_gc);
+      lua_pop(L, 1);
+
+      initialize_dbh_core(L);
+      luaX_set_field(L, -1, "share", impl_share);
+    }
+    luaX_set_field(L, -2, "dbh_sharable");
   }
 }
