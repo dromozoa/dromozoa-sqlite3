@@ -109,7 +109,20 @@ assert(blob:write("DEF", 3))
 assert(fetch(2) == "ABCDEF")
 assert(blob:write("abcdef", 3, 2, 4))
 assert(fetch(2) == "ABCbcd")
-
 assert(blob:close())
 assert(sth:finalize())
+
+assert(dbh:create_function("dromozoa_test", 1, function (context, n)
+  context:result_zeroblob(n)
+end))
+
+local sth = assert(dbh:prepare [[
+SELECT dromozoa_test(:n);
+]])
+
+assert(sth:bind(":n", 42))
+assert(sth:step() == sqlite3.SQLITE_ROW)
+assert(sth:column(1) == ("\0"):rep(42))
+assert(sth:step() == sqlite3.SQLITE_DONE)
+
 assert(dbh:close())
