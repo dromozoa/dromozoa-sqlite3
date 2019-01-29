@@ -52,6 +52,30 @@ end
 
 assert(blob:bytes() == #data)
 
+assert(blob:read(#data) == data)
+assert(blob:read(4) == "foo\n")
+assert(blob:read(4, 4) == "bar\n")
+assert(blob:read(4, 8) == "baz\n")
+assert(blob:read(4, 12) == "qux\n")
+
+local result, message = pcall(blob.read, blob, -1)
+if verbose then
+  print(message)
+end
+assert(not result)
+
+local result, message = blob:read(#data + 1)
+if verbose then
+  print(message)
+end
+assert(not result)
+
+local result, message = blob:read(1, #data)
+if verbose then
+  print(message)
+end
+assert(not result)
+
 assert(blob:close())
 
 assert(dbh:close())

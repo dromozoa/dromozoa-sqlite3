@@ -15,6 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <limits>
+#include <vector>
+
 #include "common.hpp"
 
 namespace dromozoa {
@@ -43,6 +46,19 @@ namespace dromozoa {
     void impl_bytes(lua_State* L) {
       luaX_push(L, sqlite3_blob_bytes(check_blob(L, 1)));
     }
+
+    void impl_read(lua_State* L) {
+      sqlite3_blob* blob = check_blob(L, 1);
+      int n = luaX_check_integer<int>(L, 2, 0, std::numeric_limits<int>::max());
+      int offset = luaX_opt_integer<int>(L, 3, 0, 0, std::numeric_limits<int>::max());
+      std::vector<char> buffer(n);
+      int result = sqlite3_blob_read(blob, buffer.data(), n, offset);
+      if (result == SQLITE_OK) {
+        luaX_push(L, luaX_string_reference(&buffer[0], buffer.size()));
+      } else {
+        push_error(L, result);
+      }
+    }
   }
 
   void initialize_blob(lua_State* L) {
@@ -56,6 +72,7 @@ namespace dromozoa {
 
       luaX_set_field(L, -1, "close", impl_close);
       luaX_set_field(L, -1, "bytes", impl_bytes);
+      luaX_set_field(L, -1, "read", impl_read);
     }
     luaX_set_field(L, -2, "blob");
   }
