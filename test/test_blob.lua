@@ -34,32 +34,37 @@ CREATE TABLE t (
   t BLOB);
 ]])
 
-local sth = assert(dbh:prepare [[
+local insert_sth = assert(dbh:prepare [[
 INSERT INTO t (t) VALUES (:t);
 ]])
 
-assert(sth:bind(":t", data))
-assert(sth:step() == sqlite3.SQLITE_DONE)
-assert(sth:reset())
+assert(insert_sth:bind(":t", data))
+assert(insert_sth:step() == sqlite3.SQLITE_DONE)
+assert(insert_sth:reset())
 assert(dbh:last_insert_rowid() == 1)
 
-assert(sth:bind(":t", "123456"))
-assert(sth:step() == sqlite3.SQLITE_DONE)
-assert(sth:reset())
+assert(insert_sth:bind(":t", "123456"))
+assert(insert_sth:step() == sqlite3.SQLITE_DONE)
+assert(insert_sth:reset())
 assert(dbh:last_insert_rowid() == 2)
 
-assert(sth:finalize())
+assert(insert_sth:bind_zeroblob(":t", 69))
+assert(insert_sth:step() == sqlite3.SQLITE_DONE)
+assert(insert_sth:reset())
+assert(dbh:last_insert_rowid() == 3)
 
-local sth = assert(dbh:prepare [[
+assert(insert_sth:finalize())
+
+local fetch_sth = assert(dbh:prepare [[
 SELECT t FROM t WHERE id = :id;
 ]])
 
 local function fetch(id)
-  assert(sth:reset())
-  assert(sth:bind(":id", id))
-  assert(sth:step() == sqlite3.SQLITE_ROW)
-  local t = sth:column(1)
-  assert(sth:step() == sqlite3.SQLITE_DONE)
+  assert(fetch_sth:reset())
+  assert(fetch_sth:bind(":id", id))
+  assert(fetch_sth:step() == sqlite3.SQLITE_ROW)
+  local t = fetch_sth:column(1)
+  assert(fetch_sth:step() == sqlite3.SQLITE_DONE)
   return t
 end
 
@@ -109,7 +114,24 @@ assert(blob:write("DEF", 3))
 assert(fetch(2) == "ABCDEF")
 assert(blob:write("abcdef", 3, 2, 4))
 assert(fetch(2) == "ABCbcd")
-
 assert(blob:close())
-assert(sth:finalize())
+
+assert(fetch(3) == ("\0"):rep(69))
+
+assert(fetch_sth:finalize())
+
+assert(dbh:create_function("dromozoa_test", 1, function (context, n)
+  context:result_zeroblob(n)
+end))
+
+local call_sth = assert(dbh:prepare [[
+SELECT dromozoa_test(:n);
+]])
+
+assert(call_sth:bind(":n", 42))
+assert(call_sth:step() == sqlite3.SQLITE_ROW)
+assert(call_sth:column(1) == ("\0"):rep(42))
+assert(call_sth:step() == sqlite3.SQLITE_DONE)
+assert(call_sth:finalize())
+
 assert(dbh:close())

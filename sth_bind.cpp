@@ -113,6 +113,17 @@ namespace dromozoa {
       }
     }
 
+    void impl_bind_zeroblob(lua_State* L) {
+      sqlite3_stmt* sth = check_sth(L, 1);
+      int param = check_bind_parameter_index(L, 2, sth);
+      int n = luaX_check_integer<int>(L, 3);
+      if (sqlite3_bind_zeroblob(sth, param, n) == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, sth);
+      }
+    }
+
     void impl_bind(lua_State* L) {
       sqlite3_stmt* sth = check_sth(L, 1);
       int param = check_bind_parameter_index(L, 2, sth);
@@ -160,6 +171,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "bind_text", impl_bind_text);
     luaX_set_field(L, -1, "bind_blob", impl_bind_blob);
     luaX_set_field(L, -1, "bind_null", impl_bind_null);
+    luaX_set_field(L, -1, "bind_zeroblob", impl_bind_zeroblob);
     luaX_set_field(L, -1, "bind", impl_bind);
     luaX_set_field(L, -1, "clear_bindings", impl_clear_bindings);
   }
