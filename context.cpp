@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018,2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -67,6 +67,11 @@ namespace dromozoa {
       luaX_push_success(L);
     }
 
+    void impl_result_zeroblob(lua_State* L) {
+      sqlite3_result_zeroblob(check_context(L, 1), luaX_check_integer<int>(L, 2));
+      luaX_push_success(L);
+    }
+
     void impl_result(lua_State* L) {
       sqlite3_context* context = check_context(L, 1);
       switch (lua_type(L, 2)) {
@@ -90,11 +95,6 @@ namespace dromozoa {
     }
   }
 
-  void new_context(lua_State* L, sqlite3_context* context) {
-    luaX_new<sqlite3_context*>(L, context);
-    luaX_set_metatable(L, "dromozoa.sqlite3.context");
-  }
-
   void initialize_context(lua_State* L) {
     lua_newtable(L);
     {
@@ -108,6 +108,7 @@ namespace dromozoa {
       luaX_set_field(L, -1, "result_text", impl_result_text);
       luaX_set_field(L, -1, "result_blob", impl_result_blob);
       luaX_set_field(L, -1, "result_null", impl_result_null);
+      luaX_set_field(L, -1, "result_zeroblob", impl_result_zeroblob);
       luaX_set_field(L, -1, "result", impl_result);
     }
     luaX_set_field(L, -2, "context");

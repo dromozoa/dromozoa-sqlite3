@@ -98,10 +98,19 @@ namespace dromozoa {
     statement_handle& operator=(const statement_handle&);
   };
 
-  void new_sth(lua_State*, sqlite3_stmt*);
   sqlite3_stmt* check_sth(lua_State*, int);
 
-  void new_context(lua_State*, sqlite3_context*);
+  class blob_handle {
+  public:
+    explicit blob_handle(sqlite3_blob*);
+    ~blob_handle();
+    sqlite3_blob* get() const;
+    int close();
+  private:
+    sqlite3_blob* blob_;
+    blob_handle(const blob_handle&);
+    blob_handle& operator=(const blob_handle&);
+  };
 
   std::string error_to_string(int);
   void push_error(lua_State*, int);
