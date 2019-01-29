@@ -43,6 +43,7 @@ namespace dromozoa {
       }
     }
 
+#if SQLITE_VERSION_NUMBER >= 3007004
     void impl_reopen(lua_State* L) {
       sqlite3_blob* blob = check_blob(L, 1);
       sqlite3_int64 row = luaX_check_integer<sqlite3_int64>(L, 2);
@@ -53,6 +54,7 @@ namespace dromozoa {
         push_error(L, result);
       }
     }
+#endif
 
     void impl_bytes(lua_State* L) {
       luaX_push(L, sqlite3_blob_bytes(check_blob(L, 1)));
@@ -96,7 +98,9 @@ namespace dromozoa {
       lua_pop(L, 1);
 
       luaX_set_field(L, -1, "close", impl_close);
+#if SQLITE_VERSION_NUMBER >= 3007004
       luaX_set_field(L, -1, "reopen", impl_reopen);
+#endif
       luaX_set_field(L, -1, "bytes", impl_bytes);
       luaX_set_field(L, -1, "read", impl_read);
       luaX_set_field(L, -1, "write", impl_write);

@@ -93,7 +93,14 @@ if verbose then
 end
 assert(not result)
 
-assert(blob:reopen(2))
+if verbose then
+  print("reopen", blob.reopen)
+end
+if blob.reopen then
+  assert(blob:reopen(2))
+else
+  blob = assert(dbh:blob_open("main", "t", "t", 2))
+end
 assert(fetch(2) == "123456")
 assert(blob:write("ABC"))
 assert(fetch(2) == "ABC456")
