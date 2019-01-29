@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018,2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -54,11 +54,6 @@ namespace dromozoa {
     void impl_data_count(lua_State* L) {
       luaX_push(L, sqlite3_data_count(check_sth(L, 1)));
     }
-  }
-
-  void new_sth(lua_State* L, sqlite3_stmt* sth) {
-    luaX_new<statement_handle>(L, sth);
-    luaX_set_metatable(L, "dromozoa.sqlite3.sth");
   }
 
   sqlite3_stmt* check_sth(lua_State* L, int arg) {

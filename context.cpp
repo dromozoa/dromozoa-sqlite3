@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016,2018,2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -88,11 +88,6 @@ namespace dromozoa {
       }
       luaX_push_success(L);
     }
-  }
-
-  void new_context(lua_State* L, sqlite3_context* context) {
-    luaX_new<sqlite3_context*>(L, context);
-    luaX_set_metatable(L, "dromozoa.sqlite3.context");
   }
 
   void initialize_context(lua_State* L) {
