@@ -111,5 +111,5 @@ assert(blob:write("abcdef", 3, 2, 4))
 assert(fetch(2) == "ABCbcd")
 
 assert(blob:close())
-
+assert(sth:finalize())
 assert(dbh:close())
