@@ -28,7 +28,7 @@ namespace dromozoa {
 
   namespace {
     void impl_gc(lua_State* L) {
-      check_statement_handle(L, 1)->~statement_handle();
+      check_blob_handle(L, 1)->~blob_handle();
     }
 
     void impl_close(lua_State* L) {
