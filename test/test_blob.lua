@@ -99,6 +99,7 @@ end
 if blob.reopen then
   assert(blob:reopen(2))
 else
+  assert(blob:close())
   blob = assert(dbh:blob_open("main", "t", "t", 2))
 end
 assert(fetch(2) == "123456")
