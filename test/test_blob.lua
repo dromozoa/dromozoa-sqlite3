@@ -19,18 +19,6 @@ local sqlite3 = require "dromozoa.sqlite3"
 
 local verbose = os.getenv "VERBOSE" == "1"
 
-local dbh = assert(sqlite3.open ":memory:")
-
-assert(dbh:exec [[
-CREATE TABLE t (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  t BLOB);
-]])
-
-local sth = assert(dbh:prepare [[
-INSERT INTO t (t) VALUES (:t);
-]])
-
 local data = [[
 foo
 bar
@@ -38,20 +26,49 @@ baz
 qux
 ]]
 
+local dbh = assert(sqlite3.open ":memory:")
+
+assert(dbh:exec [[
+CREATE TABLE t (
+  id INTEGER PRIMARY KEY,
+  t BLOB);
+]])
+
+local sth = assert(dbh:prepare [[
+INSERT INTO t (t) VALUES (:t);
+]])
+
 assert(sth:bind(":t", data))
 assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(sth:reset())
+assert(dbh:last_insert_rowid() == 1)
 
-local id = dbh:last_insert_rowid()
-assert(id == 1)
+assert(sth:bind(":t", "123456"))
+assert(sth:step() == sqlite3.SQLITE_DONE)
+assert(sth:reset())
+assert(dbh:last_insert_rowid() == 2)
 
-local blob = assert(dbh:blob_open("main", "t", "t", id))
+assert(sth:finalize())
+
+local sth = assert(dbh:prepare [[
+SELECT t FROM t WHERE id = :id;
+]])
+
+local function fetch(id)
+  assert(sth:reset())
+  assert(sth:bind(":id", id))
+  assert(sth:step() == sqlite3.SQLITE_ROW)
+  local t = sth:column(1)
+  assert(sth:step() == sqlite3.SQLITE_DONE)
+  return t
+end
+
+local blob = assert(dbh:blob_open("main", "t", "t", 1))
 if verbose then
   print(blob)
 end
 
 assert(blob:bytes() == #data)
-
 assert(blob:read(#data) == data)
 assert(blob:read(4) == "foo\n")
 assert(blob:read(4, 4) == "bar\n")
@@ -75,6 +92,15 @@ if verbose then
   print(message)
 end
 assert(not result)
+
+assert(blob:reopen(2))
+assert(fetch(2) == "123456")
+assert(blob:write("ABC"))
+assert(fetch(2) == "ABC456")
+assert(blob:write("DEF", 3))
+assert(fetch(2) == "ABCDEF")
+assert(blob:write("abcdef", 3, 2, 4))
+assert(fetch(2) == "ABCbcd")
 
 assert(blob:close())
 

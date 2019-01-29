@@ -43,6 +43,17 @@ namespace dromozoa {
       }
     }
 
+    void impl_reopen(lua_State* L) {
+      sqlite3_blob* blob = check_blob(L, 1);
+      sqlite3_int64 row = luaX_check_integer<sqlite3_int64>(L, 2);
+      int result = sqlite3_blob_reopen(blob, row);
+      if (result == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, result);
+      }
+    }
+
     void impl_bytes(lua_State* L) {
       luaX_push(L, sqlite3_blob_bytes(check_blob(L, 1)));
     }
@@ -59,6 +70,20 @@ namespace dromozoa {
         push_error(L, result);
       }
     }
+
+    void impl_write(lua_State* L) {
+      sqlite3_blob* blob = check_blob(L, 1);
+      luaX_string_reference buffer = luaX_check_string(L, 2);
+      int offset = luaX_opt_integer<int>(L, 3, 0, 0, std::numeric_limits<int>::max());
+      size_t i = luaX_opt_range_i(L, 4, buffer.size());
+      size_t j = luaX_opt_range_j(L, 5, buffer.size());
+      int result = sqlite3_blob_write(blob, buffer.data() + i, j - i, offset);
+      if (result == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, result);
+      }
+    }
   }
 
   void initialize_blob(lua_State* L) {
@@ -71,8 +96,10 @@ namespace dromozoa {
       lua_pop(L, 1);
 
       luaX_set_field(L, -1, "close", impl_close);
+      luaX_set_field(L, -1, "reopen", impl_reopen);
       luaX_set_field(L, -1, "bytes", impl_bytes);
       luaX_set_field(L, -1, "read", impl_read);
+      luaX_set_field(L, -1, "write", impl_write);
     }
     luaX_set_field(L, -2, "blob");
   }
