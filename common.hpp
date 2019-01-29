@@ -98,10 +98,7 @@ namespace dromozoa {
     statement_handle& operator=(const statement_handle&);
   };
 
-  void new_sth(lua_State*, sqlite3_stmt*);
   sqlite3_stmt* check_sth(lua_State*, int);
-
-  void new_context(lua_State*, sqlite3_context*);
 
   std::string error_to_string(int);
   void push_error(lua_State*, int);

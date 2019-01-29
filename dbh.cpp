@@ -82,7 +82,8 @@ namespace dromozoa {
         result = sqlite3_prepare_v2(dbh, "", 0, &sth, 0);
       }
       if (result == SQLITE_OK) {
-        new_sth(L, sth);
+        luaX_new<statement_handle>(L, sth);
+        luaX_set_metatable(L, "dromozoa.sqlite3.sth");
         if (tail) {
           luaX_push(L, tail - sql.data() + 1);
         }

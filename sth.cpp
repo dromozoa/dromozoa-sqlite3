@@ -56,11 +56,6 @@ namespace dromozoa {
     }
   }
 
-  void new_sth(lua_State* L, sqlite3_stmt* sth) {
-    luaX_new<statement_handle>(L, sth);
-    luaX_set_metatable(L, "dromozoa.sqlite3.sth");
-  }
-
   sqlite3_stmt* check_sth(lua_State* L, int arg) {
     return check_statement_handle(L, arg)->get();
   }

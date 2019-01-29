@@ -116,7 +116,8 @@ namespace dromozoa {
       luaX_top_saver save_top(L);
       {
         ref->get_field(L, T_i);
-        new_context(L, context);
+        luaX_new<sqlite3_context*>(L, context);
+        luaX_set_metatable(L, "dromozoa.sqlite3.context");
         for (int i = 0; i < argc; ++i) {
           if (!push_value(L, argv[i])) {
             luaX_push(L, luaX_nil);

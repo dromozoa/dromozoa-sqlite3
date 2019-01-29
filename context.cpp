@@ -90,11 +90,6 @@ namespace dromozoa {
     }
   }
 
-  void new_context(lua_State* L, sqlite3_context* context) {
-    luaX_new<sqlite3_context*>(L, context);
-    luaX_set_metatable(L, "dromozoa.sqlite3.context");
-  }
-
   void initialize_context(lua_State* L) {
     lua_newtable(L);
     {
