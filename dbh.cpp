@@ -122,6 +122,24 @@ namespace dromozoa {
       }
     }
 
+    void impl_blob_open(lua_State* L) {
+      sqlite3* dbh = check_dbh(L, 1);
+      luaX_string_reference db = luaX_check_string(L, 2);
+      luaX_string_reference table = luaX_check_string(L, 3);
+      luaX_string_reference column = luaX_check_string(L, 4);
+      sqlite3_int64 row = luaX_check_integer<sqlite3_int64>(L, 5);
+      int flags = luaX_opt_integer<int>(L, 6, 1); // read-write
+      sqlite3_blob* blob = 0;
+      int result = sqlite3_blob_open(dbh, db.data(), table.data(), column.data(), row, flags, &blob);
+      if (result == SQLITE_OK) {
+        luaX_new<blob_handle>(L, blob);
+        luaX_set_metatable(L, "dromozoa.sqlite3.blob");
+      } else {
+        sqlite3_blob_close(blob);
+        push_error(L, result);
+      }
+    }
+
     void impl_share(lua_State* L) {
       lua_pushlightuserdata(L, check_database_handle_sharable(L, 1)->share());
     }
@@ -151,6 +169,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "changes", impl_changes);
     luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
     luaX_set_field(L, -1, "exec", impl_exec);
+    luaX_set_field(L, -1, "blob_open", impl_blob_open);
   }
 
   void initialize_dbh_function(lua_State* L);

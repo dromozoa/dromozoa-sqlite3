@@ -18,12 +18,14 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  void initialize_context(lua_State* L);
-  void initialize_dbh(lua_State* L);
-  void initialize_main(lua_State* L);
-  void initialize_sth(lua_State* L);
+  void initialize_blob(lua_State*);
+  void initialize_context(lua_State*);
+  void initialize_dbh(lua_State*);
+  void initialize_main(lua_State*);
+  void initialize_sth(lua_State*);
 
   void initialize(lua_State* L) {
+    initialize_blob(L);
     initialize_context(L);
     initialize_dbh(L);
     initialize_main(L);
