@@ -44,7 +44,7 @@ namespace dromozoa {
       sqlite3_backup* backup = check_backup(L, 1);
       int page = luaX_check_integer<int>(L, 2);
       int result = sqlite3_backup_step(backup, page);
-      if (result == SQLITE_ROW || result == SQLITE_DONE) {
+      if (result == SQLITE_OK || result == SQLITE_DONE) {
         luaX_push(L, result);
       } else {
         push_error(L, result);
@@ -63,7 +63,7 @@ namespace dromozoa {
   void initialize_backup(lua_State* L) {
     lua_newtable(L);
     {
-      luaL_newmetatable(L, "dromozoa.sqlite3.blob");
+      luaL_newmetatable(L, "dromozoa.sqlite3.backup");
       lua_pushvalue(L, -2);
       luaX_set_field(L, -2, "__index");
       luaX_set_field(L, -1, "__gc", impl_gc);
