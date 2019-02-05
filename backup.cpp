@@ -39,6 +39,25 @@ namespace dromozoa {
         push_error(L, result);
       }
     }
+
+    void impl_step(lua_State* L) {
+      sqlite3_backup* backup = check_backup(L, 1);
+      int page = luaX_check_integer<int>(L, 2);
+      int result = sqlite3_backup_step(backup, page);
+      if (result == SQLITE_ROW || result == SQLITE_DONE) {
+        luaX_push(L, result);
+      } else {
+        push_error(L, result);
+      }
+    }
+
+    void impl_remaining(lua_State* L) {
+      luaX_push(L, sqlite3_backup_remaining(check_backup(L, 1)));
+    }
+
+    void impl_pagecount(lua_State* L) {
+      luaX_push(L, sqlite3_backup_pagecount(check_backup(L, 1)));
+    }
   }
 
   void initialize_backup(lua_State* L) {
@@ -51,6 +70,9 @@ namespace dromozoa {
       lua_pop(L, 1);
 
       luaX_set_field(L, -1, "finish", impl_finish);
+      luaX_set_field(L, -1, "step", impl_step);
+      luaX_set_field(L, -1, "remaining", impl_remaining);
+      luaX_set_field(L, -1, "pagecount", impl_pagecount);
     }
     luaX_set_field(L, -2, "backup");
   }
