@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2019 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2019 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -18,25 +18,25 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  void initialize_backup(lua_State*);
-  void initialize_blob(lua_State*);
-  void initialize_context(lua_State*);
-  void initialize_dbh(lua_State*);
-  void initialize_main(lua_State*);
-  void initialize_sth(lua_State*);
+  backup_handle::backup_handle(sqlite3_backup* backup, lua_State* L, int index0, int index1)
+    : backup_(backup), references_(L, index0, index1) {}
 
-  void initialize(lua_State* L) {
-    initialize_backup(L);
-    initialize_blob(L);
-    initialize_context(L);
-    initialize_dbh(L);
-    initialize_main(L);
-    initialize_sth(L);
+  backup_handle::~backup_handle() {
+    if (backup_) {
+      int result = finish();
+      if (result != SQLITE_OK) {
+        DROMOZOA_UNEXPECTED(error_to_string(result));
+      }
+    }
   }
-}
 
-extern "C" int luaopen_dromozoa_sqlite3(lua_State* L) {
-  lua_newtable(L);
-  dromozoa::initialize(L);
-  return 1;
+  sqlite3_backup* backup_handle::get() const {
+    return backup_;
+  }
+
+  int backup_handle::finish() {
+    sqlite3_backup* backup = backup_;
+    backup_ = 0;
+    return sqlite3_backup_finish(backup);
+  }
 }
