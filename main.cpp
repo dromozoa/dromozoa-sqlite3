@@ -82,6 +82,19 @@ namespace dromozoa {
     void impl_threadsafe(lua_State* L) {
       luaX_push(L, sqlite3_threadsafe());
     }
+
+    void impl_backup_init(lua_State* L) {
+      sqlite3* dest_dbh = check_dbh(L, 1);
+      luaX_string_reference dest_name = luaX_check_string(L, 2);
+      sqlite3* source_dbh = check_dbh(L, 3);
+      luaX_string_reference source_name = luaX_check_string(L, 4);
+      if (sqlite3_backup* backup = sqlite3_backup_init(dest_dbh, dest_name.data(), source_dbh, source_name.data())) {
+        luaX_new<backup_handle>(L, backup, L, 1, 3);
+        luaX_set_metatable(L, "dromozoa.sqlite3.backup");
+      } else {
+        push_error(L, dest_dbh);
+      }
+    }
   }
 
   void push_null(lua_State* L) {
@@ -97,6 +110,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "libversion_number", impl_libversion_number);
     luaX_set_field(L, -1, "sourceid", impl_sourceid);
     luaX_set_field(L, -1, "threadsafe", impl_threadsafe);
+    luaX_set_field(L, -1, "backup_init", impl_backup_init);
 
     push_null(L);
     luaX_set_field(L, -2, "null");
