@@ -21,6 +21,8 @@ LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS += -lsqlite3 -lpthread -ldl
 
 OBJS = \
+	backup.o \
+	backup_handle.o \
 	blob.o \
 	blob_handle.o \
 	context.o \

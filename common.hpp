@@ -112,6 +112,19 @@ namespace dromozoa {
     blob_handle& operator=(const blob_handle&);
   };
 
+  class backup_handle {
+  public:
+    backup_handle(sqlite3_backup*, lua_State*, int, int);
+    ~backup_handle();
+    sqlite3_backup* get() const;
+    int finish();
+  private:
+    sqlite3_backup* backup_;
+    luaX_reference<2> references_;
+    backup_handle(const backup_handle&);
+    backup_handle& operator=(const backup_handle&);
+  };
+
   std::string error_to_string(int);
   void push_error(lua_State*, int);
   void push_error(lua_State*, sqlite3*);

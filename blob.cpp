@@ -21,15 +21,15 @@
 #include "common.hpp"
 
 namespace dromozoa {
-  blob_handle* check_blob_handle(lua_State* L, int arg) {
-    return luaX_check_udata<blob_handle>(L, arg, "dromozoa.sqlite3.blob");
-  }
-
-  sqlite3_blob* check_blob(lua_State* L, int arg) {
-    return check_blob_handle(L, arg)->get();
-  }
-
   namespace {
+    blob_handle* check_blob_handle(lua_State* L, int arg) {
+      return luaX_check_udata<blob_handle>(L, arg, "dromozoa.sqlite3.blob");
+    }
+
+    sqlite3_blob* check_blob(lua_State* L, int arg) {
+      return check_blob_handle(L, arg)->get();
+    }
+
     void impl_gc(lua_State* L) {
       check_blob_handle(L, 1)->~blob_handle();
     }
