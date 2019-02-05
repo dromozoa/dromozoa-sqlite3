@@ -57,6 +57,7 @@ while true do
 end
 
 assert(backup:finish())
+assert(insert_sth:finalize())
 assert(dbh:close())
 
 local dbh = assert(sqlite3.open "test.db")
