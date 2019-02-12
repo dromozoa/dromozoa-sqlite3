@@ -25,6 +25,7 @@
 #include <utility>
 
 #include <dromozoa/bind.hpp>
+#include <dromozoa/bind/atomic.hpp>
 #include <dromozoa/bind/mutex.hpp>
 
 namespace dromozoa {
@@ -60,8 +61,7 @@ namespace dromozoa {
     sqlite3* get();
     int close();
   private:
-    long counter_;
-    mutex counter_mutex_;
+    atomic_count<long> count_;
     sqlite3* dbh_;
     mutex dbh_mutex_;
     database_handle_sharable_impl(const database_handle_sharable_impl&);
