@@ -21,6 +21,7 @@ LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS += -lpthread -ldl
 
 OBJS = \
+	atomic.o \
 	callback.o \
 	common.o \
 	core.o \

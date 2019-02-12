@@ -62,7 +62,7 @@ namespace dromozoa {
     return result;
   }
 
-  database_handle_sharable_impl::database_handle_sharable_impl(const char* filename, int flags, const char* vfs) : counter_(), dbh_() {
+  database_handle_sharable_impl::database_handle_sharable_impl(const char* filename, int flags, const char* vfs) : dbh_() {
     int result = sqlite3_open_v2(filename, &dbh_, flags, vfs);
     if (result != SQLITE_OK) {
       sqlite3_close(dbh_);
@@ -84,17 +84,11 @@ namespace dromozoa {
   }
 
   void database_handle_sharable_impl::add_ref() {
-    lock_guard<> lock(counter_mutex_);
-    ++counter_;
+    ++count_;
   }
 
   void database_handle_sharable_impl::release() {
-    bool reached_zero = false;
-    {
-      lock_guard<> lock(counter_mutex_);
-      reached_zero = --counter_ == 0;
-    }
-    if (reached_zero) {
+    if (--count_ == 0) {
       delete this;
     }
   }
