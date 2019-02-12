@@ -1,9 +1,9 @@
 rockspec_format = "3.0"
 package = "dromozoa-sqlite3"
-version = "1.19-1"
+version = "1.20-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-sqlite3/archive/v1.19.tar.gz";
-  file = "dromozoa-sqlite3-1.19.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-sqlite3/archive/v1.20.tar.gz";
+  file = "dromozoa-sqlite3-1.20.tar.gz";
 }
 description = {
   summary = "Lua bindings for SQLite3";
