@@ -29,14 +29,15 @@ namespace dromozoa {
     }
   }
 
-  void initialize_callback(lua_State* L);
-  void initialize_core(lua_State* L);
-  void initialize_handle(lua_State* L);
-  void initialize_mutex(lua_State* L);
-  void initialize_scoped_ptr(lua_State* L);
-  void initialize_system_error(lua_State* L);
-  void initialize_thread(lua_State* L);
-  void initialize_util(lua_State* L);
+  void initialize_atomic(lua_State*);
+  void initialize_callback(lua_State*);
+  void initialize_core(lua_State*);
+  void initialize_handle(lua_State*);
+  void initialize_mutex(lua_State*);
+  void initialize_scoped_ptr(lua_State*);
+  void initialize_system_error(lua_State*);
+  void initialize_thread(lua_State*);
+  void initialize_util(lua_State*);
 
   void initialize(lua_State* L) {
     luaL_newmetatable(L, "dromozoa.bind");
@@ -47,6 +48,7 @@ namespace dromozoa {
     static int count = 0;
     luaX_set_field(L, -1, "count", ++count);
 
+    initialize_atomic(L);
     initialize_callback(L);
     initialize_core(L);
     initialize_handle(L);
