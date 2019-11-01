@@ -17,7 +17,6 @@
 
 CPPFLAGS += -I$(LUA_INCDIR)
 CXXFLAGS += -Wall -W $(CFLAGS)
-LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS += -lpthread -ldl
 
 OBJS = \
@@ -43,13 +42,13 @@ check:
 	./test.sh
 
 bind.so: $(OBJS)
-	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(CXX) $(LDFLAGS) $(LIBFLAG) $^ $(LDLIBS) -o $@
 
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 driver: driver.c
-	$(CC) $(CPPFLAGS) -Wall -W $(CFLAGS) -L$(LUA_LIBDIR) $< -llua -o $@
+	$(CC) $(CPPFLAGS) -Wall -W $(CFLAGS) $(LDFLAGS) $< -llua -o $@
 
 install:
 	mkdir -p $(LIBDIR)/dromozoa

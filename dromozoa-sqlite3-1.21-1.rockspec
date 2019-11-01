@@ -1,14 +1,14 @@
 rockspec_format = "3.0"
-package = "dromozoa-bind"
-version = "1.55-1"
+package = "dromozoa-sqlite3"
+version = "1.21-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-bind/archive/v1.55.tar.gz";
-  file = "dromozoa-bind-1.55.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-sqlite3/archive/v1.21.tar.gz";
+  file = "dromozoa-sqlite3-1.21.tar.gz";
 }
 description = {
-  summary = "Helper library for creating bindings between C++ and Lua";
+  summary = "Lua bindings for SQLite3";
   license = "GPL-3";
-  homepage = "https://github.com/dromozoa/dromozoa-bind/";
+  homepage = "https://github.com/dromozoa/dromozoa-sqlite3/";
   maintainer = "Tomoyuki Fujimori <moyu@dromozoa.com>";
 }
 test = {
@@ -21,7 +21,6 @@ build = {
     CFLAGS = "$(CFLAGS)";
     LIBFLAG = "$(LIBFLAG)";
     LUA_INCDIR = "$(LUA_INCDIR)";
-    LUA_LIBDIR = "$(LUA_LIBDIR)";
   };
   install_variables = {
     LIBDIR = "$(LIBDIR)";

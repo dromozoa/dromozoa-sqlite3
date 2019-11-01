@@ -17,7 +17,6 @@
 
 CPPFLAGS += -Ibind -I$(LUA_INCDIR)
 CXXFLAGS += -Wall -W $(CFLAGS) -g
-LDFLAGS += -L$(LUA_LIBDIR) $(LIBFLAG)
 LDLIBS += -lsqlite3 -lpthread -ldl
 
 OBJS = \
@@ -47,7 +46,7 @@ check:
 	./test.sh
 
 sqlite3.so: $(OBJS)
-	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(CXX) $(LDFLAGS) $(LIBFLAG) $^ $(LDLIBS) -o $@
 
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
