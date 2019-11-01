@@ -107,7 +107,7 @@ namespace dromozoa {
             what_ = compat_strerror(code_);
           }
           return what_.c_str();
-        } catch (const std::exception e) {
+        } catch (const std::exception& e) {
           return e.what();
         }
       }
