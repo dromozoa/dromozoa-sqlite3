@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
+// Copyright (C) 2016-2019,2024 Tomoyuki Fujimori <moyu@dromozoa.com>
 //
 // This file is part of dromozoa-sqlite3.
 //
@@ -140,6 +140,16 @@ namespace dromozoa {
       }
     }
 
+    void impl_enable_load_extension(lua_State* L) {
+      sqlite3* dbh = check_dbh(L, 1);
+      int on_off = lua_toboolean(L, 2);
+      if (sqlite3_enable_load_extension(dbh, on_off) == SQLITE_OK) {
+        luaX_push_success(L);
+      } else {
+        push_error(L, dbh);
+      }
+    }
+
     void impl_share(lua_State* L) {
       lua_pushlightuserdata(L, check_database_handle_sharable(L, 1)->share());
     }
@@ -170,6 +180,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
     luaX_set_field(L, -1, "exec", impl_exec);
     luaX_set_field(L, -1, "blob_open", impl_blob_open);
+    luaX_set_field(L, -1, "enable_load_extension", impl_enable_load_extension);
   }
 
   void initialize_dbh_function(lua_State* L);
