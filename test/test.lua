@@ -98,5 +98,7 @@ assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(dbh:last_insert_rowid() == 4)
 assert(sth:finalize())
 
+assert(dbh:enable_load_extension(true))
+
 assert(dbh:close())
 assert(os.remove "test.db")
