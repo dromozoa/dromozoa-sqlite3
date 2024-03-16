@@ -17,6 +17,7 @@
 
 CPPFLAGS += -I$(LUA_INCDIR)
 CXXFLAGS += -Wall -W $(CFLAGS)
+LDFLAGS += -L$(LUA_LIBDIR)
 LDLIBS += -lpthread -ldl
 
 OBJS = \
