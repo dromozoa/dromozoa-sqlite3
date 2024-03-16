@@ -15,9 +15,17 @@
 -- You should have received a copy of the GNU General Public License
 -- along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-local multi = require "dromozoa.multi"
 local unix = require "dromozoa.unix"
 local sqlite3 = require "dromozoa.sqlite3"
+
+local multi
+local result, message = pcall(function ()
+  multi = require "dromozoa.multi"
+end)
+if not result then
+  print "[SKIP] dromozoa.multi not found"
+  return
+end
 
 local verbose = os.getenv "VERBOSE" == "1"
 
