@@ -1,8 +1,8 @@
 package = "dromozoa-sqlite3"
-version = "1.22-1"
+version = "1.23-1"
 source = {
-  url = "https://github.com/dromozoa/dromozoa-sqlite3/archive/v1.22.tar.gz";
-  file = "dromozoa-sqlite3-1.22.tar.gz";
+  url = "https://github.com/dromozoa/dromozoa-sqlite3/archive/v1.23.tar.gz";
+  file = "dromozoa-sqlite3-1.23.tar.gz";
 }
 description = {
   summary = "Lua bindings for SQLite3";
