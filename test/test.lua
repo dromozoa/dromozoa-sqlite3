@@ -1,4 +1,4 @@
--- Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+-- Copyright (C) 2016,2018,2024 Tomoyuki Fujimori <moyu@dromozoa.com>
 --
 -- This file is part of dromozoa-sqlite3.
 --
@@ -97,6 +97,8 @@ assert(dbh:last_insert_rowid() == 3)
 assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(dbh:last_insert_rowid() == 4)
 assert(sth:finalize())
+
+assert(dbh:enable_load_extension(true))
 
 assert(dbh:close())
 assert(os.remove "test.db")
