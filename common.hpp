@@ -19,6 +19,7 @@
 #define DROMOZOA_COMMON_HPP
 
 #include <sqlite3.h>
+#include <sqlite3ext.h>
 
 #include <map>
 #include <string>
