@@ -103,5 +103,5 @@ assert(dbh:enable_load_extension(true))
 assert(dbh:close())
 assert(os.remove "test.db")
 
-print("enable_load_extension", sqlite3.enable_load_extension)
+print("enable_load_extension", sqlite3.dbh.enable_load_extension)
 

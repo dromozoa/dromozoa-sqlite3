@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "config.h"
 #include "common.hpp"
 
 namespace dromozoa {
@@ -140,7 +141,7 @@ namespace dromozoa {
       }
     }
 
-#ifndef SQLITE_OMIT_LOAD_EXTENSION
+#ifdef HAVE_SQLITE3_ENABLE_LOAD_EXTENSION
     void impl_enable_load_extension(lua_State* L) {
       sqlite3* dbh = check_dbh(L, 1);
       int on_off = lua_toboolean(L, 2);
@@ -182,7 +183,7 @@ namespace dromozoa {
     luaX_set_field(L, -1, "last_insert_rowid", impl_last_insert_rowid);
     luaX_set_field(L, -1, "exec", impl_exec);
     luaX_set_field(L, -1, "blob_open", impl_blob_open);
-#ifndef SQLITE_OMIT_LOAD_EXTENSION
+#ifdef HAVE_SQLITE3_ENABLE_LOAD_EXTENSION
     luaX_set_field(L, -1, "enable_load_extension", impl_enable_load_extension);
 #endif
   }

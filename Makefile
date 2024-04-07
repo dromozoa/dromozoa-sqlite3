@@ -45,12 +45,17 @@ clean:
 check:
 	./test.sh
 
+install:
+	mkdir -p $(LIBDIR)/dromozoa
+	cp $(TARGET) $(LIBDIR)/dromozoa
+
 sqlite3.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $(LIBFLAG) $^ $(LDLIBS) -o $@
 
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-install:
-	mkdir -p $(LIBDIR)/dromozoa
-	cp $(TARGET) $(LIBDIR)/dromozoa
+config.h: config.sh
+	./config.sh >$@
+
+dbh.o: config.h
