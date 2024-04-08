@@ -27,9 +27,9 @@ int main(int ac, char* av[]) {
 }
 EOH
 
-trap "rm -f '$name.c' '$name.o'" 0
+trap "rm -f '$name' '$name.c'" 0
 
-if cc $CPPFLAGS $LDFLAGS -g -O2 -c "$name.c" >/dev/null 2>&1
+if cc $CPPFLAGS $LDFLAGS "$name.c" -lsqlite3 -o "$name" >/dev/null 2>&1
 then
   echo '#define HAVE_SQLITE3_ENABLE_LOAD_EXTENSION 1'
 else
