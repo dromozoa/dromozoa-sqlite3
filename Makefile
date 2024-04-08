@@ -40,7 +40,7 @@ TARGET = sqlite3.so
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET)
+	rm -f config.h *.o $(TARGET)
 
 check:
 	./test.sh
