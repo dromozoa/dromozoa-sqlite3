@@ -1,6 +1,6 @@
 #! /bin/sh -e
 
-# Copyright (C) 2016,2018,2024 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2024 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-sqlite3.
 #
@@ -17,19 +17,21 @@
 # You should have received a copy of the GNU General Public License
 # along with dromozoa-sqlite3.  If not, see <http://www.gnu.org/licenses/>.
 
-mkdir -p .test/dromozoa
-(cd .test/dromozoa && ln -f -s ../../sqlite3.so sqlite3.so)
+name=".config-sqlite3_enable_load_extension"
+cat <<EOH >"$name.c"
+#include <sqlite3.h>
 
-LUA_CPATH=".test/?.so;;"
-LUA_PATH="test/?.lua;;"
-export LUA_CPATH LUA_PATH
+int main(int ac, char* av[]) {
+  sqlite3_enable_load_extension(0, 0);
+  return 0;
+}
+EOH
 
-for i in test/test*.lua
-do
-  case X$# in
-    X0) lua "$i";;
-    *) "$@" "$i";;
-  esac
-done
+trap "rm -f '$name.c' '$name.o'" 0
 
-rm -f test.db*
+if cc $CPPFLAGS $LDFLAGS -g -O2 -c "$name.c" >/dev/null 2>&1
+then
+  echo '#define HAVE_SQLITE3_ENABLE_LOAD_EXTENSION 1'
+else
+  echo '/* #undef HAVE_SQLITE3_ENABLE_LOAD_EXTENSION */'
+fi

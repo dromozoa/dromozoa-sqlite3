@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2016-2019,2024 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-sqlite3.
 #
@@ -40,17 +40,22 @@ TARGET = sqlite3.so
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET)
+	rm -f config.h *.o $(TARGET)
 
 check:
 	./test.sh
 
+install:
+	mkdir -p $(LIBDIR)/dromozoa
+	cp $(TARGET) $(LIBDIR)/dromozoa
+
 sqlite3.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $(LIBFLAG) $^ $(LDLIBS) -o $@
+
+config.h: config.sh
+	./config.sh >$@
 
 .cpp.o:
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-install:
-	mkdir -p $(LIBDIR)/dromozoa
-	cp $(TARGET) $(LIBDIR)/dromozoa
+dbh.o: config.h

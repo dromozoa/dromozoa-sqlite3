@@ -98,7 +98,13 @@ assert(sth:step() == sqlite3.SQLITE_DONE)
 assert(dbh:last_insert_rowid() == 4)
 assert(sth:finalize())
 
-assert(dbh:enable_load_extension(true))
+if dbh.enable_load_extension then
+  assert(dbh:enable_load_extension(true))
+else
+  print "enable_load_extension not supported"
+end
 
 assert(dbh:close())
 assert(os.remove "test.db")
+
+
