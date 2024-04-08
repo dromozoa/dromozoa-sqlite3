@@ -52,10 +52,10 @@ install:
 sqlite3.so: $(OBJS)
 	$(CXX) $(LDFLAGS) $(LIBFLAG) $^ $(LDLIBS) -o $@
 
-.cpp.o:
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
-
 config.h: config.sh
 	./config.sh >$@
+
+.cpp.o:
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 dbh.o: config.h
