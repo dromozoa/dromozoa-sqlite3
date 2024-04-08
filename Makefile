@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2016-2019,2024 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-sqlite3.
 #

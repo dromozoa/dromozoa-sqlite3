@@ -1,6 +1,6 @@
 #! /bin/sh -e
 
-# Copyright (C) 2016,2018 Tomoyuki Fujimori <moyu@dromozoa.com>
+# Copyright (C) 2016,2018,2024 Tomoyuki Fujimori <moyu@dromozoa.com>
 #
 # This file is part of dromozoa-sqlite3.
 #
